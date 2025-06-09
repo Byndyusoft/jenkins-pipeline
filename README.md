@@ -11,3 +11,6 @@
 
 ### Deploy to `prod`
 - [Manual: deploy to prod](./docs/deploy_to_prod.md)
+
+## Usage examples
+- [Examples](https://github.com/Byndyusoft/jenkins-pipeline-usage-examples.git)
