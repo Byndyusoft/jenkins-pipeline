@@ -1,0 +1,29 @@
+{
+    "extends": "recommended",
+    "rules": {
+        "ClassEndsWithBlankLine": {
+            "enabled": false
+        },
+        "ClassStartsWithBlankLine": {
+            "enabled": false
+        },
+        "Indentation": {
+            "enabled": false
+        },
+        "LineLength": {
+            "enabled": false
+        },
+        "NestedBlockDepth": {
+            "enabled": false
+        },
+        "UnnecessaryElseStatement": {
+            "enabled": false
+        },
+        "UnnecessaryGetter": {
+            "enabled": false
+        },
+        "UnnecessaryObjectReferences": {
+            "enabled": false
+        }
+    }
+}
