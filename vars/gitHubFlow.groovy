@@ -86,7 +86,7 @@ def call(Map serviceSetting = [:], List<String> checks = [], Map k8sCloud = [:],
             artifactSettings.initialize(deployConfig, jenkinsFileSettings, environmentVariables, pipelineParameters,
                     git, latestVersion)
 
-            Make make = new Make(this, serviceConfig)
+            Make make = new Make(this, serviceConfig, logger)
 
             if (pipelineParameters.stageAvailable(PipelineStage.CheckImage)) {
                 runStage('Check image exists', 'docker') {

@@ -2,15 +2,21 @@
 class Make {
     private def script
     private ServiceConfig serviceConfig
+    private final Logger logger
 
-    Make(script, ServiceConfig serviceConfig){
+    Make(script, ServiceConfig serviceConfig, Logger logger){
         this.script = script
         this.serviceConfig = serviceConfig
+        this.logger = logger
     }
 
     void runUnitTests() {
         script.sh("make ${serviceConfig.makeOption} test ${serviceConfig.makeFileEnvString}")
-        script.junit testResults: 'test/results.xml'
+        if (script.fileExists('test/results.xml')) {
+            script.junit testResults: 'test/results.xml'
+        } else {
+            logger.logInfo("Test report file 'test/results.xml' not found. Skipping junit step.")
+        }
     }
 
     void runStyleChecks() {
