@@ -16,7 +16,7 @@ class DeployConfig {
     /**custom yaml for "Pod Templates jenkins agent(k8s)"*/
     String yaml
     /**volumes for "Pod Templates jenkins agent(k8s)"*/
-    String volumes
+    List volumes
     /**for deploy jenkins agent*/
     String serviceAccount
     /**setting secrets provider*/
@@ -39,6 +39,7 @@ class DeployConfig {
         secretValuesFilePath = deployYaml.get('secretValues')
 
         yaml = deployYaml.get('yaml')
+        volumes = deployYaml.get('volumes') as List
         serviceAccount = deployYaml.get('serviceAccount')
 
         secretProvider = new SecretProvider(deployYaml.get('secret') as Map ?: [:])
