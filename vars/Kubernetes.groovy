@@ -27,7 +27,12 @@ class Kubernetes {
             script.echo "${kubernetesConfig.podTemplateVolumes.getClass()}"
             script.echo "${kubernetesConfig.podTemplateVolumes[0]}"
             script.echo "${kubernetesConfig.podTemplateVolumes[0].getClass()}"
-            podParams.volumes = [kubernetesConfig.podTemplateVolumes]
+
+            // if (kubernetesConfig.podTemplateVolumes.get('persistentVolumeClaim')) {
+            //     podParams.volumes = [persistentVolumeClaim()]
+            // }
+
+            podParams.volumes = [persistentVolumeClaim(claimName: 'storage-volume-cache', mountPath: '/root/.nuget')]
         }
 
         script.podTemplate(podParams) {
