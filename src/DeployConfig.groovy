@@ -5,7 +5,7 @@ class DeployConfig {
     String gitCredentialsId
     /**project name*/
     String projectName
-    /***/
+    /**list of available agents*/
     List clusterNames = []
     /**path default values file*/
     String defaultValuesFilePath
@@ -13,8 +13,10 @@ class DeployConfig {
     String microServiceValuesFilePath
     /**path final values-secret file for deploy service*/
     String secretValuesFilePath
-    /**custom settings for "Pod Templates jenkins agent(k8s)"*/
+    /**custom yaml for "Pod Templates jenkins agent(k8s)"*/
     String yaml
+    /**volumes for "Pod Templates jenkins agent(k8s)"*/
+    String volumes
     /**for deploy jenkins agent*/
     String serviceAccount
     /**setting secrets provider*/

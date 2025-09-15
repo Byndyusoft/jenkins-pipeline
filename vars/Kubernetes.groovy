@@ -22,6 +22,10 @@ class Kubernetes {
             podParams.yaml = """${kubernetesConfig.podTemplateYaml}"""
         }
 
+        if (kubernetesConfig.podTemplateVolumes) {
+            podParams.volumes = kubernetesConfig.podTemplateVolumes
+        }
+
         script.podTemplate(podParams) {
             closure()
         }
