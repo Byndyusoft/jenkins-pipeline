@@ -32,7 +32,7 @@ class Kubernetes {
             //     podParams.volumes = [persistentVolumeClaim()]
             // }
 
-            podParams.volumes = [persistentVolumeClaim(claimName: 'storage-volume-cache', mountPath: '/root/.nuget')]
+            podParams.volumes = [script.persistentVolumeClaim(claimName: 'storage-volume-cache', mountPath: '/root/.nuget')]
         }
 
         script.podTemplate(podParams) {
