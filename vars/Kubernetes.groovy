@@ -24,6 +24,7 @@ class Kubernetes {
 
         if (kubernetesConfig.podTemplateVolumes) {
             script.echo "${kubernetesConfig.podTemplateVolumes}"
+            script.echo "${kubernetesConfig.podTemplateVolumes.getClass()}"
             podParams.volumes = kubernetesConfig.podTemplateVolumes
         }
 
