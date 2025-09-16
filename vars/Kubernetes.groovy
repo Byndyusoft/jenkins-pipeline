@@ -28,12 +28,13 @@ class Kubernetes {
             script.echo "${kubernetesConfig.podTemplateVolumes[0]}"
             script.echo "${kubernetesConfig.podTemplateVolumes[0].getClass()}"
 
-            // if (kubernetesConfig.podTemplateVolumes.get('persistentVolumeClaim')) {
-            //     podParams.volumes = [persistentVolumeClaim()]
-            // }
+            if (kubernetesConfig.podTemplateVolumes.get('persistentVolumeClaim')) {
+                script.echo "${kubernetesConfig.podTemplateVolumes.get('persistentVolumeClaim')[0]}"
+                podParams.volumes = [persistentVolumeClaim(claimName: kubernetesConfig.podTemplateVolumes.get('persistentVolumeClaim')[0]['claimName'], mountPath: kubernetesConfig.podTemplateVolumes.get('persistentVolumeClaim')[0]['mountPath'])]
+            }
 
             //podParams.volumes = [script.dynamicPVC(mountPath: '/root/.nuget', requestsSize: '1Gi', storageClassName: 'localpath-data')]
-            podParams.volumes = [script.persistentVolumeClaim(claimName: 'storage-volume-cache', mountPath: '/root/.nuget')]
+            //podParams.volumes = [script.persistentVolumeClaim(claimName: 'storage-volume-cache', mountPath: '/root/.nuget')]
         }
 
         script.podTemplate(podParams) {
