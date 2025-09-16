@@ -25,12 +25,12 @@ class Kubernetes {
         if (kubernetesConfig.podTemplateVolumes) {
             script.echo "${kubernetesConfig.podTemplateVolumes}"
             script.echo "${kubernetesConfig.podTemplateVolumes.getClass()}"
-            script.echo "${kubernetesConfig.podTemplateVolumes[0]}"
-            script.echo "${kubernetesConfig.podTemplateVolumes[0].getClass()}"
+            // script.echo "${kubernetesConfig.podTemplateVolumes[0]}"
+            // script.echo "${kubernetesConfig.podTemplateVolumes[0].getClass()}"
 
             if (kubernetesConfig.podTemplateVolumes.get('persistentVolumeClaim')) {
                 script.echo "${kubernetesConfig.podTemplateVolumes.get('persistentVolumeClaim')[0]}"
-                podParams.volumes = [persistentVolumeClaim(claimName: kubernetesConfig.podTemplateVolumes.get('persistentVolumeClaim')[0]['claimName'], mountPath: kubernetesConfig.podTemplateVolumes.get('persistentVolumeClaim')[0]['mountPath'])]
+                podParams.volumes = [script.persistentVolumeClaim(claimName: kubernetesConfig.podTemplateVolumes.get('persistentVolumeClaim')[0]['claimName'], mountPath: kubernetesConfig.podTemplateVolumes.get('persistentVolumeClaim')[0]['mountPath'])]
             }
 
             //podParams.volumes = [script.dynamicPVC(mountPath: '/root/.nuget', requestsSize: '1Gi', storageClassName: 'localpath-data')]
