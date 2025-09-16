@@ -1,6 +1,7 @@
 /** Wrapper over the podTemplate */
 class Kubernetes {
     private final def script
+    private List volumes
 
     Kubernetes(script) {
         this.script = script
@@ -23,14 +24,13 @@ class Kubernetes {
         }
 
         if (kubernetesConfig.podTemplateVolumes) {
-            script.echo "${kubernetesConfig.podTemplateVolumes}"
-            script.echo "${kubernetesConfig.podTemplateVolumes.getClass()}"
-            // script.echo "${kubernetesConfig.podTemplateVolumes[0]}"
-            // script.echo "${kubernetesConfig.podTemplateVolumes[0].getClass()}"
-
+            volumes = []
             if (kubernetesConfig.podTemplateVolumes.get('persistentVolumeClaim')) {
-                script.echo "${kubernetesConfig.podTemplateVolumes.get('persistentVolumeClaim')[0]}"
-                podParams.volumes = [script.persistentVolumeClaim(claimName: kubernetesConfig.podTemplateVolumes.get('persistentVolumeClaim')[0]['claimName'], mountPath: kubernetesConfig.podTemplateVolumes.get('persistentVolumeClaim')[0]['mountPath'])]
+                for (pvc in kubernetesConfig.podTemplateVolumes.get('persistentVolumeClaim')) {
+                    script.echo "${pvc}"
+                    volumes.add(script.persistentVolumeClaim(claimName: pvc['claimName'], mountPath: pvc['mountPath']))
+                }
+                podParams.volumes = values
             }
 
             //podParams.volumes = [script.dynamicPVC(mountPath: '/root/.nuget', requestsSize: '1Gi', storageClassName: 'localpath-data')]
