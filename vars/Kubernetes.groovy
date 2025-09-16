@@ -33,7 +33,7 @@ class Kubernetes {
             // }
 
             //podParams.volumes = [script.dynamicPVC(mountPath: '/root/.nuget', requestsSize: '1Gi', storageClassName: 'localpath-data')]
-            podParams.volumes = [script.persistentVolumeClaim(claimName: 'storage-volume-cache', mountPath: '/home/jenkins/.nuget')]
+            podParams.volumes = [script.persistentVolumeClaim(claimName: 'storage-volume-cache', mountPath: '/root/.nuget')]
         }
 
         script.podTemplate(podParams) {
