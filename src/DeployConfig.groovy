@@ -39,7 +39,7 @@ class DeployConfig {
         secretValuesFilePath = deployYaml.get('secretValues')
 
         yaml = deployYaml.get('yaml')
-        volumes = deployYaml.get('volumes') as List
+        volumes = deployYaml.get('volumes') as Map
         serviceAccount = deployYaml.get('serviceAccount')
 
         secretProvider = new SecretProvider(deployYaml.get('secret') as Map ?: [:])
