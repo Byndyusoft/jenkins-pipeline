@@ -30,7 +30,7 @@ class Kubernetes {
                     script.echo "${pvc}"
                     volumes.add(script.persistentVolumeClaim(claimName: pvc['claimName'], mountPath: pvc['mountPath']))
                 }
-                podParams.volumes = values
+                podParams.volumes = volumes
             }
 
             //podParams.volumes = [script.dynamicPVC(mountPath: '/root/.nuget', requestsSize: '1Gi', storageClassName: 'localpath-data')]
