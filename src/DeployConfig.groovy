@@ -16,7 +16,7 @@ class DeployConfig {
     /**custom yaml for "Pod Templates jenkins agent(k8s)"*/
     String yaml
     /**volumes for "Pod Templates jenkins agent(k8s)"*/
-    List volumes
+    Map volumes
     /**for deploy jenkins agent*/
     String serviceAccount
     /**setting secrets provider*/
