@@ -16,6 +16,7 @@
   - `third param(k8sCloud)` - setting jenkins cloud(`Dashboard > Manage Jenkins > Clouds`) (type: **map**)
     - `cloud` - set jenkins agent name. *Default: choosing by name `Dashboard > Manage Jenkins > Clouds` and `environment`*
     - `yaml` - *Default: empty*
+    - `volumes` - *Default: empty*
     - `serviceAccount` - for deploy jenkins agent. *Default: empty*
 
 ## Example `Jenkinsfile` file

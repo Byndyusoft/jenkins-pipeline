@@ -15,6 +15,9 @@
   - `vaultUrl` - url to vault
   - `vaultAppRoleCredential` - credentials from jenkins for get secret
 - `yaml` - custom settings for "Pod Templates jenkins agent(k8s)"
+- `volumes` - volumes that are defined for the pod and are mounted by ALL containers for "Pod Templates jenkins agent(k8s)"
+  - `persistentVolumeClaim` - an existing persistent volume claim by name
+ 
 
 ## Example `deploy.yaml` file
 ```
@@ -74,4 +77,26 @@ yaml: |-
   spec:
     nodeSelector:
       node-role.kubernetes.io/worker-pt: ""
+```
+
+```
+clusterName: ["bs-01-stage", "bs-01-prod"]
+project: "bs-extractor-expert"
+registryCredentialsId: "artifacts-registry"
+registryImagePullUrl: "artifacts-docker-group.example.com"
+registryImagePushUrl: "artifacts-docker.example.com"
+secret:
+  provider: vault
+  vaultUrl: "https://vault.example.com"
+  vaultAppRoleCredential: "jenkins-backend-role"
+serviceAccount: "deploy-agent"
+gitCredentialsId: "jenkins-cicd"
+yaml: |-
+  spec:
+    nodeSelector:
+      node-role.kubernetes.io/worker-pt: ""
+volumes: 
+  persistentVolumeClaim:
+    - claimName: 'nuget-cache-volume'
+      mountPath: '/root/.nuget'
 ```
