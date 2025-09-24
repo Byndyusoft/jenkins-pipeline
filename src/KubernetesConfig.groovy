@@ -16,6 +16,8 @@ class KubernetesConfig {
     String podTemplateServiceAccount
     /**select node for agent cloud*/
     String podTemplateNodeSelector
+    /**Volumes that are defined for the pod and are mounted by ALL containers for agent cloud*/
+    Map podTemplateVolumes
 
     KubernetesConfig(Map k8sCloud, DeployConfig deployConfig, PipelineParameters pipelineFlow) {
         if (k8sCloud.cloud == null) {
@@ -35,5 +37,6 @@ class KubernetesConfig {
         podTemplateYaml = k8sCloud.yaml ?: deployConfig?.yaml ?: ''
         podTemplateServiceAccount = k8sCloud.serviceAccount ?: deployConfig?.serviceAccount ?: 'default'
         podTemplateNodeSelector = k8sCloud.nodeSelector ?: ''
+        podTemplateVolumes = k8sCloud.volumes ?: deployConfig?.volumes ?: [:]
     }
 }

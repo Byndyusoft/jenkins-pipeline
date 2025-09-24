@@ -1,6 +1,7 @@
 /** Wrapper over the podTemplate */
 class Kubernetes {
     private final def script
+    private List volumes
 
     Kubernetes(script) {
         this.script = script
@@ -20,6 +21,16 @@ class Kubernetes {
 
         if (kubernetesConfig.podTemplateYaml) {
             podParams.yaml = """${kubernetesConfig.podTemplateYaml}"""
+        }
+
+        if (kubernetesConfig.podTemplateVolumes) {
+            volumes = []
+            if (kubernetesConfig.podTemplateVolumes.get('persistentVolumeClaim')) {
+                for (pvc in kubernetesConfig.podTemplateVolumes.get('persistentVolumeClaim')) {
+                    volumes.add(script.persistentVolumeClaim(claimName: pvc['claimName'], mountPath: pvc['mountPath']))
+                }
+                podParams.volumes = volumes
+            }
         }
 
         script.podTemplate(podParams) {

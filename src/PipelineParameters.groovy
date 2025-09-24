@@ -186,9 +186,7 @@ class PipelineParameters {
 
                     if (environmentVariables.TAG_NAME) {
                         mandatoryStages.addAll([PipelineStage.BuildApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication])
-                        // ToDo: wait test environment
-                        // environments = [DeployEnvironment.test, DeployEnvironment.preprod, DeployEnvironment.prod]
-                        environments.addAll([DeployEnvironment.preprod, DeployEnvironment.prod])
+                        environments.addAll([DeployEnvironment.test, DeployEnvironment.preprod, DeployEnvironment.prod])
                         break
                     }
 
@@ -198,9 +196,7 @@ class PipelineParameters {
                     }
 
                     optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication])
-                    // ToDo: wait test environment
-                    // environments = [DeployEnvironment.test, DeployEnvironment.preprod]
-                    environments.addAll([DeployEnvironment.preprod])
+                    environments.addAll([DeployEnvironment.test, DeployEnvironment.preprod])
                     break
 
                 case RepositoryType.None:

@@ -1,3 +1,6 @@
+## Docs
+- [kubernetes-plugin docs](https://github.com/jenkinsci/kubernetes-plugin?tab=readme-ov-file#pod-template)
+
 ## Description setting `deploy.yaml` file
 - `clusterName` - jenkins agent name `Dashboard > Manage Jenkins > Clouds`
 - `project` - project name
@@ -15,6 +18,11 @@
   - `vaultUrl` - url to vault
   - `vaultAppRoleCredential` - credentials from jenkins for get secret
 - `yaml` - custom settings for "Pod Templates jenkins agent(k8s)"
+- `volumes` - volumes for "Pod Templates jenkins agent(k8s)". 
+  - `persistentVolumeClaim` - an existing persistent volume claim by name
+     - `claimName` - claim name
+     - `mountPath` - path to mount this volume inside the pod
+ 
 
 ## Example `deploy.yaml` file
 ```
@@ -74,4 +82,26 @@ yaml: |-
   spec:
     nodeSelector:
       node-role.kubernetes.io/worker-pt: ""
+```
+
+```
+clusterName: ["bs-01-stage", "bs-01-prod"]
+project: "bs-extractor-expert"
+registryCredentialsId: "artifacts-registry"
+registryImagePullUrl: "artifacts-docker-group.example.com"
+registryImagePushUrl: "artifacts-docker.example.com"
+secret:
+  provider: vault
+  vaultUrl: "https://vault.example.com"
+  vaultAppRoleCredential: "jenkins-backend-role"
+serviceAccount: "deploy-agent"
+gitCredentialsId: "jenkins-cicd"
+yaml: |-
+  spec:
+    nodeSelector:
+      node-role.kubernetes.io/worker-pt: ""
+volumes: 
+  persistentVolumeClaim:
+    - claimName: 'nuget-cache-volume'
+      mountPath: '/root/.nuget'
 ```
