@@ -29,8 +29,8 @@ class Make {
         script.sh("make ${serviceConfig.makeOption} build-image app_image=${fullImagePath} ${serviceConfig.makeFileEnvString}")
     }
 
-    void buildApplication() {
-        script.sh("make ${serviceConfig.makeOption} build-app ${serviceConfig.makeFileEnvString}")
+    void buildApplication(String version) {
+        script.sh("make ${serviceConfig.makeOption} build-app ${serviceConfig.makeFileEnvString} Version=${version}")
     }
 
     void packPackage(String packageVersion) {

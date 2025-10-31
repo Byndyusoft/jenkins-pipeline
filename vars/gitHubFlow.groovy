@@ -79,12 +79,21 @@ def call(Map serviceSetting = [:], List<String> checks = [], Map k8sCloud = [:],
 
             Git git = new Git(this, deployConfig)
 
-            SemanticVersion latestVersion = git.findLatestSemVerTag()
-            latestVersion.increaseVersion(pipelineParameters.patchLevel)
+            SemanticVersion latestTag = git.findLatestSemVerTag()
+            SemanticVersion releaseVersion = new SemanticVersion(latestTag.toString())
+            releaseVersion.increaseVersion(pipelineParameters.patchLevel)
 
             ArtifactSettings artifactSettings = new ArtifactSettings()
             artifactSettings.initialize(deployConfig, jenkinsFileSettings, environmentVariables, pipelineParameters,
-                    git, latestVersion)
+                    git, releaseVersion)
+
+            String version
+            if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
+                version = releaseVersion.toString()
+            } else {
+                Utils utils = new Utils()
+                version = "${latestTag.toString()}-${utils.prepareName(environmentVariables.BRANCH_NAME)}-${environmentVariables.BUILD_NUMBER}-${artifactSettings.gitCommitShort}"
+            }
 
             Make make = new Make(this, serviceConfig, logger)
 
@@ -98,7 +107,7 @@ def call(Map serviceSetting = [:], List<String> checks = [], Map k8sCloud = [:],
 
             if (pipelineParameters.stageAvailable(PipelineStage.BuildApplication)) {
                 runStage('Build application', 'docker') {
-                    make.buildApplication()
+                    make.buildApplication(version)
                 }
             }
 
@@ -131,17 +140,8 @@ def call(Map serviceSetting = [:], List<String> checks = [], Map k8sCloud = [:],
             }
 
             if (pipelineParameters.stageAvailable(PipelineStage.BuildPackage)) {
-                String packageVersion = latestVersion.toString()
-
-                if (!pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
-                    // if we don't release it, we'll create a version with a suffix
-                    Utils utils = new Utils()
-                    def getCurrentTagForBranch = git.getCurrentTagForBranch()
-                    packageVersion = "${getCurrentTagForBranch != null ? getCurrentTagForBranch.toString() : packageVersion}-${utils.prepareName(environmentVariables.BRANCH_NAME)}-${artifactSettings.gitCommitShort}"
-                }
-
                 runStage('Pack package', 'docker') {
-                    make.packPackage(packageVersion)
+                    make.packPackage(version)
                 }
 
                 if (pipelineParameters.stageAvailable(PipelineStage.PushPackage)) {
@@ -173,7 +173,7 @@ def call(Map serviceSetting = [:], List<String> checks = [], Map k8sCloud = [:],
 
             if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
                 runStage('Make release', 'docker') {
-                    git.createTag(latestVersion)
+                    git.createTag(releaseVersion)
                 }
             }
         }
