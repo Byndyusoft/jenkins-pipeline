@@ -26,7 +26,7 @@ class Make {
     void buildImage(DeployConfig deployConfig, ArtifactSettings artifactSettings) {
         String fullImagePath = "${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactSettings.imageFolder}/${artifactSettings.imageName}:${artifactSettings.imageTag}"
         
-        // TODO app_image переделать в appImage
+        // TODO app_image to appImage
         script.sh("make ${serviceConfig.makeOption} build-image app_image=${fullImagePath} ${serviceConfig.makeFileEnvString}")
     }
 
