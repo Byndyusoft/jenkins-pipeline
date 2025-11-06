@@ -25,16 +25,15 @@ class Make {
 
     void buildImage(DeployConfig deployConfig, ArtifactSettings artifactSettings) {
         String fullImagePath = "${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactSettings.imageFolder}/${artifactSettings.imageName}:${artifactSettings.imageTag}"
-        
-        // TODO app_image переделать в appImage
+
         script.sh("make ${serviceConfig.makeOption} build-image app_image=${fullImagePath} ${serviceConfig.makeFileEnvString}")
     }
 
     void buildApplication(String version) {
-        script.sh("make ${serviceConfig.makeOption} build-app version=${version} ${serviceConfig.makeFileEnvString}")
+        script.sh("make ${serviceConfig.makeOption} build-app ${serviceConfig.makeFileEnvString} Version=${version}")
     }
 
     void packPackage(String packageVersion) {
-        script.sh("make ${serviceConfig.makeOption} pack-package packageVersion=${packageVersion} ${serviceConfig.makeFileEnvString}")
+        script.sh("make ${serviceConfig.makeOption} pack-package ${serviceConfig.makeFileEnvString} packageVersion=${packageVersion}")
     }
 }

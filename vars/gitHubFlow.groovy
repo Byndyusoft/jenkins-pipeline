@@ -79,20 +79,21 @@ def call(Map serviceSetting = [:], List<String> checks = [], Map k8sCloud = [:],
 
             Git git = new Git(this, deployConfig)
 
-            SemanticVersion latestTag = SemanticVersion.parse(git.findLatestSemVerTag())
-            SemanticVersion releaseVersion = latestTag.increase(pipelineParameters.patchLevel)
-            
+            SemanticVersion latestTag = git.findLatestSemVerTag()
+            SemanticVersion releaseVersion = new SemanticVersion(latestTag.toString())
+            releaseVersion.increaseVersion(pipelineParameters.patchLevel)
+
             ArtifactSettings artifactSettings = new ArtifactSettings()
             artifactSettings.initialize(deployConfig, jenkinsFileSettings, environmentVariables, pipelineParameters,
                     git, releaseVersion)
 
-            String version = pipelineParameters.stageAvailable(PipelineStage.CreateTag) \
-              ? releaseVersion.toString() \
-              : latestTag.toPreReleaseVersion(
-                  environmentVariables.BRANCH_NAME,
-                  environmentVariables.BUILD_NUMBER,
-                  artifactSettings.gitCommitShort
-                )
+            String version
+            if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
+                version = releaseVersion.toString()
+            } else {
+                Utils utils = new Utils()
+                version = "${latestTag.toString()}-${utils.prepareName(environmentVariables.BRANCH_NAME)}-${environmentVariables.BUILD_NUMBER}-${artifactSettings.gitCommitShort}"
+            }
 
             Make make = new Make(this, serviceConfig, logger)
 
