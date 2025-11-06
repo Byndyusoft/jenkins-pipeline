@@ -9,24 +9,6 @@ class SemanticVersion implements Serializable {
         this.patch = patch
     }
 
-    SemanticVersion(String version) {
-        if (!version) {
-            throw new IllegalArgumentException("Version string cannot be null or empty for constructor")
-        }
-        def versionParts = version.tokenize('.')
-        if (versionParts.size != 3) {
-            throw new IllegalArgumentException("Wrong version format - expected MAJOR.MINOR.PATCH - got ${version}")
-        }
-        try {
-            def parsedMajor = versionParts[0].toInteger()
-            def parsedMinor = versionParts[1].toInteger()
-            def parsedPatch = versionParts[2].toInteger()
-            this(parsedMajor, parsedMinor, parsedPatch) 
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Version parts must be integers - got ${version}", e)
-        }
-    }
-
     static SemanticVersion parse(String version) {
         if (!version) return null
         def versionParts = version.tokenize('.')
