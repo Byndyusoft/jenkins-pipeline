@@ -10,7 +10,7 @@ class ArtifactSettings {
     String releaseTag
 
     void initialize(DeployConfig deployConfig, JenkinsFileSettings jenkinsFileSettings, EnvironmentVariables environmentVariables,
-                    PipelineParameters pipelineParameters, Git git, SemanticVersion latestVersion) {
+                    PipelineParameters pipelineParameters, Git git, SemanticVersion releaseVersion) {
         Utils utils = new Utils()
 
         gitCommitShort = git.getCommitShaShort()
@@ -23,6 +23,6 @@ class ArtifactSettings {
         namespace = utils.prepareName("${deployConfig.projectName}-${pipelineParameters.deployEnvironment}")
         releaseName = utils.prepareName("${deployConfig.projectName}-${jenkinsFileSettings.artifactName}-${pipelineParameters.deployEnvironment}")
 
-        releaseTag = latestVersion.toString()
+        releaseTag = releaseVersion.toString()
     }
 }
