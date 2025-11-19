@@ -1,7 +1,7 @@
 ## Deploy to prod
 <br>
 
-### Step 1: Open project in jenkins
+### Step 1: Open `project` in jenkins
 ![](./imgs/projects.png)
 <br>
 <br>
@@ -19,29 +19,29 @@
 <br>
 <br>
 
-### Step 4: Click to `Build`
+### Step 4: Click the `Build` button
 ![](./imgs/build.png)
 <br>
 <br>
 <br>
 
-### Step 5: Wait to finish `build` make release
+### Step 5: Wait to finish `build` and `make release`
 ![](./imgs/finish_release.png)
 <br>
 <br>
 <br>
 
-### Step 6: Go to(1) the `tags` tab(2)
+### Step 6: Go to the `tags(1)`
 ![](./imgs/tags.png)
 <br>
 <br>
 <br>
 
-### Step 7: Checking the required `branch(1)` and set `prod(2)`
+### Step 7: Checking the required `tag(1)` and set `Deployment environment` to `prod(2)`
 ![](./imgs/to_prod.png)
 <br>
 <br>
 <br>
 
-### Step 8: Wait to finish `build` prod
+### Step 8: Wait to finish `build` and `deploy` to prod
 ![](./imgs/finish_prod.png)
