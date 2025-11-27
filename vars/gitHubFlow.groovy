@@ -24,9 +24,11 @@ def call(Map serviceSetting = [:], List<String> checks = [], Map k8sCloud = [:],
     logger.logInfo("Debug mode is env.DEBUG=${environmentVariables.DEBUG}")
     logger.logInfo('###################################################################')
 
-    PipelineParameters pipelineParameters = new PipelineParameters(this, logger)
+    Kubernetes kubernetes = new Kubernetes(this)
+    DeployConfig deployConfig = getDeployConfig(kubernetes, configDir, logger)
 
-    pipelineParameters.initialize(jenkinsFileSettings, environmentVariables)
+    PipelineParameters pipelineParameters = new PipelineParameters(this, logger)
+    pipelineParameters.initialize(jenkinsFileSettings, environmentVariables, deployConfig)
 
     logger.logInfo('###################################################################')
     logger.logInfo("Deploy to cluster=${pipelineParameters.cluster}")
@@ -45,10 +47,6 @@ def call(Map serviceSetting = [:], List<String> checks = [], Map k8sCloud = [:],
             return
         }
     }
-
-    Kubernetes kubernetes = new Kubernetes(this)
-
-    DeployConfig deployConfig = getDeployConfig(kubernetes, configDir, logger)
 
     KubernetesConfig kubernetesConfig = new KubernetesConfig(k8sCloud, deployConfig, pipelineParameters)
 

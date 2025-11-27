@@ -42,7 +42,10 @@ class Helm {
 
         valuesOverrides["microservice"] = [name: jenkinsFileSettings.artifactName, registryUrl: deployConfig.registryProvider.registryImagePushUrl, imageFolder: artifactSettings.imageFolder, image: jenkinsFileSettings.artifactName, tag: artifactSettings.imageTag]
         valuesOverrides["project"] = deployConfig.projectName
-        valuesOverrides["environment"] = "${pipelineParameters.deployEnvironment}"
+        String deployEnv = pipelineParameters.deployEnvironment instanceof DeployEnvironment ? 
+        pipelineParameters.deployEnvironment.name() : 
+        pipelineParameters.deployEnvironment.toString()
+        valuesOverrides["environment"] = deployEnv
         valuesOverrides["gitCommitShort"] = artifactSettings.gitCommitShort
         valuesOverrides["namespace"] = artifactSettings.namespace
         valuesOverrides["makefile"] = [env: serviceConfig.makeFileEnv]
@@ -53,7 +56,7 @@ class Helm {
             case 'vault':
                 Vault vault = new Vault(script, deployConfig)
                 // TODO "stage/bs-tmc/tmc-api/preprod" зачем дважды повторяется оружение (stage, preprod)
-                String vaultPathSecret = "${pipelineParameters.cluster}/${deployConfig.projectName}/${jenkinsFileSettings.artifactName}/${pipelineParameters.deployEnvironment}"
+                String vaultPathSecret = "${pipelineParameters.cluster}/${deployConfig.projectName}/${jenkinsFileSettings.artifactName}/${deployEnv}"
                 Map valuesOverridesSecret = [secret: vault.getVaultSecret(vaultPathSecret)]
 
                 script.writeYaml file: deployConfig.secretValuesFilePath, overwrite: true, data: valuesOverridesSecret
