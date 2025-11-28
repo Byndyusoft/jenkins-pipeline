@@ -5,7 +5,7 @@ class PipelineParameters {
 
     private List<PipelineStage> mandatoryStages
     private List<PipelineStage> optionalStages
-    private List<Object> environments
+    private List<String> environments
 
     private final String titleDeploymentEnvironment = 'Deployment environment'
     private final String titleBuildParameters = 'Build parameters'
@@ -19,7 +19,7 @@ class PipelineParameters {
     private final String masterBranchName = 'master'
 
     boolean onlyPipelineUpdate = false
-    def deployEnvironment
+    String deployEnvironment
     PatchLevel patchLevel
     String cluster
 
@@ -45,24 +45,11 @@ class PipelineParameters {
             onlyPipelineUpdate = true
         }
 
-        String selectedEnvironment = script.params[titleDeploymentEnvironment]
-        if (selectedEnvironment) {
-            try {
-                deployEnvironment = DeployEnvironment.valueOf(selectedEnvironment)
-            } catch (IllegalArgumentException e) {
-                deployEnvironment = selectedEnvironment
-            }
-        } else {
-            deployEnvironment = null
-        }
+        deployEnvironment = script.params[titleDeploymentEnvironment]
 
         patchLevel = script.params.version_type ?: PatchLevel.PATCH
 
-        if (deployEnvironment instanceof DeployEnvironment) {
-            cluster = deployEnvironment == DeployEnvironment.prod ? 'prod' : 'stage'
-        } else {
-            cluster = 'stage'
-        }
+        cluster = deployEnvironment == DeployEnvironment.prod.name() ? 'prod' : 'stage'
 
         if (script.params[titleBuildParameters].contains(buildApplication) == false) {
             deleteStage([PipelineStage.BuildApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication,])
@@ -143,11 +130,7 @@ class PipelineParameters {
 
         if (environments) {
             if (stageAvailable(PipelineStage.DeployApplication)) {
-                List<String> environmentStrings = environments.collect { env ->
-                    env instanceof DeployEnvironment ? env.name() : env.toString()
-                }
-                
-                String environmentChoices = environmentStrings.collect { env -> "'${env}'" }.join(',')
+                String environmentChoices = environments.collect { env -> "'${env}'" }.join(',')
                 
                 parameters.add(script.reactiveChoice(choiceType: 'PT_RADIO', filterLength: 1, filterable: false, name: titleDeploymentEnvironment, referencedParameters: 'reload',
                         script: script.groovyScript(fallbackScript: [classpath: [], oldScript: '', sandbox: true, script: 'return \'<p>ERROR</p>\''],
@@ -208,7 +191,7 @@ class PipelineParameters {
                     if (environmentVariables.TAG_NAME) {
                         mandatoryStages.addAll([PipelineStage.BuildApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication])
                         environments.addAll(deployConfig.customEnvironments)
-                        environments.addAll([DeployEnvironment.preprod, DeployEnvironment.prod])
+                        environments.addAll([DeployEnvironment.preprod.name(), DeployEnvironment.prod.name()])
                         break
                     }
 
@@ -219,7 +202,7 @@ class PipelineParameters {
 
                     optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication])
                     environments.addAll(deployConfig.customEnvironments)
-                    environments.add(DeployEnvironment.preprod)
+                    environments.add(DeployEnvironment.preprod.name())
                     break
 
                 case RepositoryType.None:
