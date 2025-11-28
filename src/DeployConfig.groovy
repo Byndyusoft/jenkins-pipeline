@@ -8,7 +8,7 @@ class DeployConfig {
     /**list of available agents*/
     List clusterNames = []
     /** list of available environments */
-    List additionalEnvironments = []
+    List additionalDeployEnvironments = []
     /**path default values file*/
     String defaultValuesFilePath
     /**path final values file for deploy service*/
@@ -35,11 +35,11 @@ class DeployConfig {
 
         projectName = deployYaml.get('project')
         clusterNames = deployYaml.get('clusterName') as List
-        def environmentsConfig = deployYaml.get('additionalEnvironments')
+        def environmentsConfig = deployYaml.get('additionalDeployEnvironments')
         if (environmentsConfig instanceof List) {
-            additionalEnvironments = environmentsConfig.collect { it?.toString() ?: '' }.findAll { it }
+            additionalDeployEnvironments = environmentsConfig.collect { it?.toString() ?: '' }.findAll { it }
         } else {
-            additionalEnvironments = []
+            additionalDeployEnvironments = []
         }
 
         defaultValuesFilePath = deployYaml.get('defaultValues')
