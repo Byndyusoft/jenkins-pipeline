@@ -190,7 +190,7 @@ class PipelineParameters {
 
                     if (environmentVariables.TAG_NAME) {
                         mandatoryStages.addAll([PipelineStage.BuildApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication])
-                        environments.addAll(deployConfig.customEnvironments)
+                        environments.addAll(deployConfig.additionalEnvironments)
                         environments.addAll([DeployEnvironment.preprod.name(), DeployEnvironment.prod.name()])
                         break
                     }
@@ -201,7 +201,7 @@ class PipelineParameters {
                     }
 
                     optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication])
-                    environments.addAll(deployConfig.customEnvironments)
+                    environments.addAll(deployConfig.additionalEnvironments)
                     environments.add(DeployEnvironment.preprod.name())
                     break
 
