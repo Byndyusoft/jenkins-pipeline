@@ -129,15 +129,13 @@ class PipelineParameters {
             }'''])))
 
         if (environments) {
-            if (stageAvailable(PipelineStage.DeployApplication)) {
-                String environmentChoices = environments.collect { env -> "'${env}'" }.join(',')
-                
+            if (stageAvailable(PipelineStage.DeployApplication)) {               
                 parameters.add(script.reactiveChoice(choiceType: 'PT_RADIO', filterLength: 1, filterable: false, name: titleDeploymentEnvironment, referencedParameters: 'reload',
                         script: script.groovyScript(fallbackScript: [classpath: [], oldScript: '', sandbox: true, script: 'return \'<p>ERROR</p>\''],
                                 script: [classpath: [], oldScript: '', sandbox: true, script: """if (reload) {
                     return []
                 } else {
-                    return [${environmentChoices}]
+                    return [${Utils.toJenkinsChoiceFormat(environments)}]
                 }"""])))
             }
         }
