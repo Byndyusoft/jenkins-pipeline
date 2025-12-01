@@ -27,7 +27,7 @@ class Utils {
     }
 
     /** Convert list to string */
-    String listToString(Map value) {
+    String mapToString(Map value) {
         String valueString = value.collect { k, v -> "$k=$v" }.join(' ')
 
         return valueString
@@ -54,5 +54,31 @@ class Utils {
         }
 
         return processedValue
+    }
+
+    /** Convert arbitrary YAML value to list of non-empty strings */
+    static List<String> listToString(Object value) {
+        if (value == null) {
+            return []
+        }
+        if (value instanceof List) {
+            return value.collect { it?.toString() ?: '' }.findAll { it }.unique()
+        }
+        if (value instanceof String) {
+            return value.split(',').collect { it.trim() }.findAll { it }.unique()
+        }
+        return [value.toString()].findAll { it }.unique()
+    }
+
+    /** Convert list to Jenkins reactive choice format */
+    static String toJenkinsChoiceFormat(List<String> items) {
+        if (!items) {
+            return ''
+        }
+        return items.collect { env ->
+            def safe = (env ?: '').toString().trim()
+            safe = safe.replace("'", "\\'")
+            return "'${safe}'"
+        }.join(',')
     }
 }

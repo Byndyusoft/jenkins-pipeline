@@ -4,6 +4,7 @@
 ## Description setting `deploy.yaml` file
 - `clusterName` - jenkins agent name `Dashboard > Manage Jenkins > Clouds`
 - `project` - project name
+- `additionalDeployEnvironments` - additional environments besides prod and preprod, which can be added as needed
 - `registryCredentialsId` - credentials from jenkins for deploy images
 - `registryImageUrl` - url registry for pull/push images(**overrides** `registryImagePullUrl` and `registryImagePushUrl`)
 - `registryImagePullUrl` - url registry for pull images
@@ -28,6 +29,7 @@
 ```
 clusterName: ["k8s-prod", "k8s-stage"]
 project: "project1"
+additionalDeployEnvironments: ["test", "development"]
 registryCredentialsId: "nexus_admin"
 registryImageUrl: "artifacts-docker.example.com"
 defaultValues: "./.helm/values.yaml"

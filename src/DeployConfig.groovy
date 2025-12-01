@@ -7,6 +7,8 @@ class DeployConfig {
     String projectName
     /**list of available agents*/
     List clusterNames = []
+    /** list of available environments */
+    List additionalDeployEnvironments = []
     /**path default values file*/
     String defaultValuesFilePath
     /**path final values file for deploy service*/
@@ -33,6 +35,7 @@ class DeployConfig {
 
         projectName = deployYaml.get('project')
         clusterNames = deployYaml.get('clusterName') as List
+        additionalDeployEnvironments = Utils.listToString(deployYaml.get('additionalDeployEnvironments'))
 
         defaultValuesFilePath = deployYaml.get('defaultValues')
         microServiceValuesFilePath = deployYaml.get('microserviceValues')

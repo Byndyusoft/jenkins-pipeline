@@ -5,7 +5,7 @@ class PipelineParameters {
 
     private List<PipelineStage> mandatoryStages
     private List<PipelineStage> optionalStages
-    private List<DeployEnvironment> environments
+    private List<String> environments
 
     private final String titleDeploymentEnvironment = 'Deployment environment'
     private final String titleBuildParameters = 'Build parameters'
@@ -19,7 +19,7 @@ class PipelineParameters {
     private final String masterBranchName = 'master'
 
     boolean onlyPipelineUpdate = false
-    DeployEnvironment deployEnvironment
+    String deployEnvironment
     PatchLevel patchLevel
     String cluster
 
@@ -28,12 +28,12 @@ class PipelineParameters {
         this.logger = logger
     }
 
-    void initialize(JenkinsFileSettings jenkinsFileSettings, EnvironmentVariables environmentVariables) {
+    void initialize(JenkinsFileSettings jenkinsFileSettings, EnvironmentVariables environmentVariables, DeployConfig deployConfig) {
         mandatoryStages = []
         optionalStages = []
         environments = []
 
-        initializeDefaultStages(jenkinsFileSettings, environmentVariables)
+        initializeDefaultStages(jenkinsFileSettings, environmentVariables, deployConfig)
 
         List params = buildParameters()
 
@@ -45,9 +45,11 @@ class PipelineParameters {
             onlyPipelineUpdate = true
         }
 
-        deployEnvironment = script.params[titleDeploymentEnvironment] ? script.params[titleDeploymentEnvironment] as DeployEnvironment : null
+        deployEnvironment = script.params[titleDeploymentEnvironment]
+
         patchLevel = script.params.version_type ?: PatchLevel.PATCH
-        cluster = deployEnvironment == DeployEnvironment.prod ? 'prod' : 'stage'
+
+        cluster = deployEnvironment == DeployEnvironment.prod.name() ? 'prod' : 'stage'
 
         if (script.params[titleBuildParameters].contains(buildApplication) == false) {
             deleteStage([PipelineStage.BuildApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication,])
@@ -127,14 +129,14 @@ class PipelineParameters {
             }'''])))
 
         if (environments) {
-            if (stageAvailable(PipelineStage.DeployApplication)) {
+            if (stageAvailable(PipelineStage.DeployApplication)) {               
                 parameters.add(script.reactiveChoice(choiceType: 'PT_RADIO', filterLength: 1, filterable: false, name: titleDeploymentEnvironment, referencedParameters: 'reload',
                         script: script.groovyScript(fallbackScript: [classpath: [], oldScript: '', sandbox: true, script: 'return \'<p>ERROR</p>\''],
-                                script: [classpath: [], oldScript: '', sandbox: true, script: '''if (reload) {
+                                script: [classpath: [], oldScript: '', sandbox: true, script: """if (reload) {
                     return []
                 } else {
-                    return [\'''' + environments.join('\',\'') +'''\']
-                }'''])))
+                    return [${Utils.toJenkinsChoiceFormat(environments)}]
+                }"""])))
             }
         }
 
@@ -145,7 +147,7 @@ class PipelineParameters {
         return parameters
     }
 
-    private initializeDefaultStages(JenkinsFileSettings jenkinsFileSettings, EnvironmentVariables environmentVariables) {
+    private initializeDefaultStages(JenkinsFileSettings jenkinsFileSettings, EnvironmentVariables environmentVariables, DeployConfig deployConfig) {
         logger.logDebug("PipelineParameters:initializeDefaultStages jenkinsFileSettings.repositoryTypes = ${jenkinsFileSettings.repositoryTypes}")
 
         for (repositoryType in jenkinsFileSettings.repositoryTypes) {
@@ -186,7 +188,8 @@ class PipelineParameters {
 
                     if (environmentVariables.TAG_NAME) {
                         mandatoryStages.addAll([PipelineStage.BuildApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication])
-                        environments.addAll([DeployEnvironment.test, DeployEnvironment.preprod, DeployEnvironment.prod])
+                        environments.addAll(deployConfig.additionalDeployEnvironments)
+                        environments.addAll([DeployEnvironment.preprod.name(), DeployEnvironment.prod.name()])
                         break
                     }
 
@@ -196,7 +199,8 @@ class PipelineParameters {
                     }
 
                     optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication])
-                    environments.addAll([DeployEnvironment.test, DeployEnvironment.preprod])
+                    environments.addAll(deployConfig.additionalDeployEnvironments)
+                    environments.add(DeployEnvironment.preprod.name())
                     break
 
                 case RepositoryType.None:
