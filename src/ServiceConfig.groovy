@@ -13,7 +13,7 @@ class ServiceConfig {
 
         makeOption = serviceYaml.get('make/option') ?: ''
         makeFileEnv = serviceYaml.get('makefile/env') as Map ?: [:]
-        makeFileEnvString = utils.listToString(makeFileEnv) ?: ''
+        makeFileEnvString = utils.mapToString(makeFileEnv) ?: ''
 
         helmOption = serviceYaml.get('helm/option') ?: ''
     }

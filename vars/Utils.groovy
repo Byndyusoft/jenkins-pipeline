@@ -27,7 +27,7 @@ class Utils {
     }
 
     /** Convert list to string */
-    String listToString(Map value) {
+    String mapToString(Map value) {
         String valueString = value.collect { k, v -> "$k=$v" }.join(' ')
 
         return valueString
@@ -57,7 +57,7 @@ class Utils {
     }
 
     /** Convert arbitrary YAML value to list of non-empty strings */
-    static List<String> toStringList(Object value) {
+    static List<String> listToString(Object value) {
         if (value == null) {
             return []
         }

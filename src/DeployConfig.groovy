@@ -35,7 +35,7 @@ class DeployConfig {
 
         projectName = deployYaml.get('project')
         clusterNames = deployYaml.get('clusterName') as List
-        additionalDeployEnvironments = Utils.toStringList(deployYaml.get('additionalDeployEnvironments'))
+        additionalDeployEnvironments = Utils.listToString(deployYaml.get('additionalDeployEnvironments'))
 
         defaultValuesFilePath = deployYaml.get('defaultValues')
         microServiceValuesFilePath = deployYaml.get('microserviceValues')
