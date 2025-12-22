@@ -90,7 +90,8 @@ def call(Map serviceSetting = [:], List<String> checks = [], Map k8sCloud = [:],
                 version = releaseVersion.toString()
             } else {
                 Utils utils = new Utils()
-                version = "${latestTag.toString()}-${utils.prepareName(environmentVariables.BRANCH_NAME)}-${environmentVariables.BUILD_NUMBER}-${artifactSettings.gitCommitShort}"
+                def getCurrentTagForBranch = git.getCurrentTagForBranch()
+                version = "${getCurrentTagForBranch != null ? getCurrentTagForBranch.toString() : latestTag.toString()}-${utils.prepareName(environmentVariables.BRANCH_NAME)}-${environmentVariables.BUILD_NUMBER}-${artifactSettings.gitCommitShort}"
             }
 
             Make make = new Make(this, serviceConfig, logger)
