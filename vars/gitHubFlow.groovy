@@ -73,10 +73,13 @@ def call(Map artifactSetting = [:]) {
                     Yaml serviceYaml = new Yaml(readYaml(file: "${configDir}/${file.name}"))
 
                     String microserviceName = file.name.split("\\.")[0]
+                    logger.logInfo("microserviceName=${microserviceName}")
 
                     ServiceConfig serviceConfig = new ServiceConfig()
 
                     artifactVariables["${microserviceName}"].add(["serviceConfig": serviceConfig.initialize(serviceYaml)])
+
+                    logger.logInfo("artifactVariables=${artifactVariables}")
 
                     Nexus nexus = new Nexus(this, deployConfig, environmentVariables, logger)
 
