@@ -77,14 +77,14 @@ def call(Map artifactSetting = [:]) {
 
                     ServiceConfig serviceConfig = new ServiceConfig()
 
-                    artifactVariables["${microserviceName}"].add(["serviceConfig": serviceConfig.initialize(serviceYaml)])
+                    artifactVariables["${microserviceName}"].put("serviceConfig": serviceConfig.initialize(serviceYaml))
 
                     logger.logInfo("artifactVariables=${artifactVariables}")
 
                     Nexus nexus = new Nexus(this, deployConfig, environmentVariables, logger)
 
                     runStage('Nexus initialize', 'docker') {
-                        artifactVariables["${microserviceName}"].add(["nexus": nexus.initialize()])
+                        artifactVariables["${microserviceName}"].put("nexus": nexus.initialize())
                     }
 
                     Git git = new Git(this, deployConfig)
@@ -94,8 +94,8 @@ def call(Map artifactSetting = [:]) {
                     releaseVersion.increaseVersion(pipelineParameters.patchLevel)
 
                     ArtifactSettings artifactSettings = new ArtifactSettings()
-                    artifactVariables["${microserviceName}"].add(["artifactSettings": artifactSettings.initialize(deployConfig, jenkinsFileSettings, environmentVariables, pipelineParameters,
-                            git, releaseVersion)])
+                    artifactVariables["${microserviceName}"].put("artifactSettings": artifactSettings.initialize(deployConfig, jenkinsFileSettings, environmentVariables, pipelineParameters,
+                            git, releaseVersion))
 
                     String version
                     if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
