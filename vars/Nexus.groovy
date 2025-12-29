@@ -39,7 +39,7 @@ class Nexus {
     }
 
     void pushPackage(JenkinsFileSettings jenkinsFileSettings, ServiceConfig serviceConfig) {
-        for (repositoryType in jenkinsFileSettings.repositoryTypes) {
+        for (repositoryType in jenkinsFileSettings.artifactTypes) {
             switch (repositoryType) {
                 case RepositoryType.PythonPackage:
                     pushPythonPackage()

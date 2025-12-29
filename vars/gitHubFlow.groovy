@@ -1,6 +1,6 @@
 import jenkins.model.Jenkins
 
-def call(Map serviceSetting = [:], List<String> checks = [], Map k8sCloud = [:], HashMap functions = [:]) {
+def call(Map artifactSetting = [:]) {
     Logger logger = new Logger()
 
     EnvironmentVariables environmentVariables = new EnvironmentVariables(env)
@@ -12,9 +12,9 @@ def call(Map serviceSetting = [:], List<String> checks = [], Map k8sCloud = [:],
 
     JenkinsFileSettings jenkinsFileSettings = new JenkinsFileSettings()
 
-    jenkinsFileSettings.initialize(serviceSetting)
+    jenkinsFileSettings.initialize(artifactSetting)
 
-    final String pipelineVersion = '1.0.5'
+    final String pipelineVersion = '2.0.0'
     final String configDir = './deploy'
 
     logger.logInfo('###################################################################')
@@ -63,38 +63,53 @@ def call(Map serviceSetting = [:], List<String> checks = [], Map k8sCloud = [:],
                 checkout scm
             }
 
-            Yaml serviceYaml = new Yaml(readYaml(file: "${configDir}/${jenkinsFileSettings.artifactName}.yaml"))
+            def artifactVariables = [:]
 
-            ServiceConfig serviceConfig = new ServiceConfig()
+            def fileIndir = new File("${configDir}")
+            def excludedFileName = ["common.yaml", "deploy.yaml"]
 
-            serviceConfig.initialize(serviceYaml)
+            fileIndir.eachFile { file ->
+                if (file.isFile() && file.name != excludedFileName) {
+                    Yaml serviceYaml = new Yaml(readYaml(file: "${configDir}/${file.name}"))
 
-            Nexus nexus = new Nexus(this, deployConfig, environmentVariables, logger)
+                    String microserviceName = file.name.split("\\.")[0]
 
-            runStage('Nexus initialize', 'docker') {
-                nexus.initialize()
+                    ServiceConfig serviceConfig = new ServiceConfig()
+
+                    artifactVariables["${microserviceName}"] = {"serviceConfig": serviceConfig.initialize(serviceYaml)}
+
+                    Nexus nexus = new Nexus(this, deployConfig, environmentVariables, logger)
+
+                    runStage('Nexus initialize', 'docker') {
+                        artifactVariables["${microserviceName}"] = {"nexus": nexus.initialize()}
+                    }
+
+                    Git git = new Git(this, deployConfig)
+
+                    SemanticVersion latestTag = git.findLatestSemVerTag()
+                    SemanticVersion releaseVersion = new SemanticVersion(latestTag.toString())
+                    releaseVersion.increaseVersion(pipelineParameters.patchLevel)
+
+                    ArtifactSettings artifactSettings = new ArtifactSettings()
+                    artifactVariables["${microserviceName}"] = {"artifactSettings": artifactSettings.initialize(deployConfig, jenkinsFileSettings, environmentVariables, pipelineParameters,
+                            git, releaseVersion)}
+
+                    String version
+                    if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
+                        version = releaseVersion.toString()
+                    } else {
+                        Utils utils = new Utils()
+                        def getCurrentTagForBranch = git.getCurrentTagForBranch()
+                        version = "${getCurrentTagForBranch != null ? getCurrentTagForBranch.toString() : latestTag.toString()}-${utils.prepareName(environmentVariables.BRANCH_NAME)}-${environmentVariables.BUILD_NUMBER}-${artifactSettings.gitCommitShort}"
+                    }
+
+                    Make make = new Make(this, serviceConfig, logger)
+
+                    logger.logInfo("artifactVariables=${artifactVariables}")
+                }
             }
 
-            Git git = new Git(this, deployConfig)
-
-            SemanticVersion latestTag = git.findLatestSemVerTag()
-            SemanticVersion releaseVersion = new SemanticVersion(latestTag.toString())
-            releaseVersion.increaseVersion(pipelineParameters.patchLevel)
-
-            ArtifactSettings artifactSettings = new ArtifactSettings()
-            artifactSettings.initialize(deployConfig, jenkinsFileSettings, environmentVariables, pipelineParameters,
-                    git, releaseVersion)
-
-            String version
-            if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
-                version = releaseVersion.toString()
-            } else {
-                Utils utils = new Utils()
-                def getCurrentTagForBranch = git.getCurrentTagForBranch()
-                version = "${getCurrentTagForBranch != null ? getCurrentTagForBranch.toString() : latestTag.toString()}-${utils.prepareName(environmentVariables.BRANCH_NAME)}-${environmentVariables.BUILD_NUMBER}-${artifactSettings.gitCommitShort}"
-            }
-
-            Make make = new Make(this, serviceConfig, logger)
+            
 
             if (pipelineParameters.stageAvailable(PipelineStage.CheckImage)) {
                 runStage('Check image exists', 'docker') {
@@ -150,6 +165,8 @@ def call(Map serviceSetting = [:], List<String> checks = [], Map k8sCloud = [:],
                 }
             }
 
+
+
             if (pipelineParameters.stageAvailable(PipelineStage.DeployApplication)) {
                 Helm helm = new Helm(this, logger)
 
@@ -175,6 +192,8 @@ def call(Map serviceSetting = [:], List<String> checks = [], Map k8sCloud = [:],
                     git.createTag(releaseVersion)
                 }
             }
+
+
         }
     }
 }

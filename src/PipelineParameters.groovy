@@ -148,9 +148,9 @@ class PipelineParameters {
     }
 
     private initializeDefaultStages(JenkinsFileSettings jenkinsFileSettings, EnvironmentVariables environmentVariables, DeployConfig deployConfig) {
-        logger.logDebug("PipelineParameters:initializeDefaultStages jenkinsFileSettings.repositoryTypes = ${jenkinsFileSettings.repositoryTypes}")
+        logger.logDebug("PipelineParameters:initializeDefaultStages jenkinsFileSettings.artifactTypes = ${jenkinsFileSettings.artifactTypes}")
 
-        for (repositoryType in jenkinsFileSettings.repositoryTypes) {
+        for (repositoryType in jenkinsFileSettings.artifactTypes) {
             switch (repositoryType) {
                 case RepositoryType.NugetPackage:
                     if (environmentVariables.BRANCH_NAME == masterBranchName) {

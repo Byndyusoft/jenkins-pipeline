@@ -52,7 +52,6 @@ class Helm {
         switch (deployConfig.secretProvider.providerName) {
             case 'vault':
                 Vault vault = new Vault(script, deployConfig)
-                // TODO "stage/bs-tmc/tmc-api/preprod" зачем дважды повторяется оружение (stage, preprod)
                 String vaultPathSecret = "${pipelineParameters.cluster}/${deployConfig.projectName}/${jenkinsFileSettings.artifactName}/${pipelineParameters.deployEnvironment}"
                 Map valuesOverridesSecret = [secret: vault.getVaultSecret(vaultPathSecret)]
 

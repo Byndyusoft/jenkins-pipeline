@@ -2,13 +2,13 @@
 class JenkinsFileSettings {
     /** Name of the service */
     String artifactName
-    /** Repository type */
-    List<RepositoryType> repositoryTypes
+    /** Artifact type */
+    List<RepositoryType> artifactTypes
 
-    void initialize(Map serviceSetting) {
+    void initialize(Map artifactSetting) {
         Utils utils = new Utils()
-        artifactName = utils.prepareName(serviceSetting.artifact_name as String)
-        repositoryTypes = mapRepositoryType(serviceSetting.type as List<String> ?: [])
+        artifactName = utils.prepareName(artifactSetting.artifact_name as String)
+        artifactTypes = mapRepositoryType(artifactSetting.type as List<String> ?: [])
     }
 
     private List<RepositoryType> mapRepositoryType(List<String> repositoryTypeOptions) {
