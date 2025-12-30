@@ -71,133 +71,133 @@ def call(Map artifactSetting = [:]) {
             logger.logInfo("fileIndir=${fileIndir}")
             logger.logInfo("excludedFileName=${excludedFileName}")
 
-            // fileIndir.eachFile { file ->
-            //     if (file.isFile() && file.name != excludedFileName) {
-            //         Yaml serviceYaml = new Yaml(readYaml(file: "${configDir}/${file.name}"))
+            fileIndir.eachFile { file ->
+                if (file.isFile() && file.name != excludedFileName) {
+                    Yaml serviceYaml = new Yaml(readYaml(file: "${configDir}/${file.name}"))
 
-            //         String microserviceName = file.name.split("\\.")[0]
-            //         logger.logInfo("microserviceName=${microserviceName}")
+                    String microserviceName = file.name.split("\\.")[0]
+                    logger.logInfo("microserviceName=${microserviceName}")
 
-            //         ServiceConfig serviceConfig = new ServiceConfig()
+                    ServiceConfig serviceConfig = new ServiceConfig()
 
-            //         artifactVariables["${microserviceName}"].put("serviceConfig": serviceConfig.initialize(serviceYaml))
+                    artifactVariables["${microserviceName}"].put("serviceConfig": serviceConfig.initialize(serviceYaml))
 
-            //         logger.logInfo("artifactVariables=${artifactVariables}")
+                    logger.logInfo("artifactVariables=${artifactVariables}")
 
-            //         Nexus nexus = new Nexus(this, deployConfig, environmentVariables, logger)
+                    Nexus nexus = new Nexus(this, deployConfig, environmentVariables, logger)
 
-            //         runStage('Nexus initialize', 'docker') {
-            //             artifactVariables["${microserviceName}"].put("nexus": nexus.initialize())
-            //         }
+                    runStage('Nexus initialize', 'docker') {
+                        artifactVariables["${microserviceName}"].put("nexus": nexus.initialize())
+                    }
 
-            //         Git git = new Git(this, deployConfig)
+                    Git git = new Git(this, deployConfig)
 
-            //         SemanticVersion latestTag = git.findLatestSemVerTag()
-            //         SemanticVersion releaseVersion = new SemanticVersion(latestTag.toString())
-            //         releaseVersion.increaseVersion(pipelineParameters.patchLevel)
+                    SemanticVersion latestTag = git.findLatestSemVerTag()
+                    SemanticVersion releaseVersion = new SemanticVersion(latestTag.toString())
+                    releaseVersion.increaseVersion(pipelineParameters.patchLevel)
 
-            //         ArtifactSettings artifactSettings = new ArtifactSettings()
-            //         artifactVariables["${microserviceName}"].put("artifactSettings": artifactSettings.initialize(deployConfig, jenkinsFileSettings, environmentVariables, pipelineParameters,
-            //                 git, releaseVersion))
+                    ArtifactSettings artifactSettings = new ArtifactSettings()
+                    artifactVariables["${microserviceName}"].put("artifactSettings": artifactSettings.initialize(deployConfig, jenkinsFileSettings, environmentVariables, pipelineParameters,
+                            git, releaseVersion))
 
-            //         String version
-            //         if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
-            //             version = releaseVersion.toString()
-            //         } else {
-            //             Utils utils = new Utils()
-            //             def getCurrentTagForBranch = git.getCurrentTagForBranch()
-            //             version = "${getCurrentTagForBranch != null ? getCurrentTagForBranch.toString() : latestTag.toString()}-${utils.prepareName(environmentVariables.BRANCH_NAME)}-${environmentVariables.BUILD_NUMBER}-${artifactSettings.gitCommitShort}"
-            //         }
+                    String version
+                    if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
+                        version = releaseVersion.toString()
+                    } else {
+                        Utils utils = new Utils()
+                        def getCurrentTagForBranch = git.getCurrentTagForBranch()
+                        version = "${getCurrentTagForBranch != null ? getCurrentTagForBranch.toString() : latestTag.toString()}-${utils.prepareName(environmentVariables.BRANCH_NAME)}-${environmentVariables.BUILD_NUMBER}-${artifactSettings.gitCommitShort}"
+                    }
 
-            //         Make make = new Make(this, serviceConfig, logger)
+                    Make make = new Make(this, serviceConfig, logger)
 
-            //         logger.logInfo("artifactVariables=${artifactVariables}")
-            //     }
-            // }
+                    logger.logInfo("artifactVariables=${artifactVariables}")
+                }
+            }
 
             
 
-            // if (pipelineParameters.stageAvailable(PipelineStage.CheckImage)) {
-            //     runStage('Check image exists', 'docker') {
-            //         if (nexus.checkImage(artifactSettings)) {
-            //             pipelineParameters.deleteStage([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.BuildDockerImage])
-            //         }
-            //     }
-            // }
+            if (pipelineParameters.stageAvailable(PipelineStage.CheckImage)) {
+                runStage('Check image exists', 'docker') {
+                    if (nexus.checkImage(artifactSettings)) {
+                        pipelineParameters.deleteStage([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.BuildDockerImage])
+                    }
+                }
+            }
 
-            // if (pipelineParameters.stageAvailable(PipelineStage.BuildApplication)) {
-            //     runStage('Build application', 'docker') {
-            //         make.buildApplication(version)
-            //     }
-            // }
+            if (pipelineParameters.stageAvailable(PipelineStage.BuildApplication)) {
+                runStage('Build application', 'docker') {
+                    make.buildApplication(version)
+                }
+            }
 
-            // if (pipelineParameters.stageAvailable(PipelineStage.RunTests)) {
-            //     runStage('Unit test', 'docker') {
-            //         make.runUnitTests()
-            //     }
-            // }
+            if (pipelineParameters.stageAvailable(PipelineStage.RunTests)) {
+                runStage('Unit test', 'docker') {
+                    make.runUnitTests()
+                }
+            }
 
-            // if (pipelineParameters.stageAvailable(PipelineStage.RunCodeStyleCheck)) {
-            //     runStage('Style checks', 'docker') {
-            //         make.runStyleChecks()
-            //     }
-            // }
+            if (pipelineParameters.stageAvailable(PipelineStage.RunCodeStyleCheck)) {
+                runStage('Style checks', 'docker') {
+                    make.runStyleChecks()
+                }
+            }
 
-            // if (pipelineParameters.stageAvailable(PipelineStage.BuildDockerImage)) {
-            //     runStage('Build image', 'docker') {
-            //         make.buildImage(deployConfig, artifactSettings)
-            //     }
+            if (pipelineParameters.stageAvailable(PipelineStage.BuildDockerImage)) {
+                runStage('Build image', 'docker') {
+                    make.buildImage(deployConfig, artifactSettings)
+                }
 
-            //     runStage('Push image', 'docker') {
-            //         nexus.pushImage(artifactSettings)
-            //     }
-            // }
+                runStage('Push image', 'docker') {
+                    nexus.pushImage(artifactSettings)
+                }
+            }
 
-            // if (pipelineParameters.stageAvailable(PipelineStage.CreateReleaseImage)) {
-            //     runStage('Push release image', 'docker') {
-            //         nexus.createReleaseImage(artifactSettings)
-            //     }
-            // }
+            if (pipelineParameters.stageAvailable(PipelineStage.CreateReleaseImage)) {
+                runStage('Push release image', 'docker') {
+                    nexus.createReleaseImage(artifactSettings)
+                }
+            }
 
-            // if (pipelineParameters.stageAvailable(PipelineStage.BuildPackage)) {
-            //     runStage('Pack package', 'docker') {
-            //         make.packPackage(version)
-            //     }
+            if (pipelineParameters.stageAvailable(PipelineStage.BuildPackage)) {
+                runStage('Pack package', 'docker') {
+                    make.packPackage(version)
+                }
 
-            //     if (pipelineParameters.stageAvailable(PipelineStage.PushPackage)) {
-            //         runStage('Push package', 'docker') {
-            //             nexus.pushPackage(jenkinsFileSettings, serviceConfig)
-            //         }
-            //     }
-            // }
+                if (pipelineParameters.stageAvailable(PipelineStage.PushPackage)) {
+                    runStage('Push package', 'docker') {
+                        nexus.pushPackage(jenkinsFileSettings, serviceConfig)
+                    }
+                }
+            }
 
 
 
-            // if (pipelineParameters.stageAvailable(PipelineStage.DeployApplication)) {
-            //     Helm helm = new Helm(this, logger)
+            if (pipelineParameters.stageAvailable(PipelineStage.DeployApplication)) {
+                Helm helm = new Helm(this, logger)
 
-            //     stage('Prepare microservice yaml configs') {
-            //         Yaml commonYaml = null
-            //         String commonYamlPath = "${configDir}/common.yaml"
+                stage('Prepare microservice yaml configs') {
+                    Yaml commonYaml = null
+                    String commonYamlPath = "${configDir}/common.yaml"
 
-            //         if (fileExists(commonYamlPath)) {
-            //             commonYaml = new Yaml(readYaml(file: commonYamlPath))
-            //         }
+                    if (fileExists(commonYamlPath)) {
+                        commonYaml = new Yaml(readYaml(file: commonYamlPath))
+                    }
 
-            //         helm.prepareServiceYamlConfigs(deployConfig, serviceConfig, commonYaml,
-            //                 jenkinsFileSettings, pipelineParameters, artifactSettings)
-            //     }
+                    helm.prepareServiceYamlConfigs(deployConfig, serviceConfig, commonYaml,
+                            jenkinsFileSettings, pipelineParameters, artifactSettings)
+                }
 
-            //     runStage("Deployment $jenkinsFileSettings.artifactName to ${pipelineParameters.deployEnvironment}", 'helm') {
-            //         helm.deployApplication(deployConfig, serviceConfig, artifactSettings, environmentVariables)
-            //     }
-            // }
+                runStage("Deployment $jenkinsFileSettings.artifactName to ${pipelineParameters.deployEnvironment}", 'helm') {
+                    helm.deployApplication(deployConfig, serviceConfig, artifactSettings, environmentVariables)
+                }
+            }
 
-            // if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
-            //     runStage('Make release', 'docker') {
-            //         git.createTag(releaseVersion)
-            //     }
-            // }
+            if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
+                runStage('Make release', 'docker') {
+                    git.createTag(releaseVersion)
+                }
+            }
 
 
         }
