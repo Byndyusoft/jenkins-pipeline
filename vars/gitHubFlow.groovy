@@ -63,7 +63,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
                 checkout scm
             }
 
-            def currentDirectoryPath = currentDirectory.getAbsolutePath()
+            def currentDirectoryPath = pwd()
 
             def artifactVariables = [:]
 
