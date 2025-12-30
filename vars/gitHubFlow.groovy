@@ -15,7 +15,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
     jenkinsFileSettings.initialize(artifactSetting)
 
     final String pipelineVersion = '2.0.0'
-    final String configDir = './deploy'
+    final String configDir = 'deploy'
 
     logger.logInfo('###################################################################')
     logger.logInfo("Version jenkins=${Jenkins.instance.getVersion()}")
@@ -67,7 +67,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
 
             def artifactVariables = [:]
 
-            def fileIndir = new File("${configDir}")
+            def fileIndir = new File("${currentDirectoryPath}/${configDir}")
             def excludedFileName = ["common.yaml", "deploy.yaml"]
 
             logger.logInfo("currentDirectoryPath=${currentDirectoryPath}")
@@ -77,7 +77,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
 
             fileIndir.eachFile { file ->
                 if (file.isFile() && file.name != excludedFileName) {
-                    Yaml serviceYaml = new Yaml(readYaml(file: "${configDir}/${file.name}"))
+                    Yaml serviceYaml = new Yaml(readYaml(file: "${currentDirectoryPath}/${configDir}/${file.name}"))
 
                     String microserviceName = file.name.split("\\.")[0]
                     logger.logInfo("microserviceName=${microserviceName}")
