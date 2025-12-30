@@ -76,46 +76,56 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
             logger.logInfo("fileIndir=${fileIndir}")
             logger.logInfo("excludedFileName=${excludedFileName}")
 
+            ServiceConfig serviceConfig = new ServiceConfig()
+            Yaml serviceYaml
+            String microserviceName
+            String version
+            Git git
+            SemanticVersion latestTag
+            SemanticVersion releaseVersion
+            ArtifactSettings artifactSettings
+            Nexus nexus
+            Utils utils
+            Make make
+
             for (fileName in fileIndir) {
                 logger.logInfo("fileName=${fileName}")
                 if (excludedFileName.contains("${fileName}")) {
-                    Yaml serviceYaml = new Yaml(readYaml(file: "${configDir}/${fileName}"))
+                    logger.logInfo("fileName=${fileName}")
+                    serviceYaml = new Yaml(readYaml(file: "${configDir}/${fileName}"))
 
-                    String microserviceName = fileName.split("\\.")[0]
+                    microserviceName = fileName.split("\\.")[0]
                     logger.logInfo("microserviceName=${microserviceName}")
-
-                    ServiceConfig serviceConfig = new ServiceConfig()
 
                     artifactVariables["${microserviceName}"].put("serviceConfig": serviceConfig.initialize(serviceYaml))
 
                     logger.logInfo("artifactVariables=${artifactVariables}")
 
-                    Nexus nexus = new Nexus(this, deployConfig, environmentVariables, logger)
+                    nexus = new Nexus(this, deployConfig, environmentVariables, logger)
 
                     runStage('Nexus initialize', 'docker') {
                         artifactVariables["${microserviceName}"].put("nexus": nexus.initialize())
                     }
 
-                    Git git = new Git(this, deployConfig)
+                    git = new Git(this, deployConfig)
 
-                    SemanticVersion latestTag = git.findLatestSemVerTag()
-                    SemanticVersion releaseVersion = new SemanticVersion(latestTag.toString())
+                    latestTag = git.findLatestSemVerTag()
+                    releaseVersion = new SemanticVersion(latestTag.toString())
                     releaseVersion.increaseVersion(pipelineParameters.patchLevel)
 
-                    ArtifactSettings artifactSettings = new ArtifactSettings()
+                    artifactSettings = new ArtifactSettings()
                     artifactVariables["${microserviceName}"].put("artifactSettings": artifactSettings.initialize(deployConfig, jenkinsFileSettings, environmentVariables, pipelineParameters,
                             git, releaseVersion))
 
-                    String version
                     if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
                         version = releaseVersion.toString()
                     } else {
-                        Utils utils = new Utils()
+                        utils = new Utils()
                         def getCurrentTagForBranch = git.getCurrentTagForBranch()
                         version = "${getCurrentTagForBranch != null ? getCurrentTagForBranch.toString() : latestTag.toString()}-${utils.prepareName(environmentVariables.BRANCH_NAME)}-${environmentVariables.BUILD_NUMBER}-${artifactSettings.gitCommitShort}"
                     }
 
-                    Make make = new Make(this, serviceConfig, logger)
+                    make = new Make(this, serviceConfig, logger)
 
                     logger.logInfo("artifactVariables=${artifactVariables}")
                 }
