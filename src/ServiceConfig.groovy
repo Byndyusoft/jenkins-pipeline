@@ -16,7 +16,5 @@ class ServiceConfig {
         makeFileEnvString = utils.mapToString(makeFileEnv) ?: ''
 
         helmOption = serviceYaml.get('helm/option') ?: ''
-
-        return this
     }
 }
