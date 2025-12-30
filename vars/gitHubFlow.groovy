@@ -75,6 +75,13 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
             logger.logInfo("fileIndir=${fileIndir}")
             logger.logInfo("excludedFileName=${excludedFileName}")
 
+
+            Nexus nexus = new Nexus(this, deployConfig, environmentVariables, logger)
+
+            runStage('Nexus initialize', 'docker') {
+                nexus.initialize()
+            }
+
             for (fileName in fileIndir) {
                 logger.logInfo("fileName=${fileName}")
                 if (!excludedFileName.contains(fileName)) {
@@ -85,25 +92,18 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
                     artifactVariables["${microserviceName}"] = [:]
                     logger.logInfo("microserviceName=${microserviceName}")
 
-                    ServiceConfig serviceConfig = new ServiceConfig()
-                    artifactVariables["${microserviceName}"].put("serviceConfig", serviceConfig.initialize(serviceYaml))
+                    ServiceConfig serviceConfig = new ServiceConfig(serviceYaml)
+                    artifactVariables["${microserviceName}"].put("serviceConfig", serviceConfig)
 
                     logger.logInfo("artifactVariables=${artifactVariables}")
-
-                    Nexus nexus = new Nexus(this, deployConfig, environmentVariables, logger)
-
-                    runStage('Nexus initialize', 'docker') {
-                        artifactVariables["${microserviceName}"].put("nexus", nexus.initialize())
-                    }
 
                     Git git = new Git(this, deployConfig)
 
                     SemanticVersion latestTag = git.findLatestSemVerTag()
                     SemanticVersion releaseVersion = new SemanticVersion(latestTag.toString())
 
-                    artifactSettings = new ArtifactSettings()
-                    artifactVariables["${microserviceName}"].put("artifactSettings", artifactSettings.initialize(deployConfig, jenkinsFileSettings, environmentVariables, pipelineParameters,
-                            git, releaseVersion))
+                    artifactSettings = new ArtifactSettings(deployConfig, jenkinsFileSettings, environmentVariables, pipelineParameters,git, releaseVersion)
+                    artifactVariables["${microserviceName}"].put("artifactSettings", artifactSettings)
 
                     String version
                     if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
@@ -116,6 +116,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
                     }
 
                     Make make = new Make(this, serviceConfig, logger)
+                    artifactVariables["${microserviceName}"].put("make", make)
 
                     logger.logInfo("artifactVariables=${artifactVariables}")
                 }
