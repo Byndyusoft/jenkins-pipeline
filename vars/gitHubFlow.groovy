@@ -15,7 +15,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
     jenkinsFileSettings.initialize(artifactSetting)
 
     final String pipelineVersion = '2.0.0'
-    final String configDir = 'deploy'
+    final String configDir = './deploy'
 
     logger.logInfo('###################################################################')
     logger.logInfo("Version jenkins=${Jenkins.instance.getVersion()}")
@@ -76,6 +76,10 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
             logger.logInfo("fileIndir=${fileIndir}")
             logger.logInfo("excludedFileName=${excludedFileName}")
 
+            def fileNames = findFiles(glob: "${configDir}/*").collect { file -> file.name }
+
+            logger.logInfo("fileNames=${fileNames}")
+
             fileIndir.each { file ->
                 logger.logInfo("file.name=${file.name}")
                 if (file.name != excludedFileName) {
@@ -121,7 +125,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
                 }
             }
 
-            
+
 
             if (pipelineParameters.stageAvailable(PipelineStage.CheckImage)) {
                 runStage('Check image exists', 'docker') {
