@@ -90,7 +90,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
 
             for (fileName in fileIndir) {
                 logger.logInfo("fileName=${fileName}")
-                if (excludedFileName.contains("${fileName}")) {
+                if (fileName in excludedFileName) {
                     logger.logInfo("fileName=${fileName}")
                     serviceYaml = new Yaml(readYaml(file: "${configDir}/${fileName}"))
 
@@ -128,62 +128,62 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
                     make = new Make(this, serviceConfig, logger)
 
                     logger.logInfo("artifactVariables=${artifactVariables}")
-                }
-            }
 
 
-
-            if (pipelineParameters.stageAvailable(PipelineStage.CheckImage)) {
-                runStage('Check image exists', 'docker') {
-                    if (nexus.checkImage(artifactSettings)) {
-                        pipelineParameters.deleteStage([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.BuildDockerImage])
+                    if (pipelineParameters.stageAvailable(PipelineStage.CheckImage)) {
+                        runStage('Check image exists', 'docker') {
+                            if (nexus.checkImage(artifactSettings)) {
+                                pipelineParameters.deleteStage([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.BuildDockerImage])
+                            }
+                        }
                     }
-                }
-            }
 
-            if (pipelineParameters.stageAvailable(PipelineStage.BuildApplication)) {
-                runStage('Build application', 'docker') {
-                    make.buildApplication(version)
-                }
-            }
-
-            if (pipelineParameters.stageAvailable(PipelineStage.RunTests)) {
-                runStage('Unit test', 'docker') {
-                    make.runUnitTests()
-                }
-            }
-
-            if (pipelineParameters.stageAvailable(PipelineStage.RunCodeStyleCheck)) {
-                runStage('Style checks', 'docker') {
-                    make.runStyleChecks()
-                }
-            }
-
-            if (pipelineParameters.stageAvailable(PipelineStage.BuildDockerImage)) {
-                runStage('Build image', 'docker') {
-                    make.buildImage(deployConfig, artifactSettings)
-                }
-
-                runStage('Push image', 'docker') {
-                    nexus.pushImage(artifactSettings)
-                }
-            }
-
-            if (pipelineParameters.stageAvailable(PipelineStage.CreateReleaseImage)) {
-                runStage('Push release image', 'docker') {
-                    nexus.createReleaseImage(artifactSettings)
-                }
-            }
-
-            if (pipelineParameters.stageAvailable(PipelineStage.BuildPackage)) {
-                runStage('Pack package', 'docker') {
-                    make.packPackage(version)
-                }
-
-                if (pipelineParameters.stageAvailable(PipelineStage.PushPackage)) {
-                    runStage('Push package', 'docker') {
-                        nexus.pushPackage(jenkinsFileSettings, serviceConfig)
+                    if (pipelineParameters.stageAvailable(PipelineStage.BuildApplication)) {
+                        runStage('Build application', 'docker') {
+                            make.buildApplication(version)
+                        }
                     }
+
+                    if (pipelineParameters.stageAvailable(PipelineStage.RunTests)) {
+                        runStage('Unit test', 'docker') {
+                            make.runUnitTests()
+                        }
+                    }
+
+                    if (pipelineParameters.stageAvailable(PipelineStage.RunCodeStyleCheck)) {
+                        runStage('Style checks', 'docker') {
+                            make.runStyleChecks()
+                        }
+                    }
+
+                    if (pipelineParameters.stageAvailable(PipelineStage.BuildDockerImage)) {
+                        runStage('Build image', 'docker') {
+                            make.buildImage(deployConfig, artifactSettings)
+                        }
+
+                        runStage('Push image', 'docker') {
+                            nexus.pushImage(artifactSettings)
+                        }
+                    }
+
+                    if (pipelineParameters.stageAvailable(PipelineStage.CreateReleaseImage)) {
+                        runStage('Push release image', 'docker') {
+                            nexus.createReleaseImage(artifactSettings)
+                        }
+                    }
+
+                    if (pipelineParameters.stageAvailable(PipelineStage.BuildPackage)) {
+                        runStage('Pack package', 'docker') {
+                            make.packPackage(version)
+                        }
+
+                        if (pipelineParameters.stageAvailable(PipelineStage.PushPackage)) {
+                            runStage('Push package', 'docker') {
+                                nexus.pushPackage(jenkinsFileSettings, serviceConfig)
+                            }
+                        }
+                    }
+
                 }
             }
 
