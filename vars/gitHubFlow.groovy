@@ -67,7 +67,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
 
             def artifactVariables = [:]
 
-            def fileIndir = new File("${env.WORKSPACE}/deploy")
+            def fileIndir = new File("${env.WORKSPACE}/deploy").listFiles()
             def excludedFileName = ["common.yaml", "deploy.yaml"]
 
             logger.logInfo("currentDirectoryPath=${currentDirectoryPath}")
@@ -76,7 +76,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
             logger.logInfo("fileIndir=${fileIndir}")
             logger.logInfo("excludedFileName=${excludedFileName}")
 
-            fileIndir.eachFile { file ->
+            fileIndir.each { file ->
                 if (file.isFile() && file.name != excludedFileName) {
                     Yaml serviceYaml = new Yaml(readYaml(file: "${currentDirectoryPath}/${configDir}/${file.name}"))
 
