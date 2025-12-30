@@ -6,7 +6,7 @@ class ServiceConfig {
     String makeFileEnvString
     String helmOption
 
-    void initialize(Yaml serviceYaml) {
+    ServiceConfig initialize(Yaml serviceYaml) {
         microservice = serviceYaml.get('microservice') as Map ?: [:]
 
         Utils utils = new Utils()
@@ -16,5 +16,7 @@ class ServiceConfig {
         makeFileEnvString = utils.mapToString(makeFileEnv) ?: ''
 
         helmOption = serviceYaml.get('helm/option') ?: ''
+
+        return this
     }
 }
