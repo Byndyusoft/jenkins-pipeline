@@ -1,6 +1,6 @@
 import jenkins.model.Jenkins
 
-def call(Map artifactSetting = [:]) {
+def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
     Logger logger = new Logger()
 
     EnvironmentVariables environmentVariables = new EnvironmentVariables(env)
