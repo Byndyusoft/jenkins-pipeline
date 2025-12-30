@@ -71,6 +71,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
             def excludedFileName = ["common.yaml", "deploy.yaml"]
 
             logger.logInfo("currentDirectoryPath=${currentDirectoryPath}")
+            logger.logInfo("env.WORKSPACE=${env.WORKSPACE}")
 
             logger.logInfo("fileIndir=${fileIndir}")
             logger.logInfo("excludedFileName=${excludedFileName}")
