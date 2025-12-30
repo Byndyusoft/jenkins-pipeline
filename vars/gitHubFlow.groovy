@@ -68,6 +68,9 @@ def call(Map artifactSetting = [:]) {
             def fileIndir = new File("${configDir}")
             def excludedFileName = ["common.yaml", "deploy.yaml"]
 
+            logger.logInfo("fileIndir=${fileIndir}")
+            logger.logInfo("excludedFileName=${excludedFileName}")
+
             fileIndir.eachFile { file ->
                 if (file.isFile() && file.name != excludedFileName) {
                     Yaml serviceYaml = new Yaml(readYaml(file: "${configDir}/${file.name}"))
