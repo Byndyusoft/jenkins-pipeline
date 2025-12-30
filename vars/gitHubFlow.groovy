@@ -63,10 +63,14 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
                 checkout scm
             }
 
+            def currentDirectoryPath = currentDirectory.getAbsolutePath()
+
             def artifactVariables = [:]
 
             def fileIndir = new File("${configDir}")
             def excludedFileName = ["common.yaml", "deploy.yaml"]
+
+            logger.logInfo("currentDirectoryPath=${currentDirectoryPath}")
 
             logger.logInfo("fileIndir=${fileIndir}")
             logger.logInfo("excludedFileName=${excludedFileName}")
