@@ -77,7 +77,8 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
             logger.logInfo("excludedFileName=${excludedFileName}")
 
             fileIndir.each { file ->
-                if (file.isFile() && file.name != excludedFileName) {
+                logger.logInfo("file.name=${file.name}")
+                if (file.name != excludedFileName) {
                     Yaml serviceYaml = new Yaml(readYaml(file: "${currentDirectoryPath}/${configDir}/${file.name}"))
 
                     String microserviceName = file.name.split("\\.")[0]
