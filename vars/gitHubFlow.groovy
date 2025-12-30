@@ -76,7 +76,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
             logger.logInfo("fileIndir=${fileIndir}")
             logger.logInfo("excludedFileName=${excludedFileName}")
 
-            def fileNames = findFiles(glob: "${env.WORKSPACE}/deploy/*").collect { file -> file.name }
+            def fileNames = findFiles(glob: "deploy/*").collect { file -> file.name }
 
             logger.logInfo("fileNames=${fileNames}")
 
