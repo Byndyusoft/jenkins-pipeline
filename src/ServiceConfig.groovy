@@ -7,7 +7,7 @@ class ServiceConfig {
     String makeFileEnvString
     String helmOption
 
-    ServiceConfig(Yaml serviceYaml) {
+    void initialize(Yaml serviceYaml) {
         Utils utils = new Utils()
 
         artifactSetting = serviceYaml.get('artifactSetting') as Map ?: [:]
