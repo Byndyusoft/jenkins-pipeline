@@ -1,11 +1,10 @@
 /** Application image settings class */
-class ArtifactSettings {
+class ArtifactCommonSettings {
     String gitCommitShort
     String imageFolder
     String releaseImageFolder
     String releaseName
     String namespace
-    String imageName
     String imageTag
     String releaseTag
 
@@ -15,7 +14,6 @@ class ArtifactSettings {
 
         gitCommitShort = git.getCommitShaShort()
         imageTag = (environmentVariables.TAG_NAME) ?: "${environmentVariables.BRANCH_NAME.replace('/', '-')}-${gitCommitShort}"
-        imageName = jenkinsFileSettings.artifactName
 
         imageFolder = environmentVariables.TAG_NAME ? 'release' : 'feature'
         releaseImageFolder = 'release'

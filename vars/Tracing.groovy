@@ -1,7 +1,7 @@
 /** Class for enabling tracing, only classes listed in the initialize method are traced */
 class Tracing {
     void initialize(Logger logger) {
-        decorateWithTracing(ArtifactSettings, logger)
+        decorateWithTracing(ArtifactCommonSettings, logger)
         decorateWithTracing(DeployConfig, logger)
         decorateWithTracing(JenkinsFileSettings, logger)
         decorateWithTracing(KubernetesConfig, logger)

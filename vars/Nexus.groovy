@@ -56,7 +56,7 @@ class Nexus {
         }
     }
 
-    boolean checkImage(ArtifactSettings artifactSettings) {
+    boolean checkImage(ArtifactCommonSettings artifactSettings) {
         boolean imageExist = false
 
         runWithCredentials {
@@ -82,11 +82,11 @@ class Nexus {
         }
     }
 
-    void pushImage(ArtifactSettings artifactSettings) {
+    void pushImage(ArtifactCommonSettings artifactSettings) {
         script.sh("docker push ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactSettings.imageFolder}/${artifactSettings.imageName}:${artifactSettings.imageTag}")
     }
 
-    void createReleaseImage(ArtifactSettings artifactSettings) {
+    void createReleaseImage(ArtifactCommonSettings artifactSettings) {
         script.sh("docker pull ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactSettings.imageFolder}/${artifactSettings.imageName}:${artifactSettings.imageTag}")
         script.sh("""docker tag ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactSettings.imageFolder}/${artifactSettings.imageName}:${artifactSettings.imageTag} \
             ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactSettings.releaseImageFolder}/${artifactSettings.imageName}:${artifactSettings.releaseTag}""")

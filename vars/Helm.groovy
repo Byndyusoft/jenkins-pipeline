@@ -10,7 +10,7 @@ class Helm {
         deployTimeoutSeconds = 300
     }
 
-    void deployApplication(DeployConfig deployConfig, ServiceConfig serviceConfig, ArtifactSettings artifactSettings, EnvironmentVariables environmentVariables) {
+    void deployApplication(DeployConfig deployConfig, ServiceConfig serviceConfig, ArtifactCommonSettings artifactSettings, EnvironmentVariables environmentVariables) {
         try {
             script.sh("""helm upgrade --atomic --install \
                             ${(environmentVariables.DEBUG ? '--debug' : '')} \
@@ -34,7 +34,7 @@ class Helm {
 
     void prepareServiceYamlConfigs(DeployConfig deployConfig, ServiceConfig serviceConfig, Yaml commonYaml,
                                    JenkinsFileSettings jenkinsFileSettings, PipelineParameters pipelineParameters,
-                                   ArtifactSettings artifactSettings) {
+                                   ArtifactCommonSettings artifactSettings) {
 
         Utils utils = new Utils()
         Map commonEnv = commonYaml == null ? [:] : commonYaml.get('common') as Map

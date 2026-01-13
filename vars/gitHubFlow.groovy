@@ -64,17 +64,39 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
                 checkout scm
             }
 
-            def currentDirectoryPath = pwd()
+            // def currentDirectoryPath = pwd()
             def artifactVariables = [:]
 
             def fileIndir = findFiles(glob: "deploy/*").collect { file -> file.name }
             def excludedFileName = ["common.yaml", "deploy.yaml"]
 
-            logger.logInfo("currentDirectoryPath=${currentDirectoryPath}")
-            logger.logInfo("env.WORKSPACE=${env.WORKSPACE}")
+            // logger.logInfo("currentDirectoryPath=${currentDirectoryPath}")
+            // logger.logInfo("env.WORKSPACE=${env.WORKSPACE}")
 
-            logger.logInfo("fileIndir=${fileIndir}")
-            logger.logInfo("excludedFileName=${excludedFileName}")
+            // logger.logInfo("fileIndir=${fileIndir}")
+            // logger.logInfo("excludedFileName=${excludedFileName}")
+
+            Utils utils = new Utils()
+            Git git = new Git(this, deployConfig)
+
+            SemanticVersion latestTag = git.findLatestSemVerTag()
+            SemanticVersion releaseVersion = new SemanticVersion(latestTag.toString())
+
+            String version
+            if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
+                releaseVersion.increaseVersion(pipelineParameters.patchLevel)
+                version = releaseVersion.toString()
+            } else {
+                def getCurrentTagForBranch = git.getCurrentTagForBranch()
+                version = "${getCurrentTagForBranch != null ? getCurrentTagForBranch.toString() : latestTag.toString()}-${utils.prepareName(environmentVariables.BRANCH_NAME)}-${environmentVariables.BUILD_NUMBER}-${artifactSettings.gitCommitShort}"
+            }
+
+            ArtifactCommonSettings artifactCommonSettings = new ArtifactCommonSettings()
+
+            artifactCommonSettings.initialize(deployConfig, jenkinsFileSettings, environmentVariables, pipelineParameters, git, releaseVersion)
+            artifactVariables["microservices"]:["${microserviceName}"].put("artifactCommonSettings", artifactCommonSettings)
+
+            // artifactVariables["common"].put("version", version)
 
             Nexus nexus = new Nexus(this, deployConfig, environmentVariables, logger)
 
@@ -83,108 +105,94 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
             }
 
             for (fileName in fileIndir) {
-                logger.logInfo("fileName=${fileName}")
+                // logger.logInfo("fileName=${fileName}")
                 if (!excludedFileName.contains(fileName)) {
                     logger.logInfo("fileName=${fileName}")
                     ServiceConfig serviceConfig = new ServiceConfig()
-                    ArtifactSettings artifactSettings = new ArtifactSettings()
                     Yaml serviceYaml = new Yaml(readYaml(file: "${configDir}/${fileName}"))
 
                     String microserviceName = fileName.split("\\.")[0]
-                    artifactVariables["${microserviceName}"] = [:]
-                    logger.logInfo("microserviceName=${microserviceName}")
-                    logger.logInfo("serviceYaml=${serviceYaml.get('microservice')}")
+                    artifactVariables["microservices"]:["${microserviceName}"] = [:]
+                    // logger.logInfo("microserviceName=${microserviceName}")
+                    // logger.logInfo("serviceYaml=${serviceYaml.get('microservice')}")
 
                     serviceConfig.initialize(serviceYaml)
 
-                    logger.logInfo("serviceConfig=${serviceConfig.artifactSetting}")
-
-                    artifactVariables["${microserviceName}"].put("serviceConfig", serviceConfig)
-
-                    logger.logInfo("artifactVariables=${artifactVariables}")
-
-                    Git git = new Git(this, deployConfig)
-
-                    SemanticVersion latestTag = git.findLatestSemVerTag()
-                    SemanticVersion releaseVersion = new SemanticVersion(latestTag.toString())
-
-                    artifactSettings.initialize(deployConfig, jenkinsFileSettings, environmentVariables, pipelineParameters, git, releaseVersion)
-                    artifactVariables["${microserviceName}"].put("artifactSettings", artifactSettings)
-
-                    String version
-                    if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
-                        releaseVersion.increaseVersion(pipelineParameters.patchLevel)
-                        version = releaseVersion.toString()
-                    } else {
-                        Utils utils = new Utils()
-                        def getCurrentTagForBranch = git.getCurrentTagForBranch()
-                        version = "${getCurrentTagForBranch != null ? getCurrentTagForBranch.toString() : latestTag.toString()}-${utils.prepareName(environmentVariables.BRANCH_NAME)}-${environmentVariables.BUILD_NUMBER}-${artifactSettings.gitCommitShort}"
+                    if (!serviceConfig.artifactSetting.get('enabled')) {
+                        continue
                     }
 
+                    // logger.logInfo("serviceConfig=${serviceConfig.artifactSetting}")
+
+                    artifactVariables["microservices"]:["${microserviceName}"].put("serviceConfig", serviceConfig)
+
+                    // logger.logInfo("artifactVariables=${artifactVariables}")
+
                     Make make = new Make(this, serviceConfig, logger)
-                    artifactVariables["${microserviceName}"].put("make", make)
+                    artifactVariables["microservices"]:["${microserviceName}"].put("make", make)
 
                     logger.logInfo("artifactVariables=${artifactVariables}")
                 }
             }
 
-            // for () {
-            //     if (pipelineParameters.stageAvailable(PipelineStage.CheckImage)) {
-            //         runStage('Check image exists', 'docker') {
-            //             if (nexus.checkImage(artifactSettings)) {
-            //                 pipelineParameters.deleteStage([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.BuildDockerImage])
-            //             }
-            //         }
-            //     }
+            for (artifact in artifactVariables.get("microservices")) {
+                logger.logInfo("!!!!!!!Start!!!!!!")
+                logger.logInfo("artifact=${artifact}")
 
-            //     if (pipelineParameters.stageAvailable(PipelineStage.BuildApplication)) {
-            //         runStage('Build application', 'docker') {
-            //             make.buildApplication(version)
-            //         }
-            //     }
+                if (pipelineParameters.stageAvailable(PipelineStage.CheckImage)) {
+                    runStage('Check image exists', 'docker') {
+                        if (nexus.checkImage(artifact.get('artifactCommonSettings'))) {
+                            pipelineParameters.deleteStage([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.BuildDockerImage])
+                        }
+                    }
+                }
 
-            //     if (pipelineParameters.stageAvailable(PipelineStage.RunTests)) {
-            //         runStage('Unit test', 'docker') {
-            //             make.runUnitTests()
-            //         }
-            //     }
+                if (pipelineParameters.stageAvailable(PipelineStage.BuildApplication)) {
+                    runStage('Build application', 'docker') {
+                        make.buildApplication(version)
+                    }
+                }
 
-            //     if (pipelineParameters.stageAvailable(PipelineStage.RunCodeStyleCheck)) {
-            //         runStage('Style checks', 'docker') {
-            //             make.runStyleChecks()
-            //         }
-            //     }
+                if (pipelineParameters.stageAvailable(PipelineStage.RunTests)) {
+                    runStage('Unit test', 'docker') {
+                        make.runUnitTests()
+                    }
+                }
 
-            //     if (pipelineParameters.stageAvailable(PipelineStage.BuildDockerImage)) {
-            //         runStage('Build image', 'docker') {
-            //             make.buildImage(deployConfig, artifactSettings)
-            //         }
+                if (pipelineParameters.stageAvailable(PipelineStage.RunCodeStyleCheck)) {
+                    runStage('Style checks', 'docker') {
+                        make.runStyleChecks()
+                    }
+                }
 
-            //         runStage('Push image', 'docker') {
-            //             nexus.pushImage(artifactSettings)
-            //         }
-            //     }
+                if (pipelineParameters.stageAvailable(PipelineStage.BuildDockerImage)) {
+                    runStage('Build image', 'docker') {
+                        make.buildImage(artifact.get('deployConfig'), artifact.get('artifactCommonSettings'))
+                    }
 
-            //     if (pipelineParameters.stageAvailable(PipelineStage.CreateReleaseImage)) {
-            //         runStage('Push release image', 'docker') {
-            //             nexus.createReleaseImage(artifactSettings)
-            //         }
-            //     }
+                    runStage('Push image', 'docker') {
+                        nexus.pushImage(artifact.get('artifactCommonSettings'))
+                    }
+                }
 
-            //     if (pipelineParameters.stageAvailable(PipelineStage.BuildPackage)) {
-            //         runStage('Pack package', 'docker') {
-            //             make.packPackage(version)
-            //         }
+                if (pipelineParameters.stageAvailable(PipelineStage.CreateReleaseImage)) {
+                    runStage('Push release image', 'docker') {
+                        nexus.createReleaseImage(artifact.get('artifactCommonSettings'))
+                    }
+                }
 
-            //         if (pipelineParameters.stageAvailable(PipelineStage.PushPackage)) {
-            //             runStage('Push package', 'docker') {
-            //                 nexus.pushPackage(jenkinsFileSettings, serviceConfig)
-            //             }
-            //         }
-            //     }
-            // }
+                if (pipelineParameters.stageAvailable(PipelineStage.BuildPackage)) {
+                    runStage('Pack package', 'docker') {
+                        make.packPackage(version)
+                    }
 
-
+                    if (pipelineParameters.stageAvailable(PipelineStage.PushPackage)) {
+                        runStage('Push package', 'docker') {
+                            nexus.pushPackage(artifact.get('jenkinsFileSettings'), artifact.get('serviceConfig'))
+                        }
+                    }
+                }
+            }
 
             if (pipelineParameters.stageAvailable(PipelineStage.DeployApplication)) {
                 Helm helm = new Helm(this, logger)
@@ -197,12 +205,12 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
                         commonYaml = new Yaml(readYaml(file: commonYamlPath))
                     }
 
-                    helm.prepareServiceYamlConfigs(deployConfig, serviceConfig, commonYaml,
-                            jenkinsFileSettings, pipelineParameters, artifactSettings)
+                    helm.prepareServiceYamlConfigs(artifact.get('deployConfig'), artifact.get('serviceConfig'), commonYaml,
+                            artifact.get('jenkinsFileSettings'), artifact.get('pipelineParameters'), artifact.get('artifactCommonSettings'))
                 }
 
                 runStage("Deployment $jenkinsFileSettings.artifactName to ${pipelineParameters.deployEnvironment}", 'helm') {
-                    helm.deployApplication(deployConfig, serviceConfig, artifactSettings, environmentVariables)
+                    helm.deployApplication(artifact.get('deployConfig'), artifact.get('serviceConfig'), artifact.get('artifactCommonSettings'), artifact.get('environmentVariables'))
                 }
             }
 
