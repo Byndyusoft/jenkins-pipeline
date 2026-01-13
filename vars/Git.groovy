@@ -3,7 +3,7 @@ class Git {
     private final def script
     private final DeployConfig deployConfig
 
-    Git(script, DeployConfig deployConfig) {
+    void initialize(script, DeployConfig deployConfig) {
         this.script = script
         this.deployConfig = deployConfig
     }

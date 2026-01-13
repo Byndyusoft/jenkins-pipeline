@@ -77,7 +77,8 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
             // logger.logInfo("excludedFileName=${excludedFileName}")
 
             Utils utils = new Utils()
-            Git git = new Git(this, deployConfig)
+            Git git = new Git()
+            git.initialize(this, deployConfig)
 
             SemanticVersion latestTag = git.findLatestSemVerTag()
             SemanticVersion releaseVersion = new SemanticVersion(latestTag.toString())
@@ -88,7 +89,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
                 version = releaseVersion.toString()
             } else {
                 def getCurrentTagForBranch = git.getCurrentTagForBranch()
-                version = "${getCurrentTagForBranch != null ? getCurrentTagForBranch.toString() : latestTag.toString()}-${utils.prepareName(environmentVariables.BRANCH_NAME)}-${environmentVariables.BUILD_NUMBER}-${artifactSettings.gitCommitShort}"
+                version = "${getCurrentTagForBranch != null ? getCurrentTagForBranch.toString() : latestTag.toString()}-${utils.prepareName(environmentVariables.BRANCH_NAME)}-${environmentVariables.BUILD_NUMBER}-${git.getCommitShaShort()}"
             }
 
             ArtifactCommonSettings artifactCommonSettings = new ArtifactCommonSettings()
