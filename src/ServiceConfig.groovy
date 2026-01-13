@@ -1,5 +1,6 @@
 /** Service configuration class {artifact name}.yaml */
 class ServiceConfig {
+    Map artifactSetting
     Map microservice
     String makeOption
     Map makeFileEnv
@@ -8,6 +9,8 @@ class ServiceConfig {
 
     ServiceConfig(Yaml serviceYaml) {
         Utils utils = new Utils()
+
+        artifactSetting = serviceYaml.get('artifactSetting') as Map ?: [:]
 
         microservice = serviceYaml.get('microservice') as Map ?: [:]
 
