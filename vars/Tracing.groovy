@@ -6,7 +6,7 @@ class Tracing {
         decorateWithTracing(JenkinsFileSettings, logger)
         decorateWithTracing(KubernetesConfig, logger)
         decorateWithTracing(PipelineParameters, logger)
-        decorateWithTracing(SemanticVersion, logger)
+        // decorateWithTracing(SemanticVersion, logger)
         decorateWithTracing(ServiceConfig, logger)
         decorateWithTracing(Git, logger)
         decorateWithTracing(Helm, logger)

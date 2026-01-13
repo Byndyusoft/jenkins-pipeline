@@ -48,7 +48,8 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
         }
     }
 
-    KubernetesConfig kubernetesConfig = new KubernetesConfig(k8sCloud, deployConfig, pipelineParameters)
+    KubernetesConfig kubernetesConfig = new KubernetesConfig()
+    kubernetesConfig.initialize(k8sCloud, deployConfig, pipelineParameters)
 
     kubernetes.customPodTemplate(kubernetesConfig) {
         node(POD_LABEL) {
@@ -86,6 +87,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
                 if (!excludedFileName.contains(fileName)) {
                     logger.logInfo("fileName=${fileName}")
                     ServiceConfig serviceConfig = new ServiceConfig()
+                    ArtifactSettings artifactSettings = new ArtifactSettings()
                     Yaml serviceYaml = new Yaml(readYaml(file: "${configDir}/${fileName}"))
 
                     String microserviceName = fileName.split("\\.")[0]
@@ -106,7 +108,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
                     SemanticVersion latestTag = git.findLatestSemVerTag()
                     SemanticVersion releaseVersion = new SemanticVersion(latestTag.toString())
 
-                    artifactSettings = new ArtifactSettings(deployConfig, jenkinsFileSettings, environmentVariables, pipelineParameters, git, releaseVersion)
+                    artifactSettings.initialize(deployConfig, jenkinsFileSettings, environmentVariables, pipelineParameters, git, releaseVersion)
                     artifactVariables["${microserviceName}"].put("artifactSettings", artifactSettings)
 
                     String version
@@ -214,7 +216,8 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
 }
 
 private DeployConfig getDeployConfig(Kubernetes kubernetes, String configDir, Logger logger) {
-    KubernetesConfig customConfig = new KubernetesConfig([cloud: 'kubernetes', podTemplateContainer: ['jnlp']], null, null)
+    KubernetesConfig customConfig = new KubernetesConfig()
+    customConfig.initialize([cloud: 'kubernetes', podTemplateContainer: ['jnlp']], null, null)
 
     return kubernetes.customPodTemplate(customConfig) {
         node(POD_LABEL) {

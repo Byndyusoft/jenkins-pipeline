@@ -9,7 +9,7 @@ class ArtifactSettings {
     String imageTag
     String releaseTag
 
-    ArtifactSettings(DeployConfig deployConfig, JenkinsFileSettings jenkinsFileSettings, EnvironmentVariables environmentVariables,
+    void initialize(DeployConfig deployConfig, JenkinsFileSettings jenkinsFileSettings, EnvironmentVariables environmentVariables,
                     PipelineParameters pipelineParameters, Git git, SemanticVersion releaseVersion) {
         Utils utils = new Utils()
 
