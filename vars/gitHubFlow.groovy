@@ -65,7 +65,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
             }
 
             // def currentDirectoryPath = pwd()
-            def artifactVariables = [:]
+            def artifactVariables = [microservices:[:], common:[]]
 
             def fileIndir = findFiles(glob: "deploy/*").collect { file -> file.name }
             def excludedFileName = ["common.yaml", "deploy.yaml"]
@@ -94,7 +94,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
             ArtifactCommonSettings artifactCommonSettings = new ArtifactCommonSettings()
 
             artifactCommonSettings.initialize(deployConfig, jenkinsFileSettings, environmentVariables, pipelineParameters, git, releaseVersion)
-            artifactVariables["microservices"]:["${microserviceName}"].put("artifactCommonSettings", artifactCommonSettings)
+            artifactVariables["common"].put("artifactCommonSettings", artifactCommonSettings)
 
             // artifactVariables["common"].put("version", version)
 
