@@ -75,7 +75,6 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
             logger.logInfo("fileIndir=${fileIndir}")
             logger.logInfo("excludedFileName=${excludedFileName}")
 
-
             Nexus nexus = new Nexus(this, deployConfig, environmentVariables, logger)
 
             runStage('Nexus initialize', 'docker') {
@@ -91,7 +90,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
                     String microserviceName = fileName.split("\\.")[0]
                     artifactVariables["${microserviceName}"] = [:]
                     logger.logInfo("microserviceName=${microserviceName}")
-                    logger.logInfo("serviceYaml=${serviceYaml.get('/')}")
+                    logger.logInfo("serviceYaml=${serviceYaml.get('microservice')}")
 
                     ServiceConfig serviceConfig = new ServiceConfig(serviceYaml)
                     artifactVariables["${microserviceName}"].put("serviceConfig", serviceConfig)
@@ -103,7 +102,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
                     SemanticVersion latestTag = git.findLatestSemVerTag()
                     SemanticVersion releaseVersion = new SemanticVersion(latestTag.toString())
 
-                    artifactSettings = new ArtifactSettings(deployConfig, jenkinsFileSettings, environmentVariables, pipelineParameters,git, releaseVersion)
+                    artifactSettings = new ArtifactSettings(deployConfig, jenkinsFileSettings, environmentVariables, pipelineParameters, git, releaseVersion)
                     artifactVariables["${microserviceName}"].put("artifactSettings", artifactSettings)
 
                     String version

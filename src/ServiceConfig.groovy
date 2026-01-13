@@ -7,9 +7,9 @@ class ServiceConfig {
     String helmOption
 
     ServiceConfig(Yaml serviceYaml) {
-        microservice = serviceYaml.get('microservice') as Map ?: [:]
-
         Utils utils = new Utils()
+
+        microservice = serviceYaml.get('microservice') as Map ?: [:]
 
         makeOption = serviceYaml.get('make/option') ?: ''
         makeFileEnv = serviceYaml.get('makefile/env') as Map ?: [:]
