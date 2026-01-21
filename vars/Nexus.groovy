@@ -56,7 +56,7 @@ class Nexus {
         }
     }
 
-    boolean checkImage(ArtifactCommonSettings artifactSettings) {
+    boolean checkImage(ArtifactCommonSettings artifactSettings, def artifact) {
         boolean imageExist = false
 
         logger.logInfo("artifactSettings")
@@ -65,7 +65,7 @@ class Nexus {
         logger.logInfo("${deployConfig.registryProvider.registryImagePushUrl}")
 
         runWithCredentials {
-            String url = "https://${deployConfig.registryProvider.registryImagePushUrl}/v2/${deployConfig.projectName}/${artifactSettings.imageFolder}/${artifactSettings.imageName}/tags/list"
+            String url = "https://${deployConfig.registryProvider.registryImagePushUrl}/v2/${deployConfig.projectName}/${artifactSettings.imageFolder}/${artifact..keySet()}/tags/list"
             imageExist = script.sh(
                     returnStdout: true,
                     script: """curl ${environmentVariables.DEBUG ? '-v' : '-s'} -u ${script.userRegistry}:${script.passRegistry} -X GET \
