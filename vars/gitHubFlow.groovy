@@ -95,6 +95,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
 
             artifactCommonSettings.initialize(deployConfig, jenkinsFileSettings, environmentVariables, pipelineParameters, git, releaseVersion)
             artifactVariables["common"].put("artifactCommonSettings", artifactCommonSettings)
+            artifactVariables["common"].put("deployConfig", deployConfig)
 
             // artifactVariables["common"].put("version", version)
 
@@ -112,7 +113,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
                     Yaml serviceYaml = new Yaml(readYaml(file: "${configDir}/${fileName}"))
 
                     String microserviceName = fileName.split("\\.")[0]
-                    artifactVariables["microservices"].putAll(["${microserviceName}":[:]])
+                    artifactVariables["microservices"] = [:]
                     logger.logInfo("artifactVariables=${artifactVariables}")
                     // logger.logInfo("microserviceName=${microserviceName}")
                     // logger.logInfo("serviceYaml=${serviceYaml.get('microservice')}")
@@ -135,9 +136,11 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
                 logger.logInfo("!!!!!!!Start!!!!!!")
                 logger.logInfo("artifact=${artifact}")
 
+                def common = artifactVariables.get("common")
+
                 if (pipelineParameters.stageAvailable(PipelineStage.CheckImage)) {
                     runStage('Check image exists', 'docker') {
-                        if (nexus.checkImage(artifact.get('artifactCommonSettings'))) {
+                        if (nexus.checkImage(common.get('artifactCommonSettings'))) {
                             pipelineParameters.deleteStage([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.BuildDockerImage])
                         }
                     }
@@ -163,17 +166,17 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
 
                 if (pipelineParameters.stageAvailable(PipelineStage.BuildDockerImage)) {
                     runStage('Build image', 'docker') {
-                        make.buildImage(artifact.get('deployConfig'), artifact.get('artifactCommonSettings'))
+                        make.buildImage(common.get('deployConfig'), common.get('artifactCommonSettings'))
                     }
 
                     runStage('Push image', 'docker') {
-                        nexus.pushImage(artifact.get('artifactCommonSettings'))
+                        nexus.pushImage(common.get('artifactCommonSettings'))
                     }
                 }
 
                 if (pipelineParameters.stageAvailable(PipelineStage.CreateReleaseImage)) {
                     runStage('Push release image', 'docker') {
-                        nexus.createReleaseImage(artifact.get('artifactCommonSettings'))
+                        nexus.createReleaseImage(common.get('artifactCommonSettings'))
                     }
                 }
 
@@ -201,12 +204,12 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
                         commonYaml = new Yaml(readYaml(file: commonYamlPath))
                     }
 
-                    helm.prepareServiceYamlConfigs(artifact.get('deployConfig'), artifact.get('serviceConfig'), commonYaml,
-                            artifact.get('jenkinsFileSettings'), artifact.get('pipelineParameters'), artifact.get('artifactCommonSettings'))
+                    helm.prepareServiceYamlConfigs(common.get('deployConfig'), artifact.get('serviceConfig'), commonYaml,
+                            artifact.get('jenkinsFileSettings'), artifact.get('pipelineParameters'), common.get('artifactCommonSettings'))
                 }
 
                 runStage("Deployment $jenkinsFileSettings.artifactName to ${pipelineParameters.deployEnvironment}", 'helm') {
-                    helm.deployApplication(artifact.get('deployConfig'), artifact.get('serviceConfig'), artifact.get('artifactCommonSettings'), artifact.get('environmentVariables'))
+                    helm.deployApplication(common.get('deployConfig'), artifact.get('serviceConfig'), common.get('artifactCommonSettings'), artifact.get('environmentVariables'))
                 }
             }
 
