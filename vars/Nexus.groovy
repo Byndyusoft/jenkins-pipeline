@@ -56,7 +56,7 @@ class Nexus {
         }
     }
 
-    boolean checkImage(ArtifactCommonSettings artifactSettings, Map artifact) {
+    boolean checkImage(ArtifactCommonSettings artifactSettings, def artifact) {
         boolean imageExist = false
 
         logger.logInfo("artifactSettings")
@@ -64,6 +64,7 @@ class Nexus {
         logger.logInfo("${artifactSettings.imageTag}")
         logger.logInfo("${deployConfig.registryProvider.registryImagePushUrl}")
         logger.logInfo("${artifact}")
+        logger.logInfo("${artifact.getClass().getName()}")
         logger.logInfo("${artifact.keySet()}")
 
         runWithCredentials {
