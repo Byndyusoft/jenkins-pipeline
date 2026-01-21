@@ -138,9 +138,9 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
 
                 def common = artifactVariables.get("common")
 
-                logger.logInfo(${common})
-                logger.logInfo(${common.get('artifactCommonSettings')})
-                logger.logInfo(${common.get('artifactCommonSettings').imageTag})
+                logger.logInfo("${common}")
+                logger.logInfo("${common.get('artifactCommonSettings')}")
+                logger.logInfo("${common.get('artifactCommonSettings').imageTag}")
 
 
                 if (pipelineParameters.stageAvailable(PipelineStage.CheckImage)) {
