@@ -124,12 +124,14 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
 
                     // logger.logInfo("serviceConfig=${serviceConfig.artifactSetting}")
 
-                    artifactVariables["microservices"].subMap(["${microserviceName}"]) << ["serviceConfig": serviceConfig]
+                    logger.logInfo(artifactVariables["microservices"].subMap(["${microserviceName}"]))
+
+                    artifactVariables["microservices"].subMap(["${microserviceName}"]).putAll(["serviceConfig": serviceConfig])
 
                     // logger.logInfo("artifactVariables=${artifactVariables}")
 
                     Make make = new Make(this, serviceConfig, logger)
-                    artifactVariables["microservices"].subMap(["${microserviceName}"]) << ["make": make]
+                    artifactVariables["microservices"].subMap(["${microserviceName}"]).putAll(["make": make])
 
                     logger.logInfo("artifactVariables=${artifactVariables}")
                 }
