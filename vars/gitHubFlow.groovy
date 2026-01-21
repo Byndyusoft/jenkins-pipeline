@@ -138,6 +138,11 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
 
                 def common = artifactVariables.get("common")
 
+                logger.logInfo(${common})
+                logger.logInfo(${common.get('artifactCommonSettings')})
+                logger.logInfo(${common.get('artifactCommonSettings').imageTag})
+
+
                 if (pipelineParameters.stageAvailable(PipelineStage.CheckImage)) {
                     runStage('Check image exists', 'docker') {
                         if (nexus.checkImage(common.get('artifactCommonSettings'))) {
