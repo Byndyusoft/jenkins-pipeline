@@ -112,7 +112,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
                     Yaml serviceYaml = new Yaml(readYaml(file: "${configDir}/${fileName}"))
 
                     String microserviceName = fileName.split("\\.")[0]
-                    //artifactVariables["microservices"].putAll(["${microserviceName}":[:]])
+                    artifactVariables["microservices"].putAll(["${microserviceName}":[:]])
                     // logger.logInfo("microserviceName=${microserviceName}")
                     // logger.logInfo("serviceYaml=${serviceYaml.get('microservice')}")
 
