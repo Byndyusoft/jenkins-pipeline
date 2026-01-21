@@ -56,7 +56,7 @@ class Nexus {
         }
     }
 
-    boolean checkImage(ArtifactCommonSettings artifactSettings, def artifact) {
+    boolean checkImage(ArtifactCommonSettings artifactSettings, Map artifact) {
         boolean imageExist = false
 
         logger.logInfo("artifactSettings")
