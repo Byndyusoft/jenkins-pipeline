@@ -77,8 +77,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
             // logger.logInfo("excludedFileName=${excludedFileName}")
 
             Utils utils = new Utils()
-            Git git = new Git()
-            git.initialize(this, deployConfig)
+            Git git = new Git(this, deployConfig)
 
             SemanticVersion latestTag = git.findLatestSemVerTag()
             SemanticVersion releaseVersion = new SemanticVersion(latestTag.toString())
