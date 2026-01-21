@@ -113,6 +113,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
 
                     String microserviceName = fileName.split("\\.")[0]
                     artifactVariables["microservices"].putAll(["${microserviceName}":[:]])
+                    logger.logInfo("artifactVariables=${artifactVariables}")
                     // logger.logInfo("microserviceName=${microserviceName}")
                     // logger.logInfo("serviceYaml=${serviceYaml.get('microservice')}")
 
@@ -124,7 +125,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
 
                     Make make = new Make(this, serviceConfig, logger)
 
-                    artifactVariables.microservices["${microserviceName}"].putAll(["make": make, "serviceConfig": serviceConfig])
+                    artifactVariables["microservices"].put("${microserviceName}", ["make": make, "serviceConfig": serviceConfig])
 
                     logger.logInfo("artifactVariables=${artifactVariables}")
                 }
