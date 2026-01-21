@@ -65,7 +65,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
             }
 
             // def currentDirectoryPath = pwd()
-            def artifactVariables = [microservices:[:], common:[]]
+            def artifactVariables = [microservices:[:], common:[:]]
 
             def fileIndir = findFiles(glob: "deploy/*").collect { file -> file.name }
             def excludedFileName = ["common.yaml", "deploy.yaml"]
