@@ -124,7 +124,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
 
                     // logger.logInfo("serviceConfig=${serviceConfig.artifactSetting}")
 
-                    logger.logInfo(artifactVariables["microservices"].subMap(["${microserviceName}"]))
+                    logger.logInfo(${artifactVariables["microservices"].subMap([microserviceName])})
 
                     artifactVariables["microservices"].subMap(["${microserviceName}"]).putAll(["serviceConfig": serviceConfig])
 
