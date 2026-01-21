@@ -59,6 +59,8 @@ class Nexus {
     boolean checkImage(ArtifactCommonSettings artifactSettings) {
         boolean imageExist = false
 
+        logger.logInfo("artifactSettings")
+        logger.logInfo(${artifactSettings})
         logger.logInfo(${artifactSettings.imageTag})
         logger.logInfo(${deployConfig.registryProvider.registryImagePushUrl})
 

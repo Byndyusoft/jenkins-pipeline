@@ -146,51 +146,51 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
                     }
                 }
 
-                if (pipelineParameters.stageAvailable(PipelineStage.BuildApplication)) {
-                    runStage('Build application', 'docker') {
-                        make.buildApplication(version)
-                    }
-                }
+                // if (pipelineParameters.stageAvailable(PipelineStage.BuildApplication)) {
+                //     runStage('Build application', 'docker') {
+                //         make.buildApplication(version)
+                //     }
+                // }
 
-                if (pipelineParameters.stageAvailable(PipelineStage.RunTests)) {
-                    runStage('Unit test', 'docker') {
-                        make.runUnitTests()
-                    }
-                }
+                // if (pipelineParameters.stageAvailable(PipelineStage.RunTests)) {
+                //     runStage('Unit test', 'docker') {
+                //         make.runUnitTests()
+                //     }
+                // }
 
-                if (pipelineParameters.stageAvailable(PipelineStage.RunCodeStyleCheck)) {
-                    runStage('Style checks', 'docker') {
-                        make.runStyleChecks()
-                    }
-                }
+                // if (pipelineParameters.stageAvailable(PipelineStage.RunCodeStyleCheck)) {
+                //     runStage('Style checks', 'docker') {
+                //         make.runStyleChecks()
+                //     }
+                // }
 
-                if (pipelineParameters.stageAvailable(PipelineStage.BuildDockerImage)) {
-                    runStage('Build image', 'docker') {
-                        make.buildImage(common.get('deployConfig'), common.get('artifactCommonSettings'))
-                    }
+                // if (pipelineParameters.stageAvailable(PipelineStage.BuildDockerImage)) {
+                //     runStage('Build image', 'docker') {
+                //         make.buildImage(common.get('deployConfig'), common.get('artifactCommonSettings'))
+                //     }
 
-                    runStage('Push image', 'docker') {
-                        nexus.pushImage(common.get('artifactCommonSettings'))
-                    }
-                }
+                //     runStage('Push image', 'docker') {
+                //         nexus.pushImage(common.get('artifactCommonSettings'))
+                //     }
+                // }
 
-                if (pipelineParameters.stageAvailable(PipelineStage.CreateReleaseImage)) {
-                    runStage('Push release image', 'docker') {
-                        nexus.createReleaseImage(common.get('artifactCommonSettings'))
-                    }
-                }
+                // if (pipelineParameters.stageAvailable(PipelineStage.CreateReleaseImage)) {
+                //     runStage('Push release image', 'docker') {
+                //         nexus.createReleaseImage(common.get('artifactCommonSettings'))
+                //     }
+                // }
 
-                if (pipelineParameters.stageAvailable(PipelineStage.BuildPackage)) {
-                    runStage('Pack package', 'docker') {
-                        make.packPackage(version)
-                    }
+                // if (pipelineParameters.stageAvailable(PipelineStage.BuildPackage)) {
+                //     runStage('Pack package', 'docker') {
+                //         make.packPackage(version)
+                //     }
 
-                    if (pipelineParameters.stageAvailable(PipelineStage.PushPackage)) {
-                        runStage('Push package', 'docker') {
-                            nexus.pushPackage(artifact.get('jenkinsFileSettings'), artifact.get('serviceConfig'))
-                        }
-                    }
-                }
+                //     if (pipelineParameters.stageAvailable(PipelineStage.PushPackage)) {
+                //         runStage('Push package', 'docker') {
+                //             nexus.pushPackage(artifact.get('jenkinsFileSettings'), artifact.get('serviceConfig'))
+                //         }
+                //     }
+                // }
             }
 
             if (pipelineParameters.stageAvailable(PipelineStage.DeployApplication)) {
