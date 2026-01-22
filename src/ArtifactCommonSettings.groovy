@@ -7,6 +7,7 @@ class ArtifactCommonSettings {
     String namespace
     String imageTag
     String releaseTag
+    String imageName
 
     void initialize(DeployConfig deployConfig, JenkinsFileSettings jenkinsFileSettings, EnvironmentVariables environmentVariables,
                     PipelineParameters pipelineParameters, Git git, SemanticVersion releaseVersion) {
