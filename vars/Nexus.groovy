@@ -66,6 +66,10 @@ class Nexus {
         logger.logInfo("${artifact}")
         logger.logInfo("${artifact.getClass().getName()}")
         // logger.logInfo("${artifact.keySet()}")
+        logger.logInfo("${deployConfig.projectName}")
+        logger.logInfo("${artifactSettings.imageFolder}")
+        logger.logInfo("${environmentVariables.DEBUG}")
+        logger.logInfo("${script.userRegistry}")
 
         runWithCredentials {
             String url = "https://${deployConfig.registryProvider.registryImagePushUrl}/v2/${deployConfig.projectName}/${artifactSettings.imageFolder}/test/tags/list"
