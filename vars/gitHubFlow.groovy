@@ -115,7 +115,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
                 }
             }
 
-            ServiceConfig commonConfig = new CommonConfig()
+            CommonConfig commonConfig = new CommonConfig()
             Yaml commonYaml = new Yaml(readYaml(file: "${configDir}/common.yaml"))
             commonConfig.initialize(commonYaml)
 
