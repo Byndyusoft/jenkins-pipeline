@@ -17,13 +17,7 @@ class Nexus {
     }
 
     private runWithCredentials(Closure code) {
-        
-        logger.logInfo("code")
-        logger.logInfo("${deployConfig.registryProvider.credentialsId}")
-
         script.withCredentials([script.usernamePassword(credentialsId: deployConfig.registryProvider.credentialsId, usernameVariable: 'userRegistry', passwordVariable: 'passRegistry')]) {
-            logger.logInfo("code1")
-            logger.logInfo("${script.userRegistry}")
             return code()
         }
     }
@@ -67,11 +61,7 @@ class Nexus {
 
         runWithCredentials {
             String url = "https://${deployConfig.registryProvider.registryImagePushUrl}/v2/${deployConfig.projectName}/${artifactSettings.imageFolder}/test/tags/list"
-            imageExist = script.sh(
-                    returnStdout: true,
-                    script: """env; curl ${environmentVariables.DEBUG ? '-v' : '-s'} -u ${script.userRegistry}:${script.passRegistry} -X GET \
-                        ${url} | jq -e '.tags | contains([\"${artifactSettings.imageTag}\"])' || echo false"""
-            ).toBoolean()
+            logger.logInfo("${url}")
         }
 
         return imageExist
