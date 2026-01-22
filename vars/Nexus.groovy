@@ -56,7 +56,7 @@ class Nexus {
         }
     }
 
-    boolean checkImage(ArtifactCommonSettings artifactSettings) {
+    boolean checkImage(ArtifactCommonSettings artifactCommonSettings) {
         boolean imageExist = false
 
         runWithCredentials {
@@ -77,18 +77,18 @@ class Nexus {
         }
     }
 
-    void pushImage(ArtifactCommonSettings artifactSettings) {
-        script.sh("docker push ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactSettings.imageFolder}/${artifactSettings.imageName}:${artifactSettings.imageTag}")
+    void pushImage(ArtifactCommonSettings artifactCommonSettings) {
+        script.sh("docker push ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.imageFolder}/${artifactCommonSettings.imageName}:${artifactCommonSettings.imageTag}")
     }
 
-    void createReleaseImage(ArtifactCommonSettings artifactSettings) {
-        script.sh("docker pull ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactSettings.imageFolder}/${artifactSettings.imageName}:${artifactSettings.imageTag}")
-        script.sh("""docker tag ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactSettings.imageFolder}/${artifactSettings.imageName}:${artifactSettings.imageTag} \
-            ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactSettings.releaseImageFolder}/${artifactSettings.imageName}:${artifactSettings.releaseTag}""")
-        script.sh("docker push ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactSettings.releaseImageFolder}/${artifactSettings.imageName}:${artifactSettings.releaseTag}")
+    void createReleaseImage(ArtifactCommonSettings artifactCommonSettings) {
+        script.sh("docker pull ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.imageFolder}/${artifactCommonSettings.imageName}:${artifactCommonSettings.imageTag}")
+        script.sh("""docker tag ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.imageFolder}/${artifactCommonSettings.imageName}:${artifactCommonSettings.imageTag} \
+            ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.releaseImageFolder}/${artifactCommonSettings.imageName}:${artifactCommonSettings.releaseTag}""")
+        script.sh("docker push ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.releaseImageFolder}/${artifactCommonSettings.imageName}:${artifactCommonSettings.releaseTag}")
 
-        artifactSettings.imageFolder = artifactSettings.releaseImageFolder
-        artifactSettings.imageTag = artifactSettings.releaseTag
+        artifactCommonSettings.imageFolder = artifactCommonSettings.releaseImageFolder
+        artifactCommonSettings.imageTag = artifactCommonSettings.releaseTag
     }
 
     void pushPythonPackage() {

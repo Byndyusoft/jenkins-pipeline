@@ -23,8 +23,8 @@ class Make {
         script.sh("make ${serviceConfig.makeOption} lint ${serviceConfig.makeFileEnvString}")
     }
 
-    void buildImage(DeployConfig deployConfig, ArtifactCommonSettings artifactSettings) {
-        String fullImagePath = "${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactSettings.imageFolder}/${artifactSettings.imageName}:${artifactSettings.imageTag}"
+    void buildImage(DeployConfig deployConfig, ArtifactCommonSettings artifactCommonSettings) {
+        String fullImagePath = "${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.imageFolder}/${artifactCommonSettings.imageName}:${artifactCommonSettings.imageTag}"
 
         // TODO app_image to appImage
         script.sh("make ${serviceConfig.makeOption} build-image app_image=${fullImagePath} ${serviceConfig.makeFileEnvString}")

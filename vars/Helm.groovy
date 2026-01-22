@@ -10,17 +10,17 @@ class Helm {
         deployTimeoutSeconds = 300
     }
 
-    void deployApplication(DeployConfig deployConfig, ServiceConfig serviceConfig, ArtifactCommonSettings artifactSettings, EnvironmentVariables environmentVariables) {
+    void deployApplication(DeployConfig deployConfig, ServiceConfig serviceConfig, ArtifactCommonSettings artifactCommonSettings, EnvironmentVariables environmentVariables) {
         try {
             script.sh("""helm upgrade --atomic --install \
                             ${(environmentVariables.DEBUG ? '--debug' : '')} \
                             --timeout ${deployTimeoutSeconds}s \
                             --create-namespace \
-                            --namespace ${artifactSettings.namespace} \
+                            --namespace ${artifactCommonSettings.namespace} \
                             -f ${deployConfig.defaultValuesFilePath} \
                             -f ${deployConfig.microServiceValuesFilePath} \
                             -f ${deployConfig.secretValuesFilePath} ${serviceConfig.helmOption} \
-                            ${artifactSettings.releaseName} .helm/""")
+                            ${artifactCommonSettings.releaseName} .helm/""")
         } catch (e) {
             logger.logInfo("Helm's work ended with an error")
             script.timeout(time: 300, unit: "SECONDS") {
@@ -34,17 +34,17 @@ class Helm {
 
     void prepareServiceYamlConfigs(DeployConfig deployConfig, ServiceConfig serviceConfig, Yaml commonYaml,
                                    JenkinsFileSettings jenkinsFileSettings, PipelineParameters pipelineParameters,
-                                   ArtifactCommonSettings artifactSettings) {
+                                   ArtifactCommonSettings artifactCommonSettings) {
 
         Utils utils = new Utils()
         Map commonEnv = commonYaml == null ? [:] : commonYaml.get('common') as Map
         Map valuesOverrides = utils.merge(commonEnv, serviceConfig.microservice)
 
-        valuesOverrides["microservice"] = [name: jenkinsFileSettings.artifactName, registryUrl: deployConfig.registryProvider.registryImagePushUrl, imageFolder: artifactSettings.imageFolder, image: jenkinsFileSettings.artifactName, tag: artifactSettings.imageTag]
+        valuesOverrides["microservice"] = [name: jenkinsFileSettings.artifactName, registryUrl: deployConfig.registryProvider.registryImagePushUrl, imageFolder: artifactCommonSettings.imageFolder, image: jenkinsFileSettings.artifactName, tag: artifactCommonSettings.imageTag]
         valuesOverrides["project"] = deployConfig.projectName
         valuesOverrides["environment"] = "${pipelineParameters.deployEnvironment}"
-        valuesOverrides["gitCommitShort"] = artifactSettings.gitCommitShort
-        valuesOverrides["namespace"] = artifactSettings.namespace
+        valuesOverrides["gitCommitShort"] = artifactCommonSettings.gitCommitShort
+        valuesOverrides["namespace"] = artifactCommonSettings.namespace
         valuesOverrides["makefile"] = [env: serviceConfig.makeFileEnv]
 
         script.writeYaml file: deployConfig.microServiceValuesFilePath, overwrite: true, data: valuesOverrides
