@@ -132,6 +132,15 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
                 }
             }
 
+
+            if (pipelineParameters.stageAvailable(PipelineStage.CheckImage)) {
+                runStage('Check image exists', 'docker') {
+                    if (nexus.checkImage(artifactCommonSettings)) {
+                        pipelineParameters.deleteStage([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.BuildDockerImage])
+                    }
+                }
+            }
+
             for (artifact in artifactVariables.get("microservices")) {
                 logger.logInfo("!!!!!!Start!!!!!!")
                 logger.logInfo("artifact=${artifact}")
@@ -141,14 +150,6 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
                 logger.logInfo("${common}")
                 logger.logInfo("${common.get('artifactCommonSettings')}")
                 logger.logInfo("${common.get('artifactCommonSettings').imageTag}")
-
-                if (pipelineParameters.stageAvailable(PipelineStage.CheckImage)) {
-                    runStage('Check image exists', 'docker') {
-                        if (nexus.checkImage(artifactCommonSettings)) {
-                            pipelineParameters.deleteStage([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.BuildDockerImage])
-                        }
-                    }
-                }
 
                 // if (pipelineParameters.stageAvailable(PipelineStage.BuildApplication)) {
                 //     runStage('Build application', 'docker') {
