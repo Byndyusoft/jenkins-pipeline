@@ -17,6 +17,10 @@ class Nexus {
     }
 
     private runWithCredentials(Closure code) {
+        
+        logger.logInfo("code")
+        logger.logInfo("${code}")
+
         script.withCredentials([script.usernamePassword(credentialsId: deployConfig.registryProvider.credentialsId, usernameVariable: 'userRegistry', passwordVariable: 'passRegistry')]) {
             return code()
         }
@@ -56,34 +60,17 @@ class Nexus {
         }
     }
 
-    boolean checkImage(ArtifactCommonSettings artifactSettings, def artifact) {
+    boolean checkImage(ArtifactCommonSettings artifactSettings) {
         boolean imageExist = false
 
-        logger.logInfo("artifactSettings")
-        logger.logInfo("${artifactSettings}")
-        logger.logInfo("${artifactSettings.imageTag}")
-        logger.logInfo("${deployConfig.registryProvider.registryImagePushUrl}")
-        logger.logInfo("${artifact}")
-        logger.logInfo("${artifact.getClass().getName()}")
-        // logger.logInfo("${artifact.keySet()}")
-        logger.logInfo("${deployConfig.projectName}")
-        logger.logInfo("${artifactSettings.imageFolder}")
-        logger.logInfo("${environmentVariables.DEBUG}")
-
         runWithCredentials {
-            String url = "https://test/tags/list"
-
-            logger.logInfo("${url}")
-
-
+            String url = "https://${deployConfig.registryProvider.registryImagePushUrl}/v2/${deployConfig.projectName}/${artifactSettings.imageFolder}/test/tags/list"
             imageExist = script.sh(
                     returnStdout: true,
                     script: """curl ${environmentVariables.DEBUG ? '-v' : '-s'} -u ${script.userRegistry}:${script.passRegistry} -X GET \
-                        ${url} | jq -e '.tags | contains(["test"])' || echo false"""
+                        ${url} | jq -e '.tags | contains([\"${artifactSettings.imageTag}\"])' || echo false"""
             ).toBoolean()
         }
-
-        logger.logInfo(${imageExist})
 
         return imageExist
     }
