@@ -187,18 +187,18 @@ class PipelineParameters {
                     mandatoryStages.addAll([PipelineStage.CheckImage])
 
                     if (environmentVariables.TAG_NAME) {
-                        mandatoryStages.addAll([PipelineStage.BuildApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication])
+                        mandatoryStages.addAll([PipelineStage.InstallDependencies, PipelineStage.BuildApplication, PipelineStage.PackApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication])
                         environments.addAll(deployConfig.additionalDeployEnvironments)
                         environments.addAll([DeployEnvironment.preprod.name(), DeployEnvironment.prod.name()])
                         break
                     }
 
                     if (environmentVariables.BRANCH_NAME == masterBranchName) {
-                        mandatoryStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.CreateReleaseImage, PipelineStage.BuildApplication, PipelineStage.BuildDockerImage, PipelineStage.CreateTag])
+                        mandatoryStages.addAll([PipelineStage.InstallDependencies, PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.CreateReleaseImage, PipelineStage.BuildApplication, PipelineStage.PackApplication, PipelineStage.BuildDockerImage, PipelineStage.CreateTag])
                         break
                     }
 
-                    optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication])
+                    optionalStages.addAll([PipelineStage.InstallDependencies, PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.PackApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication])
                     environments.addAll(deployConfig.additionalDeployEnvironments)
                     environments.add(DeployEnvironment.preprod.name())
                     break
