@@ -60,8 +60,7 @@ class Nexus {
         boolean imageExist = false
 
         runWithCredentials {
-            String url = "https://${deployConfig.registryProvider.registryImagePushUrl}/v2/${deployConfig.projectName}/${artifactSettings.imageFolder}/test/tags/list"
-            logger.logInfo("${url}")
+            logger.logInfo("Test")
         }
 
         return imageExist
