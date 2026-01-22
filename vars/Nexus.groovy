@@ -19,7 +19,8 @@ class Nexus {
     private runWithCredentials(Closure code) {
         
         logger.logInfo("code")
-        logger.logInfo("${deployConfig.registryProvider.credentialsId}")
+        logger.logInfo("${deployConfig}")
+        logger.logInfo("${deployConfig.registryProvider}")
 
         script.withCredentials([script.usernamePassword(credentialsId: deployConfig.registryProvider.credentialsId, usernameVariable: 'userRegistry', passwordVariable: 'passRegistry')]) {
             return code()
