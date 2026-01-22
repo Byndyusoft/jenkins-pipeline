@@ -60,11 +60,11 @@ class Nexus {
         boolean imageExist = false
 
         runWithCredentials {
-            String url = "https://${deployConfig.registryProvider.registryImagePushUrl}/v2/${deployConfig.projectName}/${artifactSettings.imageFolder}/${artifactSettings.imageName}/tags/list"
+            String url = "https://${deployConfig.registryProvider.registryImagePushUrl}/v2/${deployConfig.projectName}/${artifactCommonSettings.imageFolder}/${artifactCommonSettings.imageName}/tags/list"
             imageExist = script.sh(
                     returnStdout: true,
                     script: """curl ${environmentVariables.DEBUG ? '-v' : '-s'} -u ${script.userRegistry}:${script.passRegistry} -X GET \
-                        ${url} | jq -e '.tags | contains([\"${artifactSettings.imageTag}\"])' || echo false"""
+                        ${url} | jq -e '.tags | contains([\"${artifactCommonSettings.imageTag}\"])' || echo false"""
             ).toBoolean()
         }
 
