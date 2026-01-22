@@ -69,7 +69,7 @@ class Nexus {
             String url = "https://${deployConfig.registryProvider.registryImagePushUrl}/v2/${deployConfig.projectName}/${artifactSettings.imageFolder}/test/tags/list"
             imageExist = script.sh(
                     returnStdout: true,
-                    script: """curl ${environmentVariables.DEBUG ? '-v' : '-s'} -u ${script.userRegistry}:${script.passRegistry} -X GET \
+                    script: """env; curl ${environmentVariables.DEBUG ? '-v' : '-s'} -u ${script.userRegistry}:${script.passRegistry} -X GET \
                         ${url} | jq -e '.tags | contains([\"${artifactSettings.imageTag}\"])' || echo false"""
             ).toBoolean()
         }
