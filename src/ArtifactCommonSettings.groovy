@@ -15,6 +15,8 @@ class ArtifactCommonSettings {
         gitCommitShort = git.getCommitShaShort()
         imageTag = (environmentVariables.TAG_NAME) ?: "${environmentVariables.BRANCH_NAME.replace('/', '-')}-${gitCommitShort}"
 
+        imageName = "test1"
+
         imageFolder = environmentVariables.TAG_NAME ? 'release' : 'feature'
         releaseImageFolder = 'release'
 

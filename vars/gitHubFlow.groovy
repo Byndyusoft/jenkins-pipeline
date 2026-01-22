@@ -142,7 +142,6 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
                 logger.logInfo("${common.get('artifactCommonSettings')}")
                 logger.logInfo("${common.get('artifactCommonSettings').imageTag}")
 
-
                 if (pipelineParameters.stageAvailable(PipelineStage.CheckImage)) {
                     runStage('Check image exists', 'docker') {
                         if (nexus.checkImage(artifactCommonSettings)) {
@@ -184,8 +183,8 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
                 //         nexus.createReleaseImage(common.get('artifactCommonSettings'))
                 //     }
                 // }
-
-                // if (pipelineParameters.stageAvailable(PipelineStage.BuildPackage)) {
+P
+                // if (pipelineParameters.stageAvailable(PipelineStage.Buildackage)) {
                 //     runStage('Pack package', 'docker') {
                 //         make.packPackage(version)
                 //     }
