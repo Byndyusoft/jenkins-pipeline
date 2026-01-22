@@ -71,7 +71,7 @@ class Nexus {
         logger.logInfo("${environmentVariables.DEBUG}")
 
         runWithCredentials {
-            String url = "https://${deployConfig.registryProvider.registryImagePushUrl}/v2/${deployConfig.projectName}/${artifactSettings.imageFolder}/test/tags/list"
+            String url = "https://test/tags/list"
 
             logger.logInfo("${url}")
 
@@ -79,7 +79,7 @@ class Nexus {
             imageExist = script.sh(
                     returnStdout: true,
                     script: """curl ${environmentVariables.DEBUG ? '-v' : '-s'} -u ${script.userRegistry}:${script.passRegistry} -X GET \
-                        ${url} | jq -e '.tags | contains([\"${artifactSettings.imageTag}\"])' || echo false"""
+                        ${url} | jq -e '.tags | contains(["test"])' || echo false"""
             ).toBoolean()
         }
 
