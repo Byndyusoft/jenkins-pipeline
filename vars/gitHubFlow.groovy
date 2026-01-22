@@ -132,7 +132,8 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
                 }
             }
 
-            for (artifact in artifactVariables.get("microservices")) {
+            artifactVariables.get("microservices").each{k,v->
+                echo "${k}, ${v}"
                 if (pipelineParameters.stageAvailable(PipelineStage.CheckImage)) {
                     runStage('Check image exists', 'docker') {
                         if (nexus.checkImage(artifactCommonSettings)) {
