@@ -1,7 +1,6 @@
 /** Service common configuration class common.yaml */
-class commonConfig {
-    Map artifactSetting
-    Map microservice
+class CommonConfig {
+    Map common
     String makeOption
     Map makeFileEnv
     String makeFileEnvString
