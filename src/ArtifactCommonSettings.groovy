@@ -7,7 +7,6 @@ class ArtifactCommonSettings {
     String namespace
     String imageTag
     String releaseTag
-    String imageName
 
     void initialize(DeployConfig deployConfig, JenkinsFileSettings jenkinsFileSettings, EnvironmentVariables environmentVariables,
                     PipelineParameters pipelineParameters, Git git, SemanticVersion releaseVersion) {
@@ -15,8 +14,6 @@ class ArtifactCommonSettings {
 
         gitCommitShort = git.getCommitShaShort()
         imageTag = (environmentVariables.TAG_NAME) ?: "${environmentVariables.BRANCH_NAME.replace('/', '-')}-${gitCommitShort}"
-
-        imageName = "test1"
 
         imageFolder = environmentVariables.TAG_NAME ? 'release' : 'feature'
         releaseImageFolder = 'release'

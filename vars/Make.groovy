@@ -1,17 +1,21 @@
 /** Class for working with make */
 class Make {
     private def script
-    private ServiceConfig serviceConfig
+    private CommonConfig commonConfig
     private final Logger logger
 
-    Make(script, ServiceConfig serviceConfig, Logger logger){
+    Make(script, CommonConfig commonConfig, Logger logger){
         this.script = script
-        this.serviceConfig = serviceConfig
+        this.commonConfig = commonConfig
         this.logger = logger
     }
 
+    void installDependencies() {
+        script.sh("make ${commonConfig.makeOption} install-dependencies ${commonConfig.makeFileEnvString}")
+    }
+
     void runUnitTests() {
-        script.sh("make ${serviceConfig.makeOption} test ${serviceConfig.makeFileEnvString}")
+        script.sh("make ${commonConfig.makeOption} test ${commonConfig.makeFileEnvString}")
         if (script.fileExists('test/results.xml')) {
             script.junit testResults: 'test/results.xml'
         } else {
@@ -20,21 +24,24 @@ class Make {
     }
 
     void runStyleChecks() {
-        script.sh("make ${serviceConfig.makeOption} lint ${serviceConfig.makeFileEnvString}")
-    }
-
-    void buildImage(DeployConfig deployConfig, ArtifactCommonSettings artifactCommonSettings) {
-        String fullImagePath = "${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.imageFolder}/${artifactCommonSettings.imageName}:${artifactCommonSettings.imageTag}"
-
-        // TODO app_image to appImage
-        script.sh("make ${serviceConfig.makeOption} build-image app_image=${fullImagePath} ${serviceConfig.makeFileEnvString}")
+        script.sh("make ${commonConfig.makeOption} lint ${commonConfig.makeFileEnvString}")
     }
 
     void buildApplication(String version) {
-        script.sh("make ${serviceConfig.makeOption} build-app version=${version} ${serviceConfig.makeFileEnvString}")
+        script.sh("make ${commonConfig.makeOption} build-app version=${version} ${commonConfig.makeFileEnvString}")
+    }
+
+    void packApplication() {
+        script.sh("make ${commonConfig.makeOption} pack-application ${commonConfig.makeFileEnvString}")
+    }
+
+    void buildImage(DeployConfig deployConfig, ArtifactCommonSettings artifactCommonSettings, String imageName) {
+        String fullImagePath = "${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.imageFolder}/${imageName}:${artifactCommonSettings.imageTag}"
+
+        script.sh("make ${commonConfig.makeOption} build-image appImage=${fullImagePath} ${commonConfig.makeFileEnvString}")
     }
 
     void packPackage(String packageVersion) {
-        script.sh("make ${serviceConfig.makeOption} pack-package packageVersion=${packageVersion} ${serviceConfig.makeFileEnvString}")
+        script.sh("make ${commonConfig.makeOption} pack-package packageVersion=${packageVersion} ${commonConfig.makeFileEnvString}")
     }
 }

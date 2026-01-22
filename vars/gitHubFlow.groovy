@@ -65,16 +65,10 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
             }
 
             // def currentDirectoryPath = pwd()
-            def artifactVariables = [microservices:[:], common:[:]]
+            def artifactVariables = [microservices:[:]]
 
             def fileIndir = findFiles(glob: "deploy/*").collect { file -> file.name }
             def excludedFileName = ["common.yaml", "deploy.yaml"]
-
-            // logger.logInfo("currentDirectoryPath=${currentDirectoryPath}")
-            // logger.logInfo("env.WORKSPACE=${env.WORKSPACE}")
-
-            // logger.logInfo("fileIndir=${fileIndir}")
-            // logger.logInfo("excludedFileName=${excludedFileName}")
 
             Utils utils = new Utils()
             Git git = new Git(this, deployConfig)
@@ -94,10 +88,6 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
             ArtifactCommonSettings artifactCommonSettings = new ArtifactCommonSettings()
 
             artifactCommonSettings.initialize(deployConfig, jenkinsFileSettings, environmentVariables, pipelineParameters, git, releaseVersion)
-            artifactVariables["common"].put("artifactCommonSettings", artifactCommonSettings)
-            artifactVariables["common"].put("deployConfig", deployConfig)
-
-            // artifactVariables["common"].put("version", version)
 
             Nexus nexus = new Nexus(this, deployConfig, environmentVariables, logger)
 
@@ -106,107 +96,120 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
             }
 
             for (fileName in fileIndir) {
-                // logger.logInfo("fileName=${fileName}")
                 if (!excludedFileName.contains(fileName)) {
                     logger.logInfo("fileName=${fileName}")
+
                     ServiceConfig serviceConfig = new ServiceConfig()
                     Yaml serviceYaml = new Yaml(readYaml(file: "${configDir}/${fileName}"))
+                    serviceConfig.initialize(serviceYaml)
 
                     String microserviceName = fileName.split("\\.")[0]
-                    artifactVariables["microservices"] = [:]
-                    logger.logInfo("artifactVariables=${artifactVariables}")
-                    // logger.logInfo("microserviceName=${microserviceName}")
-                    // logger.logInfo("serviceYaml=${serviceYaml.get('microservice')}")
-
-                    serviceConfig.initialize(serviceYaml)
 
                     if (!serviceConfig.artifactSetting.get('enabled')) {
                         continue
                     }
 
-                    Make make = new Make(this, serviceConfig, logger)
-
-                    artifactVariables["microservices"].put("${microserviceName}", ["make": make, "serviceConfig": serviceConfig])
+                    artifactVariables["${microserviceName}"].putAll(["serviceConfig": serviceConfig])
 
                     logger.logInfo("artifactVariables=${artifactVariables}")
                 }
             }
 
-            artifactVariables.get("microservices").each{k,v->
-                echo "${k}, ${v}"
-                if (pipelineParameters.stageAvailable(PipelineStage.CheckImage)) {
+            ServiceConfig commonConfig = new CommonConfig()
+            Yaml commonYaml = new Yaml(readYaml(file: "${configDir}/common.yaml"))
+            commonConfig.initialize(commonYaml)
+
+            Make make = new Make(this, commonConfig, logger)
+
+            if (pipelineParameters.stageAvailable(PipelineStage.CheckImage)) {
+                artifactVariables.each{ imageName, artifactVariable ->
                     runStage('Check image exists', 'docker') {
-                        if (nexus.checkImage(artifactCommonSettings)) {
-                            pipelineParameters.deleteStage([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.BuildDockerImage])
+                        if (nexus.checkImage(artifactCommonSettings, imageName)) {
+                            pipelineParameters.deleteStage([InstallDependencies, PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PackApplication, PipelineStage.BuildDockerImage])
                         }
                     }
                 }
-
-                // if (pipelineParameters.stageAvailable(PipelineStage.BuildApplication)) {
-                //     runStage('Build application', 'docker') {
-                //         make.buildApplication(version)
-                //     }
-                // }
-
-                // if (pipelineParameters.stageAvailable(PipelineStage.RunTests)) {
-                //     runStage('Unit test', 'docker') {
-                //         make.runUnitTests()
-                //     }
-                // }
-
-                // if (pipelineParameters.stageAvailable(PipelineStage.RunCodeStyleCheck)) {
-                //     runStage('Style checks', 'docker') {
-                //         make.runStyleChecks()
-                //     }
-                // }
-
-                // if (pipelineParameters.stageAvailable(PipelineStage.BuildDockerImage)) {
-                //     runStage('Build image', 'docker') {
-                //         make.buildImage(common.get('deployConfig'), common.get('artifactCommonSettings'))
-                //     }
-
-                //     runStage('Push image', 'docker') {
-                //         nexus.pushImage(common.get('artifactCommonSettings'))
-                //     }
-                // }
-
-                // if (pipelineParameters.stageAvailable(PipelineStage.CreateReleaseImage)) {
-                //     runStage('Push release image', 'docker') {
-                //         nexus.createReleaseImage(common.get('artifactCommonSettings'))
-                //     }
-                // }
-                // if (pipelineParameters.stageAvailable(PipelineStage.Buildackage)) {
-                //     runStage('Pack package', 'docker') {
-                //         make.packPackage(version)
-                //     }
-
-                //     if (pipelineParameters.stageAvailable(PipelineStage.PushPackage)) {
-                //         runStage('Push package', 'docker') {
-                //             nexus.pushPackage(artifact.get('jenkinsFileSettings'), artifact.get('serviceConfig'))
-                //         }
-                //     }
-                // }
             }
 
-            if (pipelineParameters.stageAvailable(PipelineStage.DeployApplication)) {
-                Helm helm = new Helm(this, logger)
+            if (pipelineParameters.stageAvailable(PipelineStage.InstallDependencies)) {
+                runStage('Install dependencies', 'docker') {
+                    make.installDependencies()
+                }
+            }
 
-                stage('Prepare microservice yaml configs') {
-                    Yaml commonYaml = null
-                    String commonYamlPath = "${configDir}/common.yaml"
+            if (pipelineParameters.stageAvailable(PipelineStage.BuildApplication)) {
+                runStage('Build application', 'docker') {
+                    make.buildApplication(version)
+                }
+            }
 
-                    if (fileExists(commonYamlPath)) {
-                        commonYaml = new Yaml(readYaml(file: commonYamlPath))
+            if (pipelineParameters.stageAvailable(PipelineStage.RunTests)) {
+                runStage('Unit test', 'docker') {
+                    make.runUnitTests()
+                }
+            }
+
+            if (pipelineParameters.stageAvailable(PipelineStage.RunCodeStyleCheck)) {
+                runStage('Style checks', 'docker') {
+                    make.runStyleChecks()
+                }
+            }
+
+            artifactVariables.each{ imageName, artifactVariable ->
+                if (pipelineParameters.stageAvailable(PipelineStage.PackApplication)) {
+                    runStage('Pack application', 'docker') {
+                        make.packApplication()
+                    }
+                }
+
+                if (pipelineParameters.stageAvailable(PipelineStage.BuildDockerImage)) {
+                    runStage('Build image', 'docker') {
+                        make.buildImage(deployConfig, artifactCommonSettings, imageName))
                     }
 
-                    helm.prepareServiceYamlConfigs(common.get('deployConfig'), artifact.get('serviceConfig'), commonYaml,
-                            artifact.get('jenkinsFileSettings'), artifact.get('pipelineParameters'), common.get('artifactCommonSettings'))
+                    runStage('Push image', 'docker') {
+                        nexus.pushImage(artifactCommonSettings, imageName))
+                    }
                 }
 
-                runStage("Deployment $jenkinsFileSettings.artifactName to ${pipelineParameters.deployEnvironment}", 'helm') {
-                    helm.deployApplication(common.get('deployConfig'), artifact.get('serviceConfig'), common.get('artifactCommonSettings'), artifact.get('environmentVariables'))
+                if (pipelineParameters.stageAvailable(PipelineStage.CreateReleaseImage)) {
+                    runStage('Push release image', 'docker') {
+                        nexus.createReleaseImage(artifactCommonSettings, imageName)
+                    }
+                }
+
+                if (pipelineParameters.stageAvailable(PipelineStage.Buildackage)) {
+                    runStage('Pack package', 'docker') {
+                        make.packPackage(version)
+                    }
+
+                    if (pipelineParameters.stageAvailable(PipelineStage.PushPackage)) {
+                        runStage('Push package', 'docker') {
+                            nexus.pushPackage(jenkinsFileSettings, artifactVariable.get('serviceConfig'))
+                        }
+                    }
                 }
             }
+
+            // if (pipelineParameters.stageAvailable(PipelineStage.DeployApplication)) {
+            //     Helm helm = new Helm(this, logger)
+
+            //     stage('Prepare microservice yaml configs') {
+            //         Yaml commonYaml = null
+            //         String commonYamlPath = "${configDir}/common.yaml"
+
+            //         if (fileExists(commonYamlPath)) {
+            //             commonYaml = new Yaml(readYaml(file: commonYamlPath))
+            //         }
+
+            //         helm.prepareServiceYamlConfigs(deployConfig, artifactVariable.get('serviceConfig'), commonYaml,
+            //                 jenkinsFileSettings, pipelineParameters, artifactCommonSettings)
+            //     }
+
+            //     runStage("Deployment $jenkinsFileSettings.artifactName to ${pipelineParameters.deployEnvironment}", 'helm') {
+            //         helm.deployApplication(deployConfig, artifactVariable.get('serviceConfig'), artifactCommonSettings, environmentVariables)
+            //     }
+            // }
 
             if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
                 runStage('Make release', 'docker') {
