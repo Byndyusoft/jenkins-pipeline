@@ -133,7 +133,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
             }
 
             for (artifact in artifactVariables.get("microservices")) {
-                logger.logInfo("!!!!!!!Start!!!!!!")
+                logger.logInfo("!!!!!!Start!!!!!!")
                 logger.logInfo("artifact=${artifact}")
 
                 def common = artifactVariables.get("common")
@@ -145,7 +145,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
 
                 if (pipelineParameters.stageAvailable(PipelineStage.CheckImage)) {
                     runStage('Check image exists', 'docker') {
-                        if (nexus.checkImage(common.get('artifactCommonSettings'), artifact)) {
+                        if (nexus.checkImage(common.get('artifactCommonSettings'))) {
                             pipelineParameters.deleteStage([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.BuildDockerImage])
                         }
                     }
