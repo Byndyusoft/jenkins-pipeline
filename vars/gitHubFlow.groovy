@@ -164,7 +164,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
 
                 if (pipelineParameters.stageAvailable(PipelineStage.BuildDockerImage)) {
                     runStage('Build image', 'docker') {
-                        make.buildImage(deployConfig, artifactCommonSettings, imageName)
+                        make.buildImage(deployConfig, artifactCommonSettings, artifactVariable.get('serviceConfig'), imageName)
                     }
 
                     runStage('Push image', 'docker') {
