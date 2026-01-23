@@ -158,7 +158,7 @@ def call(Map artifactSetting = [:], Map k8sCloud = [:]) {
             artifactVariables.each{ imageName, artifactVariable ->
                 if (pipelineParameters.stageAvailable(PipelineStage.PackApplication)) {
                     runStage('Pack application', 'docker') {
-                        make.packApplication()
+                        make.packApplication(imageName)
                     }
                 }
 
