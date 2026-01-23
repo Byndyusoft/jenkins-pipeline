@@ -7,10 +7,10 @@ class Yaml {
     }
 
     def get(String path) {
-        def value
+        def value = parsedYaml
 
         for (i in path.split('/')) {
-            value = parsedYaml?.get(i)
+            value = value?.get(i)
         }
 
         return value
