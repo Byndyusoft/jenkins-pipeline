@@ -31,17 +31,15 @@ class Make {
         script.sh("make ${commonConfig.makeOption} build-app version=${version} ${commonConfig.makeFileEnvString}")
     }
 
-    void packApplication(ServiceConfig serviceConfig, String imageName) {
-        script.sh("make ${commonConfig.makeOption} pack-application imageName=${imageName} ${commonConfig.makeFileEnvString} ${serviceConfig.makeFileEnvString}")
+    void packApplication(def artifactVariables) {
+        script.sh("make ${commonConfig.makeOption} pack-application outputDir=${artifactVariables.get('outputDir')} ${commonConfig.makeFileEnvString} ${artifactVariables.get('serviceConfig').makeFileEnvString}")
     }
 
-    void buildImage(DeployConfig deployConfig, ArtifactCommonSettings artifactCommonSettings, ServiceConfig serviceConfig, String imageName) {
-        String fullImagePath = "${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.imageFolder}/${imageName}:${artifactCommonSettings.imageTag}"
-
-        script.sh("make ${commonConfig.makeOption} build-image appImage=${fullImagePath} imageName=${imageName} ${commonConfig.makeFileEnvString} ${serviceConfig.makeFileEnvString}")
+    void buildImage(def artifactVariables) {
+        script.sh("make ${commonConfig.makeOption} build-image appImage=${artifactVariables.get('fullImagePath')} outputDir=${artifactVariables.get('outputDir')} ${commonConfig.makeFileEnvString} ${artifactVariables.get('serviceConfig').makeFileEnvString}")
     }
 
-    void packPackage(String packageVersion) {
-        script.sh("make ${commonConfig.makeOption} pack-package packageVersion=${packageVersion} ${commonConfig.makeFileEnvString}")
+    void packPackage(String packageVersion, def artifactVariables) {
+        script.sh("make ${commonConfig.makeOption} pack-package packageVersion=${packageVersion} outputDir=${artifactVariables.get('outputDir')} ${commonConfig.makeFileEnvString} ${artifactVariables.get('serviceConfig').makeFileEnvString}")
     }
 }

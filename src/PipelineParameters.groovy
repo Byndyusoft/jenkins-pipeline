@@ -14,7 +14,7 @@ class PipelineParameters {
     private final String releaseType = 'Release Type'
     private final String runTests = 'Run tests'
     private final String runCodeStyleCheck = 'Run code style check'
-    private final String buildPackage = 'Build package'
+    private final String packPackage = 'Pack package'
     private final String publishPackage = 'Publish package'
     private final String masterBranchName = 'master'
 
@@ -67,8 +67,8 @@ class PipelineParameters {
             deleteStage([PipelineStage.RunCodeStyleCheck])
         }
 
-        if (script.params[titleBuildParameters].contains(buildPackage) == false) {
-            deleteStage([PipelineStage.BuildPackage, PipelineStage.PushPackage])
+        if (script.params[titleBuildParameters].contains(packPackage) == false) {
+            deleteStage([PipelineStage.PackPackage, PipelineStage.PushPackage])
         }
 
         if (script.params[titleBuildParameters].contains(publishPackage) == false) {
@@ -108,8 +108,8 @@ class PipelineParameters {
             buildVariants.add("\'${runCodeStyleCheck}${mandatoryStages.contains(PipelineStage.RunCodeStyleCheck) ? ':selected:disabled' : ''}\'")
         }
 
-        if (stageAvailable(PipelineStage.BuildPackage)) {
-            buildVariants.add("\'${buildPackage}:selected${mandatoryStages.contains(PipelineStage.RunCodeStyleCheck) ? ':disabled' : ''}\'")
+        if (stageAvailable(PipelineStage.PackPackage)) {
+            buildVariants.add("\'${packPackage}:selected${mandatoryStages.contains(PipelineStage.RunCodeStyleCheck) ? ':disabled' : ''}\'")
         }
 
         if (stageAvailable(PipelineStage.PushPackage)) {
@@ -148,38 +148,38 @@ class PipelineParameters {
     }
 
     private initializeDefaultStages(JenkinsFileSettings jenkinsFileSettings, EnvironmentVariables environmentVariables, DeployConfig deployConfig) {
-        logger.logDebug("PipelineParameters:initializeDefaultStages jenkinsFileSettings.artifactTypes = ${jenkinsFileSettings.artifactTypes}")
+        logger.logDebug("PipelineParameters:initializeDefaultStages jenkinsFileSettings.repositoryTypes = ${jenkinsFileSettings.repositoryTypes}")
 
-        for (repositoryType in jenkinsFileSettings.artifactTypes) {
+        for (repositoryType in jenkinsFileSettings.repositoryTypes) {
             switch (repositoryType) {
                 case RepositoryType.NugetPackage:
                     if (environmentVariables.BRANCH_NAME == masterBranchName) {
                         mandatoryStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.CreateTag,
-                                PipelineStage.BuildPackage, PipelineStage.PushPackage])
+                                PipelineStage.PackPackage, PipelineStage.PushPackage])
                         break
                     }
 
-                    optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildPackage, PipelineStage.PushPackage])
+                    optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.PackPackage, PipelineStage.PushPackage])
                     break
 
                 case RepositoryType.RawPackage:
                     if (environmentVariables.BRANCH_NAME == masterBranchName) {
                         mandatoryStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.CreateTag,
-                                PipelineStage.BuildPackage, PipelineStage.PushPackage])
+                                PipelineStage.PackPackage, PipelineStage.PushPackage])
                         break
                     }
 
-                    optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildPackage, PipelineStage.PushPackage])
+                    optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.PackPackage, PipelineStage.PushPackage])
                     break
 
                 case RepositoryType.PythonPackage:
                     if (environmentVariables.BRANCH_NAME == masterBranchName) {
                         mandatoryStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.CreateTag,
-                                PipelineStage.BuildPackage, PipelineStage.PushPackage])
+                                PipelineStage.PackPackage, PipelineStage.PushPackage])
                         break
                     }
 
-                    optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildPackage, PipelineStage.PushPackage])
+                    optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.PackPackage, PipelineStage.PushPackage])
                     break
 
                 // By default

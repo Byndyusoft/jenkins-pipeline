@@ -38,17 +38,17 @@ class Nexus {
         }
     }
 
-    void pushPackage(JenkinsFileSettings jenkinsFileSettings, ServiceConfig serviceConfig) {
-        for (repositoryType in jenkinsFileSettings.artifactTypes) {
+    void pushPackage(JenkinsFileSettings jenkinsFileSettings, def artifactVariables) {
+        for (repositoryType in jenkinsFileSettings.repositoryTypes) {
             switch (repositoryType) {
                 case RepositoryType.PythonPackage:
                     pushPythonPackage()
                     break
                 case RepositoryType.RawPackage:
-                    pushRawPackage(jenkinsFileSettings.artifactName)
+                    pushRawPackage(jenkinsFileSettings.repositoryName)
                     break
                 case RepositoryType.NugetPackage:
-                    pushNugetPackage(serviceConfig)
+                    pushNugetPackage(artifactVariables)
                     break
                 default:
                     logger.logInfo('Did not determine the type package')
@@ -56,11 +56,11 @@ class Nexus {
         }
     }
 
-    boolean checkImage(ArtifactCommonSettings artifactCommonSettings, String imageName) {
+    boolean checkImage(ArtifactCommonSettings artifactCommonSettings, String artifactName) {
         boolean imageExist = false
 
         runWithCredentials {
-            String url = "https://${deployConfig.registryProvider.registryImagePushUrl}/v2/${deployConfig.projectName}/${artifactCommonSettings.imageFolder}/${imageName}/tags/list"
+            String url = "https://${deployConfig.registryProvider.registryImagePushUrl}/v2/${deployConfig.projectName}/${artifactCommonSettings.imageFolder}/${artifactName}/tags/list"
             imageExist = script.sh(
                     returnStdout: true,
                     script: """curl ${environmentVariables.DEBUG ? '-v' : '-s'} -u ${script.userRegistry}:${script.passRegistry} -X GET \
@@ -82,15 +82,14 @@ class Nexus {
         }
     }
 
-    void pushImage(ArtifactCommonSettings artifactCommonSettings, String imageName) {
-        script.sh("docker push ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.imageFolder}/${imageName}:${artifactCommonSettings.imageTag}")
+    void pushImage(def artifactVariables) {
+        script.sh("docker push ${artifactVariables.get('fullImagePath')}")
     }
 
-    void createReleaseImage(ArtifactCommonSettings artifactCommonSettings, String imageName) {
-        script.sh("docker pull ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.imageFolder}/${imageName}:${artifactCommonSettings.imageTag}")
-        script.sh("""docker tag ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.imageFolder}/${imageName}:${artifactCommonSettings.imageTag} \
-            ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.releaseImageFolder}/${imageName}:${artifactCommonSettings.releaseTag}""")
-        script.sh("docker push ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.releaseImageFolder}/${imageName}:${artifactCommonSettings.releaseTag}")
+    void createReleaseImage(ArtifactCommonSettings artifactCommonSettings, def artifactVariables) {
+        script.sh("docker pull ${artifactVariables.get('fullImagePath')}")
+        script.sh("docker tag ${artifactVariables.get('fullImagePath')} ${artifactVariables.get('releaseFullImagePath')}")
+        script.sh("docker push ${artifactVariables.get('releaseFullImagePath')}")
 
         artifactCommonSettings.imageFolder = artifactCommonSettings.releaseImageFolder
         artifactCommonSettings.imageTag = artifactCommonSettings.releaseTag
@@ -108,9 +107,9 @@ class Nexus {
         }
     }
 
-    void pushNugetPackage(serviceConfig) {
+    void pushNugetPackage(def artifactVariables) {
         runWithCredentials {
-            String nugetFileDirectory = serviceConfig.makeFileEnv.nuget_file_directory ?: '/app/nuget'
+            String nugetFileDirectory = "${artifactVariables.get('outputDir')}"
 
             script.sh("mono /usr/local/bin/nuget.exe sources Add -Name \"local-nuget-push\" \
                 -Source \"${deployConfig.registryProvider.registryPackageUrl}\" \
@@ -118,10 +117,10 @@ class Nexus {
                 -password ${script.passRegistry} \
                 -StorePasswordInClearText")
 
-            List listPackage = script.sh(returnStdout: true, script: """ls -1 ${nugetFileDirectory}""").split("\n")
+            List listPackages = script.sh(returnStdout: true, script: """ls -1 ${nugetFileDirectory}""").split("\n")
 
-            for (i in listPackage) {
-                if (!checkNugetPackage(i.replaceFirst(/\.(\d+.\d+.\d+)/, '/$1').replaceFirst(/\.nupkg/, ''))) {
+            for (package in listPackages) {
+                if (!checkNugetPackage(package.replaceFirst(/\.(\d+.\d+.\d+)/, '/$1').replaceFirst(/\.nupkg/, ''))) {
                     script.sh("cd ${nugetFileDirectory} && mono /usr/local/bin/nuget.exe push \"${i}\" \
                         -Source \"${deployConfig.registryProvider.registryPackageUrl}\" -SkipDuplicate -Verbosity detailed")
                 }

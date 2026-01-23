@@ -19,7 +19,7 @@ class ArtifactCommonSettings {
         releaseImageFolder = 'release'
 
         namespace = utils.prepareName("${deployConfig.projectName}-${pipelineParameters.deployEnvironment}")
-        releaseName = utils.prepareName("${deployConfig.projectName}-${jenkinsFileSettings.artifactName}-${pipelineParameters.deployEnvironment}")
+        releaseName = utils.prepareName("${deployConfig.projectName}-${jenkinsFileSettings.repositoryName}-${pipelineParameters.deployEnvironment}")
 
         releaseTag = releaseVersion.toString()
     }

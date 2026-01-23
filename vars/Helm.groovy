@@ -40,7 +40,7 @@ class Helm {
         Map commonEnv = commonYaml == null ? [:] : commonYaml.get('common') as Map
         Map valuesOverrides = utils.merge(commonEnv, serviceConfig.microservice)
 
-        valuesOverrides["microservice"] = [name: jenkinsFileSettings.artifactName, registryUrl: deployConfig.registryProvider.registryImagePushUrl, imageFolder: artifactCommonSettings.imageFolder, image: jenkinsFileSettings.artifactName, tag: artifactCommonSettings.imageTag]
+        valuesOverrides["microservice"] = [name: jenkinsFileSettings.repositoryName, registryUrl: deployConfig.registryProvider.registryImagePushUrl, imageFolder: artifactCommonSettings.imageFolder, image: jenkinsFileSettings.repositoryName, tag: artifactCommonSettings.imageTag]
         valuesOverrides["project"] = deployConfig.projectName
         valuesOverrides["environment"] = "${pipelineParameters.deployEnvironment}"
         valuesOverrides["gitCommitShort"] = artifactCommonSettings.gitCommitShort
@@ -52,7 +52,7 @@ class Helm {
         switch (deployConfig.secretProvider.providerName) {
             case 'vault':
                 Vault vault = new Vault(script, deployConfig)
-                String vaultPathSecret = "${pipelineParameters.cluster}/${deployConfig.projectName}/${jenkinsFileSettings.artifactName}/${pipelineParameters.deployEnvironment}"
+                String vaultPathSecret = "${pipelineParameters.cluster}/${deployConfig.projectName}/${jenkinsFileSettings.repositoryName}/${pipelineParameters.deployEnvironment}"
                 Map valuesOverridesSecret = [secret: vault.getVaultSecret(vaultPathSecret)]
 
                 script.writeYaml file: deployConfig.secretValuesFilePath, overwrite: true, data: valuesOverridesSecret

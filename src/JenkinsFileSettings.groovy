@@ -1,14 +1,14 @@
 /** The class of service settings specified in JenkinsFile */
 class JenkinsFileSettings {
     /** Name of the service */
-    String artifactName
+    String repositoryName
     /** Artifact type */
-    List<RepositoryType> artifactTypes
+    List<RepositoryType> repositoryTypes
 
     void initialize(Map artifactSetting) {
         Utils utils = new Utils()
-        artifactName = utils.prepareName(artifactSetting.artifact_name as String)
-        artifactTypes = mapRepositoryType(artifactSetting.type as List<String> ?: [])
+        repositoryName = utils.prepareName(artifactSetting.repository_name as String)
+        repositoryTypes = mapRepositoryType(artifactSetting.repository_types as List<String> ?: [])
     }
 
     private List<RepositoryType> mapRepositoryType(List<String> repositoryTypeOptions) {
