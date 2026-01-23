@@ -35,10 +35,10 @@ class Make {
         script.sh("make ${commonConfig.makeOption} pack-application imageName=${imageName} ${commonConfig.makeFileEnvString} ${serviceConfig.makeFileEnvString}")
     }
 
-    void buildImage(DeployConfig deployConfig, ArtifactCommonSettings artifactCommonSettings, String imageName) {
+    void buildImage(DeployConfig deployConfig, ArtifactCommonSettings artifactCommonSettings, ServiceConfig serviceConfig, String imageName) {
         String fullImagePath = "${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.imageFolder}/${imageName}:${artifactCommonSettings.imageTag}"
 
-        script.sh("make ${commonConfig.makeOption} build-image appImage=${fullImagePath} imageName=${imageName} ${commonConfig.makeFileEnvString}")
+        script.sh("make ${commonConfig.makeOption} build-image appImage=${fullImagePath} imageName=${imageName} ${commonConfig.makeFileEnvString} ${serviceConfig.makeFileEnvString}")
     }
 
     void packPackage(String packageVersion) {
