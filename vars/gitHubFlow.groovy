@@ -110,7 +110,7 @@ def call(Map repositorySetting = [:], Map k8sCloud = [:]) {
                     }
 
                     artifactsVariables.put("${microserviceName}", [
-                        "artifactName": ${microserviceName},
+                        "artifactName": "${microserviceName}",
                         "serviceConfig": serviceConfig,
                         "outputDir": "${./out}/${microserviceName}",
                         "fullImagePath": "${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.imageFolder}/${microserviceName}:${artifactCommonSettings.imageTag}",
