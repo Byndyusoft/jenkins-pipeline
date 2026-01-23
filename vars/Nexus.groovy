@@ -119,8 +119,8 @@ class Nexus {
 
             List listPackages = script.sh(returnStdout: true, script: """ls -1 ${nugetFileDirectory}""").split("\n")
 
-            for (package in listPackages) {
-                if (!checkNugetPackage(package.replaceFirst(/\.(\d+.\d+.\d+)/, '/$1').replaceFirst(/\.nupkg/, ''))) {
+            for (pkg in listPackages) {
+                if (!checkNugetPackage(pkg.replaceFirst(/\.(\d+.\d+.\d+)/, '/$1').replaceFirst(/\.nupkg/, ''))) {
                     script.sh("cd ${nugetFileDirectory} && mono /usr/local/bin/nuget.exe push \"${i}\" \
                         -Source \"${deployConfig.registryProvider.registryPackageUrl}\" -SkipDuplicate -Verbosity detailed")
                 }
