@@ -31,8 +31,8 @@ class Make {
         script.sh("make ${commonConfig.makeOption} build-app version=${version} ${commonConfig.makeFileEnvString}")
     }
 
-    void packApplication(String imageName) {
-        script.sh("make ${commonConfig.makeOption} pack-application imageName=${imageName} ${commonConfig.makeFileEnvString}")
+    void packApplication(ServiceConfig serviceConfig, String imageName) {
+        script.sh("make ${commonConfig.makeOption} pack-application imageName=${imageName} ${commonConfig.makeFileEnvString} ${serviceConfig.makeFileEnvString}")
     }
 
     void buildImage(DeployConfig deployConfig, ArtifactCommonSettings artifactCommonSettings, String imageName) {
