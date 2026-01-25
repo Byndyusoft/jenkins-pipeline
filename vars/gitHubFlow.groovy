@@ -131,7 +131,7 @@ def call(Map repositorySetting = [:], Map k8sCloud = [:]) {
                 runStage('Check image exists', 'docker') {
                     artifactsVariables.each{ artifactName, artifactVariables ->
                         if (nexus.checkImage(artifactCommonSettings, artifactName)) {
-                            pipelineParameters.deleteStage([InstallDependencies, PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PackApplication, PipelineStage.BuildDockerImage])
+                            pipelineParameters.deleteStage([PipelineStage.InstallDependencies, PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.PackApplication, PipelineStage.BuildDockerImage])
                         }
                     }
                 }
