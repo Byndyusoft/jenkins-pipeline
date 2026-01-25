@@ -186,12 +186,12 @@ def call(Map repositorySetting = [:], Map k8sCloud = [:]) {
 
                 if (pipelineParameters.stageAvailable(PipelineStage.PackPackage)) {
                     runStage('Pack package', 'docker') {
-                        make.packPackage(version)
+                        make.packPackage(version, artifactVariables)
                     }
 
                     if (pipelineParameters.stageAvailable(PipelineStage.PushPackage)) {
                         runStage('Push package', 'docker') {
-                            nexus.pushPackage(jenkinsFileSettings, artifactVariables)
+                            nexus.pushPackage(artifactVariables)
                         }
                     }
                 }
