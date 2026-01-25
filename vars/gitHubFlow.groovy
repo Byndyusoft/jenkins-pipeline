@@ -110,6 +110,7 @@ def call(Map repositorySetting = [:], Map k8sCloud = [:]) {
                     }
 
                     artifactsVariables.put("${microserviceName}", [
+                        "codeType": serviceConfig.artifactSetting.get('type'),
                         "artifactName": "${microserviceName}",
                         "serviceConfig": serviceConfig,
                         "outputDir": "./out/${microserviceName}",
@@ -162,36 +163,41 @@ def call(Map repositorySetting = [:], Map k8sCloud = [:]) {
             }
 
             artifactsVariables.each{ artifactName, artifactVariables ->
-                if (pipelineParameters.stageAvailable(PipelineStage.PackApplication)) {
-                    runStage('Pack application', 'docker') {
-                        make.packApplication(artifactVariables)
+                if (artifactVariables.get("codeType")) {
+                    if (pipelineParameters.stageAvailable(PipelineStage.PackApplication)) {
+                        runStage('Pack application', 'docker') {
+                            make.packApplication(artifactVariables)
+                        }
+                    }
+
+                    if (pipelineParameters.stageAvailable(PipelineStage.BuildDockerImage)) {
+                        runStage('Build image', 'docker') {
+                            make.buildImage(artifactVariables)
+                        }
+
+                        runStage('Push image', 'docker') {
+                            nexus.pushImage(artifactVariables)
+                        }
+                    }
+
+                    if (pipelineParameters.stageAvailable(PipelineStage.CreateReleaseImage)) {
+                        runStage('Push release image', 'docker') {
+                            nexus.createReleaseImage(artifactCommonSettings, artifactVariables)
+                        }
                     }
                 }
 
-                if (pipelineParameters.stageAvailable(PipelineStage.BuildDockerImage)) {
-                    runStage('Build image', 'docker') {
-                        make.buildImage(artifactVariables)
-                    }
 
-                    runStage('Push image', 'docker') {
-                        nexus.pushImage(artifactVariables)
-                    }
-                }
+                if (artifactVariables.get("codeType")) {
+                    if (pipelineParameters.stageAvailable(PipelineStage.PackPackage)) {
+                        runStage('Pack package', 'docker') {
+                            make.packPackage(version, artifactVariables)
+                        }
 
-                if (pipelineParameters.stageAvailable(PipelineStage.CreateReleaseImage)) {
-                    runStage('Push release image', 'docker') {
-                        nexus.createReleaseImage(artifactCommonSettings, artifactVariables)
-                    }
-                }
-
-                if (pipelineParameters.stageAvailable(PipelineStage.PackPackage)) {
-                    runStage('Pack package', 'docker') {
-                        make.packPackage(version, artifactVariables)
-                    }
-
-                    if (pipelineParameters.stageAvailable(PipelineStage.PushPackage)) {
-                        runStage('Push package', 'docker') {
-                            nexus.pushPackage(artifactVariables)
+                        if (pipelineParameters.stageAvailable(PipelineStage.PushPackage)) {
+                            runStage('Push package', 'docker') {
+                                nexus.pushPackage(artifactVariables)
+                            }
                         }
                     }
                 }
