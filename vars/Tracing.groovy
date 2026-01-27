@@ -3,7 +3,6 @@ class Tracing {
     void initialize(Logger logger) {
         decorateWithTracing(ArtifactCommonSettings, logger)
         decorateWithTracing(DeployConfig, logger)
-        decorateWithTracing(JenkinsFileSettings, logger)
         decorateWithTracing(KubernetesConfig, logger)
         decorateWithTracing(PipelineParameters, logger)
         // decorateWithTracing(SemanticVersion, logger)
