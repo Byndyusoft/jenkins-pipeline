@@ -21,65 +21,83 @@ def call() {
     logger.logInfo('###################################################################')
 
     Kubernetes kubernetes = new Kubernetes(this)
-    DeployConfig deployConfig = getDeployConfig(kubernetes, configDir, logger)
 
-    // def currentDirectoryPath = pwd()
+    KubernetesConfig customConfig = new KubernetesConfig()
+    customConfig.initialize([cloud: 'kubernetes', podTemplateContainer: ['jnlp']], null, null)
+
+    DeployConfig deployConfig = new DeployConfig(logger)
+
     def artifactsVariables = [:]
 
     def fileIndir = findFiles(glob: "deploy/*").collect { file -> file.name }
     def excludedFileName = ["common.yaml", "deploy.yaml"]
 
     Utils utils = new Utils()
-    Git git = new Git(this, deployConfig)
-
-    SemanticVersion latestTag = git.findLatestSemVerTag()
-    SemanticVersion releaseVersion = new SemanticVersion(latestTag.toString())
-
-    String version
-    if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
-        releaseVersion.increaseVersion(pipelineParameters.patchLevel)
-        version = releaseVersion.toString()
-    } else {
-        def getCurrentTagForBranch = git.getCurrentTagForBranch()
-        version = "${getCurrentTagForBranch != null ? getCurrentTagForBranch.toString() : latestTag.toString()}-${utils.prepareName(environmentVariables.BRANCH_NAME)}-${environmentVariables.BUILD_NUMBER}-${git.getCommitShaShort()}"
-    }
-
     ArtifactCommonSettings artifactCommonSettings = new ArtifactCommonSettings()
-    artifactCommonSettings.initialize(deployConfig, environmentVariables, pipelineParameters, git, releaseVersion)
 
-    List<ArtifactType> artifactTypes
+    kubernetes.customPodTemplate(customConfig) {
+        node(POD_LABEL) {
+            stage('Get configs') {
+                checkout scm
 
-    for (fileName in fileIndir) {
-        if (!excludedFileName.contains(fileName)) {
-            logger.logInfo("fileName=${fileName}")
+                if (!fileExists(configDir)) {
+                    currentBuild.result = 'FAILURE'
+                    return
+                }
 
-            ServiceConfig serviceConfig = new ServiceConfig()
-            Yaml serviceYaml = new Yaml(readYaml(file: "${configDir}/${fileName}"))
-            serviceConfig.initialize(serviceYaml)
+                Yaml deployYaml = new Yaml(readYaml(file: "${configDir}/deploy.yaml"))
+                deployConfig.initialize(deployYaml)
 
-            String microserviceName = fileName.split("\\.")[0]
+                Git git = new Git(this, deployConfig)
 
-            if (!serviceConfig.artifactSetting.get('enabled')) {
-                continue
+                SemanticVersion latestTag = git.findLatestSemVerTag()
+                SemanticVersion releaseVersion = new SemanticVersion(latestTag.toString())
+
+                String version
+                if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
+                    releaseVersion.increaseVersion(pipelineParameters.patchLevel)
+                    version = releaseVersion.toString()
+                } else {
+                    def getCurrentTagForBranch = git.getCurrentTagForBranch()
+                    version = "${getCurrentTagForBranch != null ? getCurrentTagForBranch.toString() : latestTag.toString()}-${utils.prepareName(environmentVariables.BRANCH_NAME)}-${environmentVariables.BUILD_NUMBER}-${git.getCommitShaShort()}"
+                }
+
+                artifactCommonSettings.initialize(deployConfig, environmentVariables, pipelineParameters, git, releaseVersion, version)
+
+                for (fileName in fileIndir) {
+                    if (!excludedFileName.contains(fileName)) {
+                        logger.logInfo("fileName=${fileName}")
+
+                        ServiceConfig serviceConfig = new ServiceConfig()
+                        Yaml serviceYaml = new Yaml(readYaml(file: "${configDir}/${fileName}"))
+                        serviceConfig.initialize(serviceYaml)
+
+                        String microserviceName = fileName.split("\\.")[0]
+
+                        if (!serviceConfig.artifactSetting.get('enabled')) {
+                            continue
+                        }
+
+                        List<ArtifactType> artifactTypes = utils.mapArtifactType(serviceConfig.artifactSetting.get('type') as List<String> ?: [])
+
+                        artifactsVariables.put("${microserviceName}", [
+                            "artifactTypes": artifactTypes,
+                            "artifactName": microserviceName,
+                            "serviceConfig": serviceConfig,
+                            "outputDir": "./out/${microserviceName}",
+                            "fullImagePath": "${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.imageFolder}/${microserviceName}:${artifactCommonSettings.imageTag}",
+                            "releaseFullImagePath": "${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.releaseImageFolder}/${microserviceName}:${artifactCommonSettings.releaseTag}"
+                        ])
+
+                        logger.logInfo("artifactsVariables=${artifactsVariables}")
+                    }
+                }
             }
-
-            artifactTypes = utils.mapArtifactType(serviceConfig.artifactSetting.get('type') as List<String> ?: [])
-
-            artifactsVariables.put("${microserviceName}", [
-                "artifactTypes": serviceConfig.artifactSetting.get('type'),
-                "artifactName": "${microserviceName}",
-                "serviceConfig": serviceConfig,
-                "outputDir": "./out/${microserviceName}",
-                "fullImagePath": "${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.imageFolder}/${microserviceName}:${artifactCommonSettings.imageTag}",
-                "releaseFullImagePath": "${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.releaseImageFolder}/${microserviceName}:${artifactCommonSettings.releaseTag}"
-            ])
-
-            logger.logInfo("artifactsVariables=${artifactsVariables}")
         }
     }
 
     PipelineParameters pipelineParameters = new PipelineParameters(this, logger)
-    pipelineParameters.initialize(artifactTypes, environmentVariables, deployConfig)
+    pipelineParameters.initialize(deployConfig, environmentVariables, artifactTypes)
 
     logger.logInfo('###################################################################')
     logger.logInfo("Deploy to cluster=${pipelineParameters.cluster}")
@@ -221,36 +239,12 @@ def call() {
 
             if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
                 runStage('Make release', 'docker') {
+                    Git git = new Git(this, deployConfig)
                     git.createTag(releaseVersion)
                 }
             }
         }
     }
-}
-
-private DeployConfig getDeployConfig(Kubernetes kubernetes, String configDir, Logger logger) {
-    KubernetesConfig customConfig = new KubernetesConfig()
-    customConfig.initialize([cloud: 'kubernetes', podTemplateContainer: ['jnlp']], null, null)
-
-    return kubernetes.customPodTemplate(customConfig) {
-        node(POD_LABEL) {
-            stage('Get deploy config') {
-                checkout scm
-
-                if (!fileExists(configDir)) {
-                    currentBuild.result = 'FAILURE'
-                    return
-                }
-
-                Yaml deployYaml = new Yaml(readYaml(file: "${configDir}/deploy.yaml"))
-                DeployConfig deployConfig = new DeployConfig(logger)
-
-                deployConfig.initialize(deployYaml)
-
-                return deployConfig
-            }
-        }
-    } as DeployConfig
 }
 
 private def runStage(String stageName, String containerName, Closure code) {

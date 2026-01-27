@@ -147,7 +147,7 @@ class PipelineParameters {
         return parameters
     }
 
-    private initializeDefaultStages(ArtifactType artifactTypes, EnvironmentVariables environmentVariables, DeployConfig deployConfig) {
+    private initializeDefaultStages(DeployConfig deployConfig, EnvironmentVariables environmentVariables, ArtifactType artifactTypes) {
         logger.logDebug("PipelineParameters:initializeDefaultStages artifactType = ${artifactType}")
 
         for (artifactType in artifactTypes) {
