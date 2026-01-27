@@ -100,7 +100,7 @@ def call() {
     }
 
     KubernetesConfig kubernetesConfig = new KubernetesConfig()
-    kubernetesConfig.initialize(deployConfig, pipelineParameters)
+    kubernetesConfig.initialize([:], deployConfig, pipelineParameters)
 
     kubernetes.customPodTemplate(kubernetesConfig) {
         node(POD_LABEL) {
