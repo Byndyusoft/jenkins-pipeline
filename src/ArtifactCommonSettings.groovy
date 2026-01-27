@@ -8,7 +8,7 @@ class ArtifactCommonSettings {
     String imageTag
     String releaseTag
 
-    void initialize(DeployConfig deployConfig, JenkinsFileSettings jenkinsFileSettings, EnvironmentVariables environmentVariables,
+    void initialize(DeployConfig deployConfig, EnvironmentVariables environmentVariables,
                     PipelineParameters pipelineParameters, Git git, SemanticVersion releaseVersion) {
         Utils utils = new Utils()
 
@@ -19,7 +19,7 @@ class ArtifactCommonSettings {
         releaseImageFolder = 'release'
 
         namespace = utils.prepareName("${deployConfig.projectName}-${pipelineParameters.deployEnvironment}")
-        releaseName = utils.prepareName("${deployConfig.projectName}-${jenkinsFileSettings.repositoryName}-${pipelineParameters.deployEnvironment}")
+        releaseName = utils.prepareName("${deployConfig.projectName}-${deployConfig.serviceName}-${pipelineParameters.deployEnvironment}")
 
         releaseTag = releaseVersion.toString()
     }

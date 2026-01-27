@@ -38,16 +38,16 @@ class Nexus {
         }
     }
 
-    void pushPackage(JenkinsFileSettings jenkinsFileSettings, def artifactVariables) {
-        for (repositoryType in jenkinsFileSettings.repositoryTypes) {
-            switch (repositoryType) {
-                case RepositoryType.PythonPackage:
+    void pushPackage(DeployConfig deployConfig, ArtifactType artifactTypes, def artifactVariables) {
+        for (artifactType in artifactTypes) {
+            switch (artifactType) {
+                case ArtifactType.PythonPackage:
                     pushPythonPackage()
                     break
-                case RepositoryType.RawPackage:
-                    pushRawPackage(jenkinsFileSettings.repositoryName)
+                case ArtifactType.RawPackage:
+                    pushRawPackage(deployConfig.serviceName)
                     break
-                case RepositoryType.NugetPackage:
+                case ArtifactType.NugetPackage:
                     pushNugetPackage(artifactVariables)
                     break
                 default:

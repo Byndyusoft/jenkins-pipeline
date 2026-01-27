@@ -81,4 +81,28 @@ class Utils {
             return "'${safe}'"
         }.join(',')
     }
+
+    /**  */
+    static List<ArtifactType> mapArtifactType(List<String> repositoryTypeOptions) {
+        List repoTypes = []
+
+        for (repositoryTypeOption in repositoryTypeOptions) {
+            switch (repositoryTypeOption) {
+                case 'python-package':
+                    repoTypes.add(ArtifactType.PythonPackage)
+                    break
+                case 'raw-package':
+                    repoTypes.add(ArtifactType.RawPackage)
+                    break
+                case 'nuget-package':
+                    repoTypes.add(ArtifactType.NugetPackage)
+                    break
+                case 'service':
+                    repoTypes.add(ArtifactType.Service)
+                    break
+            }
+        }
+
+        return (repoTypes) ?: [ArtifactType.Service]
+    }
 }

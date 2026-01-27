@@ -1,6 +1,6 @@
 import jenkins.model.Jenkins
 
-def call(Map repositorySetting = [:], Map k8sCloud = [:]) {
+def call() {
     Logger logger = new Logger()
 
     EnvironmentVariables environmentVariables = new EnvironmentVariables(env)
@@ -9,10 +9,6 @@ def call(Map repositorySetting = [:], Map k8sCloud = [:]) {
         def tracing = new Tracing()
         tracing.initialize(logger)
     }
-
-    JenkinsFileSettings jenkinsFileSettings = new JenkinsFileSettings()
-
-    jenkinsFileSettings.initialize(repositorySetting)
 
     final String pipelineVersion = '2.0.0'
     final String configDir = './deploy'
@@ -27,8 +23,63 @@ def call(Map repositorySetting = [:], Map k8sCloud = [:]) {
     Kubernetes kubernetes = new Kubernetes(this)
     DeployConfig deployConfig = getDeployConfig(kubernetes, configDir, logger)
 
+    // def currentDirectoryPath = pwd()
+    def artifactsVariables = [:]
+
+    def fileIndir = findFiles(glob: "deploy/*").collect { file -> file.name }
+    def excludedFileName = ["common.yaml", "deploy.yaml"]
+
+    Utils utils = new Utils()
+    Git git = new Git(this, deployConfig)
+
+    SemanticVersion latestTag = git.findLatestSemVerTag()
+    SemanticVersion releaseVersion = new SemanticVersion(latestTag.toString())
+
+    String version
+    if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
+        releaseVersion.increaseVersion(pipelineParameters.patchLevel)
+        version = releaseVersion.toString()
+    } else {
+        def getCurrentTagForBranch = git.getCurrentTagForBranch()
+        version = "${getCurrentTagForBranch != null ? getCurrentTagForBranch.toString() : latestTag.toString()}-${utils.prepareName(environmentVariables.BRANCH_NAME)}-${environmentVariables.BUILD_NUMBER}-${git.getCommitShaShort()}"
+    }
+
+    ArtifactCommonSettings artifactCommonSettings = new ArtifactCommonSettings()
+    artifactCommonSettings.initialize(deployConfig, environmentVariables, pipelineParameters, git, releaseVersion)
+
+    List<ArtifactType> artifactTypes
+
+    for (fileName in fileIndir) {
+        if (!excludedFileName.contains(fileName)) {
+            logger.logInfo("fileName=${fileName}")
+
+            ServiceConfig serviceConfig = new ServiceConfig()
+            Yaml serviceYaml = new Yaml(readYaml(file: "${configDir}/${fileName}"))
+            serviceConfig.initialize(serviceYaml)
+
+            String microserviceName = fileName.split("\\.")[0]
+
+            if (!serviceConfig.artifactSetting.get('enabled')) {
+                continue
+            }
+
+            artifactTypes = utils.mapArtifactType(serviceConfig.artifactSetting.get('type') as List<String> ?: [])
+
+            artifactsVariables.put("${microserviceName}", [
+                "artifactTypes": serviceConfig.artifactSetting.get('type'),
+                "artifactName": "${microserviceName}",
+                "serviceConfig": serviceConfig,
+                "outputDir": "./out/${microserviceName}",
+                "fullImagePath": "${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.imageFolder}/${microserviceName}:${artifactCommonSettings.imageTag}",
+                "releaseFullImagePath": "${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.releaseImageFolder}/${microserviceName}:${artifactCommonSettings.releaseTag}"
+            ])
+
+            logger.logInfo("artifactsVariables=${artifactsVariables}")
+        }
+    }
+
     PipelineParameters pipelineParameters = new PipelineParameters(this, logger)
-    pipelineParameters.initialize(jenkinsFileSettings, environmentVariables, deployConfig)
+    pipelineParameters.initialize(artifactTypes, environmentVariables, deployConfig)
 
     logger.logInfo('###################################################################')
     logger.logInfo("Deploy to cluster=${pipelineParameters.cluster}")
@@ -49,7 +100,7 @@ def call(Map repositorySetting = [:], Map k8sCloud = [:]) {
     }
 
     KubernetesConfig kubernetesConfig = new KubernetesConfig()
-    kubernetesConfig.initialize(k8sCloud, deployConfig, pipelineParameters)
+    kubernetesConfig.initialize(deployConfig, pipelineParameters)
 
     kubernetes.customPodTemplate(kubernetesConfig) {
         node(POD_LABEL) {
@@ -64,62 +115,10 @@ def call(Map repositorySetting = [:], Map k8sCloud = [:]) {
                 checkout scm
             }
 
-            // def currentDirectoryPath = pwd()
-            def artifactsVariables = [:]
-
-            def fileIndir = findFiles(glob: "deploy/*").collect { file -> file.name }
-            def excludedFileName = ["common.yaml", "deploy.yaml"]
-
-            Utils utils = new Utils()
-            Git git = new Git(this, deployConfig)
-
-            SemanticVersion latestTag = git.findLatestSemVerTag()
-            SemanticVersion releaseVersion = new SemanticVersion(latestTag.toString())
-
-            String version
-            if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
-                releaseVersion.increaseVersion(pipelineParameters.patchLevel)
-                version = releaseVersion.toString()
-            } else {
-                def getCurrentTagForBranch = git.getCurrentTagForBranch()
-                version = "${getCurrentTagForBranch != null ? getCurrentTagForBranch.toString() : latestTag.toString()}-${utils.prepareName(environmentVariables.BRANCH_NAME)}-${environmentVariables.BUILD_NUMBER}-${git.getCommitShaShort()}"
-            }
-
-            ArtifactCommonSettings artifactCommonSettings = new ArtifactCommonSettings()
-
-            artifactCommonSettings.initialize(deployConfig, jenkinsFileSettings, environmentVariables, pipelineParameters, git, releaseVersion)
-
             Nexus nexus = new Nexus(this, deployConfig, environmentVariables, logger)
 
             runStage('Nexus initialize', 'docker') {
                 nexus.initialize()
-            }
-
-            for (fileName in fileIndir) {
-                if (!excludedFileName.contains(fileName)) {
-                    logger.logInfo("fileName=${fileName}")
-
-                    ServiceConfig serviceConfig = new ServiceConfig()
-                    Yaml serviceYaml = new Yaml(readYaml(file: "${configDir}/${fileName}"))
-                    serviceConfig.initialize(serviceYaml)
-
-                    String microserviceName = fileName.split("\\.")[0]
-
-                    if (!serviceConfig.artifactSetting.get('enabled')) {
-                        continue
-                    }
-
-                    artifactsVariables.put("${microserviceName}", [
-                        "codeType": serviceConfig.artifactSetting.get('type'),
-                        "artifactName": "${microserviceName}",
-                        "serviceConfig": serviceConfig,
-                        "outputDir": "./out/${microserviceName}",
-                        "fullImagePath": "${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.imageFolder}/${microserviceName}:${artifactCommonSettings.imageTag}",
-                        "releaseFullImagePath": "${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.releaseImageFolder}/${microserviceName}:${artifactCommonSettings.releaseTag}"
-                    ])
-
-                    logger.logInfo("artifactsVariables=${artifactsVariables}")
-                }
             }
 
             CommonConfig commonConfig = new CommonConfig()
@@ -163,7 +162,7 @@ def call(Map repositorySetting = [:], Map k8sCloud = [:]) {
             }
 
             artifactsVariables.each{ artifactName, artifactVariables ->
-                if (artifactVariables.get("codeType")) {
+                if (artifactTypes in [ArtifactType.Service]) {
                     if (pipelineParameters.stageAvailable(PipelineStage.PackApplication)) {
                         runStage('Pack application', 'docker') {
                             make.packApplication(artifactVariables)
@@ -185,10 +184,7 @@ def call(Map repositorySetting = [:], Map k8sCloud = [:]) {
                             nexus.createReleaseImage(artifactCommonSettings, artifactVariables)
                         }
                     }
-                }
-
-
-                if (artifactVariables.get("codeType")) {
+                } else {
                     if (pipelineParameters.stageAvailable(PipelineStage.PackPackage)) {
                         runStage('Pack package', 'docker') {
                             make.packPackage(version, artifactVariables)
@@ -196,7 +192,7 @@ def call(Map repositorySetting = [:], Map k8sCloud = [:]) {
 
                         if (pipelineParameters.stageAvailable(PipelineStage.PushPackage)) {
                             runStage('Push package', 'docker') {
-                                nexus.pushPackage(artifactVariables)
+                                nexus.pushPackage(deployConfig, artifactTypes, artifactVariables)
                             }
                         }
                     }
@@ -215,10 +211,10 @@ def call(Map repositorySetting = [:], Map k8sCloud = [:]) {
             //         }
 
             //         helm.prepareServiceYamlConfigs(deployConfig, artifactVariables.get('serviceConfig'), commonYaml,
-            //                 jenkinsFileSettings, pipelineParameters, artifactCommonSettings)
+            //                  artifactTypes, pipelineParameters, artifactCommonSettings)
             //     }
 
-            //     runStage("Deployment $jenkinsFileSettings.artifactName to ${pipelineParameters.deployEnvironment}", 'helm') {
+            //     runStage("Deployment $artifactTypes to ${pipelineParameters.deployEnvironment}", 'helm') {
             //         helm.deployApplication(deployConfig, artifactVariables.get('serviceConfig'), artifactCommonSettings, environmentVariables)
             //     }
             // }

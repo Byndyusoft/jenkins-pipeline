@@ -3,27 +3,29 @@ class DeployConfig {
     private final Logger logger
     /** Credentials from jenkins for git repositories */
     String gitCredentialsId
-    /**project name*/
+    /** project name */
     String projectName
-    /**list of available agents*/
+    /** service name */
+    String serviceName
+    /** list of available agents */
     List clusterNames = []
     /** list of available environments */
     List additionalDeployEnvironments = []
-    /**path default values file*/
+    /** path default values file */
     String defaultValuesFilePath
-    /**path final values file for deploy service*/
+    /** path final values file for deploy service */
     String microServiceValuesFilePath
-    /**path final values-secret file for deploy service*/
+    /** path final values-secret file for deploy service */
     String secretValuesFilePath
-    /**custom yaml for "Pod Templates jenkins agent(k8s)"*/
+    /** custom yaml for "Pod Templates jenkins agent(k8s)" */
     String yaml
-    /**volumes for "Pod Templates jenkins agent(k8s)"*/
+    /** volumes for "Pod Templates jenkins agent(k8s)" */
     Map volumes
-    /**for deploy jenkins agent*/
+    /** for deploy jenkins agent */
     String serviceAccount
-    /**setting secrets provider*/
+    /** setting secrets provider */
     SecretProvider secretProvider
-    /**setting registry provider*/
+    /** setting registry provider */
     RegistryProvider registryProvider
 
     DeployConfig(Logger logger) {
@@ -34,6 +36,8 @@ class DeployConfig {
         gitCredentialsId = deployYaml.get('gitCredentialsId')
 
         projectName = deployYaml.get('project')
+        serviceName 
+
         clusterNames = deployYaml.get('clusterName') as List
         additionalDeployEnvironments = Utils.listToString(deployYaml.get('additionalDeployEnvironments'))
 

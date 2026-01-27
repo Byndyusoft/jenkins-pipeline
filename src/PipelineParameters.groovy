@@ -28,12 +28,12 @@ class PipelineParameters {
         this.logger = logger
     }
 
-    void initialize(JenkinsFileSettings jenkinsFileSettings, EnvironmentVariables environmentVariables, DeployConfig deployConfig) {
+    void initialize(ArtifactType artifactTypes, EnvironmentVariables environmentVariables, DeployConfig deployConfig) {
         mandatoryStages = []
         optionalStages = []
         environments = []
 
-        initializeDefaultStages(jenkinsFileSettings, environmentVariables, deployConfig)
+        initializeDefaultStages(artifactTypes, environmentVariables, deployConfig)
 
         List params = buildParameters()
 
@@ -129,7 +129,7 @@ class PipelineParameters {
             }'''])))
 
         if (environments) {
-            if (stageAvailable(PipelineStage.DeployApplication)) {               
+            if (stageAvailable(PipelineStage.DeployApplication)) {
                 parameters.add(script.reactiveChoice(choiceType: 'PT_RADIO', filterLength: 1, filterable: false, name: titleDeploymentEnvironment, referencedParameters: 'reload',
                         script: script.groovyScript(fallbackScript: [classpath: [], oldScript: '', sandbox: true, script: 'return \'<p>ERROR</p>\''],
                                 script: [classpath: [], oldScript: '', sandbox: true, script: """if (reload) {
@@ -147,12 +147,12 @@ class PipelineParameters {
         return parameters
     }
 
-    private initializeDefaultStages(JenkinsFileSettings jenkinsFileSettings, EnvironmentVariables environmentVariables, DeployConfig deployConfig) {
-        logger.logDebug("PipelineParameters:initializeDefaultStages jenkinsFileSettings.repositoryTypes = ${jenkinsFileSettings.repositoryTypes}")
+    private initializeDefaultStages(ArtifactType artifactTypes, EnvironmentVariables environmentVariables, DeployConfig deployConfig) {
+        logger.logDebug("PipelineParameters:initializeDefaultStages artifactType = ${artifactType}")
 
-        for (repositoryType in jenkinsFileSettings.repositoryTypes) {
+        for (artifactType in artifactTypes) {
             switch (repositoryType) {
-                case RepositoryType.NugetPackage:
+                case ArtifactType.NugetPackage:
                     if (environmentVariables.BRANCH_NAME == masterBranchName) {
                         mandatoryStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.CreateTag,
                                 PipelineStage.PackPackage, PipelineStage.PushPackage])
@@ -162,7 +162,7 @@ class PipelineParameters {
                     optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.PackPackage, PipelineStage.PushPackage])
                     break
 
-                case RepositoryType.RawPackage:
+                case ArtifactType.RawPackage:
                     if (environmentVariables.BRANCH_NAME == masterBranchName) {
                         mandatoryStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.CreateTag,
                                 PipelineStage.PackPackage, PipelineStage.PushPackage])
@@ -172,7 +172,7 @@ class PipelineParameters {
                     optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.PackPackage, PipelineStage.PushPackage])
                     break
 
-                case RepositoryType.PythonPackage:
+                case ArtifactType.PythonPackage:
                     if (environmentVariables.BRANCH_NAME == masterBranchName) {
                         mandatoryStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.CreateTag,
                                 PipelineStage.PackPackage, PipelineStage.PushPackage])
@@ -183,7 +183,7 @@ class PipelineParameters {
                     break
 
                 // By default
-                case RepositoryType.Service:
+                case ArtifactType.Service:
                     mandatoryStages.addAll([PipelineStage.CheckImage])
 
                     if (environmentVariables.TAG_NAME) {
@@ -203,11 +203,12 @@ class PipelineParameters {
                     environments.add(DeployEnvironment.preprod.name())
                     break
 
-                case RepositoryType.None:
-                    logger.logDebug("PipelineParameters:initializeDefaultStages RepositoryType is None")
+                case ArtifactType.None:
+                    logger.logDebug("PipelineParameters:initializeDefaultStages ArtifactType is None")
                     return []
             }
         }
+
         logger.logDebug("PipelineParameters:initializeDefaultStages mandatoryStages = ${mandatoryStages}")
         logger.logDebug("PipelineParameters:initializeDefaultStages optionalStages = ${optionalStages}")
         logger.logDebug("PipelineParameters:initializeDefaultStages environments = ${environments}")

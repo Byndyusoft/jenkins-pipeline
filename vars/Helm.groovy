@@ -33,14 +33,14 @@ class Helm {
     }
 
     void prepareServiceYamlConfigs(DeployConfig deployConfig, ServiceConfig serviceConfig, Yaml commonYaml,
-                                   JenkinsFileSettings jenkinsFileSettings, PipelineParameters pipelineParameters,
+                                   ArtifactType artifactTypes, PipelineParameters pipelineParameters,
                                    ArtifactCommonSettings artifactCommonSettings) {
 
         Utils utils = new Utils()
         Map commonEnv = commonYaml == null ? [:] : commonYaml.get('common') as Map
         Map valuesOverrides = utils.merge(commonEnv, serviceConfig.microservice)
 
-        valuesOverrides["microservice"] = [name: jenkinsFileSettings.repositoryName, registryUrl: deployConfig.registryProvider.registryImagePushUrl, imageFolder: artifactCommonSettings.imageFolder, image: jenkinsFileSettings.repositoryName, tag: artifactCommonSettings.imageTag]
+        valuesOverrides["microservice"] = [name: deployConfig.serviceName, registryUrl: deployConfig.registryProvider.registryImagePushUrl, imageFolder: artifactCommonSettings.imageFolder, image: deployConfig.serviceName, tag: artifactCommonSettings.imageTag]
         valuesOverrides["project"] = deployConfig.projectName
         valuesOverrides["environment"] = "${pipelineParameters.deployEnvironment}"
         valuesOverrides["gitCommitShort"] = artifactCommonSettings.gitCommitShort
@@ -52,7 +52,7 @@ class Helm {
         switch (deployConfig.secretProvider.providerName) {
             case 'vault':
                 Vault vault = new Vault(script, deployConfig)
-                String vaultPathSecret = "${pipelineParameters.cluster}/${deployConfig.projectName}/${jenkinsFileSettings.repositoryName}/${pipelineParameters.deployEnvironment}"
+                String vaultPathSecret = "${pipelineParameters.cluster}/${deployConfig.projectName}/${deployConfig.serviceName}/${pipelineParameters.deployEnvironment}"
                 Map valuesOverridesSecret = [secret: vault.getVaultSecret(vaultPathSecret)]
 
                 script.writeYaml file: deployConfig.secretValuesFilePath, overwrite: true, data: valuesOverridesSecret
