@@ -72,11 +72,11 @@ def call() {
                         Yaml serviceYaml = new Yaml(readYaml(file: "${configDir}/${fileName}"))
                         serviceConfig.initialize(serviceYaml)
 
-                        String microserviceName = fileName.split("\\.")[0]
-
                         if (!serviceConfig.artifactSetting.get('enabled')) {
                             continue
                         }
+
+                        String microserviceName = fileName.split("\\.")[0]
 
                         List<ArtifactType> artifactTypes = utils.mapArtifactType(serviceConfig.artifactSetting.get('type') as List<String> ?: [])
 
