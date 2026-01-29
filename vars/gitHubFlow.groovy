@@ -183,7 +183,7 @@ def call() {
             }
 
             artifactsVariables.each{ artifactName, artifactVariables ->
-                if (artifactVariables.get('artifactTypes') in [ArtifactType.Service]) {
+                if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.Service])) {
                     if (pipelineParameters.stageAvailable(PipelineStage.PackApplication)) {
                         runStage('Pack application', 'docker') {
                             make.packApplication(artifactVariables)
@@ -207,7 +207,7 @@ def call() {
                     }
                 }
 
-                if (artifactVariables.get('artifactTypes') in [ArtifactType.NugetPackage, ArtifactType.PythonPackage, ArtifactType.RawPackage]) {
+                if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.NugetPackage, ArtifactType.PythonPackage, ArtifactType.RawPackage])) {
                     if (pipelineParameters.stageAvailable(PipelineStage.PackPackage)) {
                         runStage('Pack package', 'docker') {
                             make.packPackage(artifactVersion, artifactVariables)
