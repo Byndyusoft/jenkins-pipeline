@@ -196,13 +196,13 @@ def call() {
                         }
 
                         runStage('Push image', 'docker') {
-                            nexus.pushImage(artifactCommonSettings)
+                            nexus.pushImage(artifactCommonSettings, artifactName)
                         }
                     }
 
                     if (pipelineParameters.stageAvailable(PipelineStage.CreateReleaseImage)) {
                         runStage('Push release image', 'docker') {
-                            nexus.createReleaseImage(artifactCommonSettings)
+                            nexus.createReleaseImage(artifactCommonSettings, artifactName)
                         }
                     }
                 }
