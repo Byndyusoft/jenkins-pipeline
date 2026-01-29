@@ -28,6 +28,7 @@ def call() {
     DeployConfig deployConfig = new DeployConfig(logger)
 
     def artifactsVariables = [:]
+    List<ArtifactType> artifactsTypes
 
     Utils utils = new Utils()
     ArtifactCommonSettings artifactCommonSettings = new ArtifactCommonSettings()
@@ -64,6 +65,8 @@ def call() {
 
                         List<ArtifactType> artifactTypes = utils.mapArtifactType(serviceConfig.artifactSetting.get('type') as List<String> ?: [])
 
+                        artifactsTypes.addAll([artifactTypes])
+
                         artifactsVariables.put("${microserviceName}", [
                             "artifactTypes": artifactTypes,
                             "artifactName": microserviceName,
@@ -79,7 +82,7 @@ def call() {
     }
 
     PipelineParameters pipelineParameters = new PipelineParameters(this, logger)
-    pipelineParameters.initialize(deployConfig, environmentVariables, artifactTypes)
+    pipelineParameters.initialize(deployConfig, environmentVariables, artifactsTypes)
 
     logger.logInfo('###################################################################')
     logger.logInfo("Deploy to cluster=${pipelineParameters.cluster}")
@@ -178,7 +181,7 @@ def call() {
             }
 
             artifactsVariables.each{ artifactName, artifactVariables ->
-                if (artifactTypes in [ArtifactType.Service]) {
+                if (artifactVariables.get('artifactTypes') in [ArtifactType.Service]) {
                     if (pipelineParameters.stageAvailable(PipelineStage.PackApplication)) {
                         runStage('Pack application', 'docker') {
                             make.packApplication(artifactVariables)
@@ -197,7 +200,7 @@ def call() {
 
                     if (pipelineParameters.stageAvailable(PipelineStage.CreateReleaseImage)) {
                         runStage('Push release image', 'docker') {
-                            nexus.createReleaseImage(artifactCommonSettings, artifactVariables)
+                            nexus.createReleaseImage(artifactCommonSettings)
                         }
                     }
                 } else {
@@ -208,7 +211,7 @@ def call() {
 
                         if (pipelineParameters.stageAvailable(PipelineStage.PushPackage)) {
                             runStage('Push package', 'docker') {
-                                nexus.pushPackage(deployConfig, artifactTypes, artifactVariables)
+                                nexus.pushPackage(artifactVariables)
                             }
                         }
                     }

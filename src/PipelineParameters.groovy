@@ -28,12 +28,12 @@ class PipelineParameters {
         this.logger = logger
     }
 
-    void initialize(ArtifactType artifactTypes, EnvironmentVariables environmentVariables, DeployConfig deployConfig) {
+    void initialize(DeployConfig deployConfig, EnvironmentVariables environmentVariables, ArtifactType artifactsTypes) {
         mandatoryStages = []
         optionalStages = []
         environments = []
 
-        initializeDefaultStages(artifactTypes, environmentVariables, deployConfig)
+        initializeDefaultStages(deployConfig, environmentVariables, artifactsTypes)
 
         List params = buildParameters()
 
@@ -147,10 +147,10 @@ class PipelineParameters {
         return parameters
     }
 
-    private initializeDefaultStages(DeployConfig deployConfig, EnvironmentVariables environmentVariables, ArtifactType artifactTypes) {
+    private initializeDefaultStages(DeployConfig deployConfig, EnvironmentVariables environmentVariables, ArtifactType artifactsTypes) {
         logger.logDebug("PipelineParameters:initializeDefaultStages artifactType = ${artifactType}")
 
-        for (artifactType in artifactTypes) {
+        for (artifactType in artifactsTypes) {
             switch (repositoryType) {
                 case ArtifactType.NugetPackage:
                     if (environmentVariables.BRANCH_NAME == masterBranchName) {

@@ -38,8 +38,8 @@ class Nexus {
         }
     }
 
-    void pushPackage(DeployConfig deployConfig, ArtifactType artifactTypes, def artifactVariables) {
-        for (artifactType in artifactTypes) {
+    void pushPackage(def artifactVariables) {
+        for (artifactType in artifactVariables.get('artifactTypes')) {
             switch (artifactType) {
                 case ArtifactType.PythonPackage:
                     pushPythonPackage()
@@ -86,10 +86,11 @@ class Nexus {
         script.sh("docker push ${artifactVariables.get('fullImagePath')}")
     }
 
-    void createReleaseImage(ArtifactCommonSettings artifactCommonSettings, def artifactVariables) {
-        script.sh("docker pull ${artifactVariables.get('fullImagePath')}")
-        script.sh("docker tag ${artifactVariables.get('fullImagePath')} ${artifactVariables.get('releaseFullImagePath')}")
-        script.sh("docker push ${artifactVariables.get('releaseFullImagePath')}")
+    void createReleaseImage(ArtifactCommonSettings artifactCommonSettings) {
+        script.sh("docker pull ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.imageFolder}/${artifactCommonSettings.imageName}:${artifactCommonSettings.imageTag}")
+        script.sh("""docker tag ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.imageFolder}/${artifactCommonSettings.imageName}:${artifactCommonSettings.imageTag} \
+            ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.releaseImageFolder}/${artifactCommonSettings.imageName}:${artifactCommonSettings.releaseTag}""")
+        script.sh("docker push ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.releaseImageFolder}/${artifactCommonSettings.imageName}:${artifactCommonSettings.releaseTag}")
 
         artifactCommonSettings.imageFolder = artifactCommonSettings.releaseImageFolder
         artifactCommonSettings.imageTag = artifactCommonSettings.releaseTag
