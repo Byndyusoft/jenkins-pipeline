@@ -28,7 +28,7 @@ def call() {
     DeployConfig deployConfig = new DeployConfig(logger)
 
     def artifactsVariables = [:]
-    List<ArtifactType> artifactsTypes
+    List<ArtifactType> artifactsTypes = []
 
     Utils utils = new Utils()
     ArtifactCommonSettings artifactCommonSettings = new ArtifactCommonSettings()
