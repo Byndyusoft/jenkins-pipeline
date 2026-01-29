@@ -31,7 +31,6 @@ def call() {
     List<ArtifactType> artifactsTypes = []
 
     Utils utils = new Utils()
-    ArtifactCommonSettings artifactCommonSettings = new ArtifactCommonSettings()
 
     kubernetes.customPodTemplate(customConfig) {
         node(POD_LABEL) {
@@ -134,6 +133,7 @@ def call() {
                 artifactVersion = "${getCurrentTagForBranch != null ? getCurrentTagForBranch.toString() : latestTag.toString()}-${utils.prepareName(environmentVariables.BRANCH_NAME)}-${environmentVariables.BUILD_NUMBER}-${git.getCommitShaShort()}"
             }
 
+            ArtifactCommonSettings artifactCommonSettings = new ArtifactCommonSettings()
             artifactCommonSettings.initialize(deployConfig, environmentVariables, pipelineParameters, git, releaseVersion, artifactVersion)
 
             Nexus nexus = new Nexus(this, deployConfig, environmentVariables, logger)

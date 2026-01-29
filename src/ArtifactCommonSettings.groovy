@@ -3,14 +3,15 @@ class ArtifactCommonSettings {
     String gitCommitShort
     String imageFolder
     String releaseImageFolder
-    String releaseName
     String namespace
+    String releaseName
     String imageTag
-    SemanticVersion releaseVersion
     String releaseTag
+    String artifactVersion
+    SemanticVersion releaseVersion
 
     void initialize(DeployConfig deployConfig, EnvironmentVariables environmentVariables,
-                    PipelineParameters pipelineParameters, Git git, SemanticVersion releaseVersion) {
+                    PipelineParameters pipelineParameters, Git git, SemanticVersion releaseVersion, String artifactVersion) {
         Utils utils = new Utils()
 
         gitCommitShort = git.getCommitShaShort()
@@ -24,6 +25,7 @@ class ArtifactCommonSettings {
         imageTag = (environmentVariables.TAG_NAME) ?: "${environmentVariables.BRANCH_NAME.replace('/', '-')}-${gitCommitShort}"
         releaseTag = releaseVersion.toString()
 
+        artifactVersion = artifactVersion
         releaseVersion = releaseVersion
     }
 }
