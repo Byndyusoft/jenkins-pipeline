@@ -32,8 +32,6 @@ def call() {
     Utils utils = new Utils()
     ArtifactCommonSettings artifactCommonSettings = new ArtifactCommonSettings()
 
-    Git git = new Git(this, deployConfig)
-
     kubernetes.customPodTemplate(customConfig) {
         node(POD_LABEL) {
             stage('Get configs') {
@@ -87,6 +85,8 @@ def call() {
     logger.logInfo("Deploy to cluster=${pipelineParameters.cluster}")
     logger.logInfo("Pipeline parameters \"deploy environment\" is pipelineParameters.deployEnvironment=${pipelineParameters.deployEnvironment}")
     logger.logInfo('###################################################################')
+
+    Git git = new Git(this, deployConfig)
 
     SemanticVersion latestTag = git.findLatestSemVerTag()
     SemanticVersion releaseVersion = new SemanticVersion(latestTag.toString())
