@@ -38,24 +38,6 @@ class Nexus {
         }
     }
 
-    void pushPackage(def artifactVariables) {
-        for (artifactType in artifactVariables.get('artifactTypes')) {
-            switch (artifactType) {
-                case ArtifactType.PythonPackage:
-                    pushPythonPackage()
-                    break
-                case ArtifactType.RawPackage:
-                    pushRawPackage(deployConfig.serviceName)
-                    break
-                case ArtifactType.NugetPackage:
-                    pushNugetPackage(artifactVariables)
-                    break
-                default:
-                    logger.logInfo('Did not determine the type package')
-            }
-        }
-    }
-
     boolean checkImage(ArtifactCommonSettings artifactCommonSettings, String artifactName) {
         boolean imageExist = false
 
@@ -96,6 +78,24 @@ class Nexus {
         artifactCommonSettings.imageTag = artifactCommonSettings.releaseTag
     }
 
+    void pushPackage(def artifactVariables) {
+        for (artifactType in artifactVariables.get('artifactTypes')) {
+            switch (artifactType) {
+                case ArtifactType.PythonPackage:
+                    pushPythonPackage()
+                    break
+                case ArtifactType.RawPackage:
+                    pushRawPackage(deployConfig.serviceName)
+                    break
+                case ArtifactType.NugetPackage:
+                    pushNugetPackage(artifactVariables)
+                    break
+                default:
+                    logger.logInfo('Did not determine the type package')
+            }
+        }
+    }
+
     void pushPythonPackage() {
         runWithCredentials {
             script.sh("twine upload -u ${script.userRegistry} -p ${script.passRegistry} --repository-url ${deployConfig.registryProvider.registryPackageUrl} ./dist/* --verbose")
@@ -122,7 +122,7 @@ class Nexus {
 
             for (pkg in listPackages) {
                 if (!checkNugetPackage(pkg.replaceFirst(/\.(\d+.\d+.\d+)/, '/$1').replaceFirst(/\.nupkg/, ''))) {
-                    script.sh("cd ${nugetFileDirectory} && mono /usr/local/bin/nuget.exe push \"${i}\" \
+                    script.sh("cd ${nugetFileDirectory} && mono /usr/local/bin/nuget.exe push \"${pkg}\" \
                         -Source \"${deployConfig.registryProvider.registryPackageUrl}\" -SkipDuplicate -Verbosity detailed")
                 }
             }
