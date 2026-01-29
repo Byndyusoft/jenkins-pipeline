@@ -82,8 +82,8 @@ class Nexus {
         }
     }
 
-    void pushImage(def artifactVariables) {
-        script.sh("docker push ${artifactVariables.get('fullImagePath')}")
+    void pushImage(ArtifactCommonSettings artifactCommonSettings) {
+        script.sh("docker push ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.imageFolder}/${artifactCommonSettings.imageName}:${artifactCommonSettings.imageTag}")
     }
 
     void createReleaseImage(ArtifactCommonSettings artifactCommonSettings) {
