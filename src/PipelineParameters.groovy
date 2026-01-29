@@ -151,7 +151,7 @@ class PipelineParameters {
         logger.logDebug("PipelineParameters:initializeDefaultStages artifactsTypes = ${artifactsTypes}")
 
         for (artifactType in artifactsTypes) {
-            switch (repositoryType) {
+            switch (artifactType) {
                 case ArtifactType.NugetPackage:
                     if (environmentVariables.BRANCH_NAME == masterBranchName) {
                         mandatoryStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.CreateTag,
