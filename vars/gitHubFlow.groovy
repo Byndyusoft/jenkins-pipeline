@@ -237,7 +237,6 @@ def call() {
 
             if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
                 runStage('Make release', 'docker') {
-                    Git git = new Git(this, deployConfig)
                     git.createTag(releaseVersion)
                 }
             }
