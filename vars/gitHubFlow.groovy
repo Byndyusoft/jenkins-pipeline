@@ -205,7 +205,9 @@ def call() {
                             nexus.createReleaseImage(artifactCommonSettings)
                         }
                     }
-                } else {
+                }
+
+                if (artifactVariables.get('artifactTypes') in [ArtifactType.NugetPackage, ArtifactType.PythonPackage, ArtifactType.RawPackage]) {
                     if (pipelineParameters.stageAvailable(PipelineStage.PackPackage)) {
                         runStage('Pack package', 'docker') {
                             make.packPackage(artifactVersion, artifactVariables)
