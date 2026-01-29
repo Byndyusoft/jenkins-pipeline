@@ -28,7 +28,7 @@ class PipelineParameters {
         this.logger = logger
     }
 
-    void initialize(DeployConfig deployConfig, EnvironmentVariables environmentVariables, ArtifactType artifactsTypes) {
+    void initialize(DeployConfig deployConfig, EnvironmentVariables environmentVariables, List<ArtifactType> artifactsTypes) {
         mandatoryStages = []
         optionalStages = []
         environments = []
@@ -147,7 +147,7 @@ class PipelineParameters {
         return parameters
     }
 
-    private initializeDefaultStages(DeployConfig deployConfig, EnvironmentVariables environmentVariables, ArtifactType artifactsTypes) {
+    private initializeDefaultStages(DeployConfig deployConfig, EnvironmentVariables environmentVariables, List<ArtifactType> artifactsTypes) {
         logger.logDebug("PipelineParameters:initializeDefaultStages artifactType = ${artifactType}")
 
         for (artifactType in artifactsTypes) {

@@ -65,7 +65,7 @@ def call() {
 
                         List<ArtifactType> artifactTypes = utils.mapArtifactType(serviceConfig.artifactSetting.get('type') as List<String> ?: [])
 
-                        artifactsTypes.addAll(artifactTypes.flatten())
+                        artifactsTypes.addAll(artifactTypes.flatten()).unique()
 
                         artifactsVariables.put("${microserviceName}", [
                             "artifactTypes": artifactTypes,
@@ -77,6 +77,8 @@ def call() {
                         logger.logInfo("artifactsVariables=${artifactsVariables}")
                     }
                 }
+
+                artifactsTypes = artifactsTypes.unique()
             }
         }
     }
