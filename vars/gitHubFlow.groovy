@@ -29,10 +29,10 @@ def call() {
 
     def artifactsVariables = [:]
 
-    def excludedFileName = ["common.yaml", "deploy.yaml"]
-
     Utils utils = new Utils()
     ArtifactCommonSettings artifactCommonSettings = new ArtifactCommonSettings()
+
+    Git git = new Git(this, deployConfig)
 
     kubernetes.customPodTemplate(customConfig) {
         node(POD_LABEL) {
@@ -47,23 +47,8 @@ def call() {
                 Yaml deployYaml = new Yaml(readYaml(file: "${configDir}/deploy.yaml"))
                 deployConfig.initialize(deployYaml)
 
-                Git git = new Git(this, deployConfig)
-
-                SemanticVersion latestTag = git.findLatestSemVerTag()
-                SemanticVersion releaseVersion = new SemanticVersion(latestTag.toString())
-
-                String version
-                if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
-                    releaseVersion.increaseVersion(pipelineParameters.patchLevel)
-                    version = releaseVersion.toString()
-                } else {
-                    def getCurrentTagForBranch = git.getCurrentTagForBranch()
-                    version = "${getCurrentTagForBranch != null ? getCurrentTagForBranch.toString() : latestTag.toString()}-${utils.prepareName(environmentVariables.BRANCH_NAME)}-${environmentVariables.BUILD_NUMBER}-${git.getCommitShaShort()}"
-                }
-
-                artifactCommonSettings.initialize(deployConfig, environmentVariables, pipelineParameters, git, releaseVersion, version)
-
                 def fileIndir = findFiles(glob: "deploy/*").collect { file -> file.name }
+                def excludedFileName = ["common.yaml", "deploy.yaml"]
 
                 for (fileName in fileIndir) {
                     if (!excludedFileName.contains(fileName)) {
@@ -85,9 +70,7 @@ def call() {
                             "artifactTypes": artifactTypes,
                             "artifactName": microserviceName,
                             "serviceConfig": serviceConfig,
-                            "outputDir": "./out/${microserviceName}",
-                            "fullImagePath": "${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.imageFolder}/${microserviceName}:${artifactCommonSettings.imageTag}",
-                            "releaseFullImagePath": "${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.releaseImageFolder}/${microserviceName}:${artifactCommonSettings.releaseTag}"
+                            "outputDir": "./out/${microserviceName}"
                         ])
 
                         logger.logInfo("artifactsVariables=${artifactsVariables}")
@@ -104,6 +87,20 @@ def call() {
     logger.logInfo("Deploy to cluster=${pipelineParameters.cluster}")
     logger.logInfo("Pipeline parameters \"deploy environment\" is pipelineParameters.deployEnvironment=${pipelineParameters.deployEnvironment}")
     logger.logInfo('###################################################################')
+
+    SemanticVersion latestTag = git.findLatestSemVerTag()
+    SemanticVersion releaseVersion = new SemanticVersion(latestTag.toString())
+
+    String artifactVersion
+    if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
+        releaseVersion.increaseVersion(pipelineParameters.patchLevel)
+        artifactVersion = releaseVersion.toString()
+    } else {
+        def getCurrentTagForBranch = git.getCurrentTagForBranch()
+        artifactVersion = "${getCurrentTagForBranch != null ? getCurrentTagForBranch.toString() : latestTag.toString()}-${utils.prepareName(environmentVariables.BRANCH_NAME)}-${environmentVariables.BUILD_NUMBER}-${git.getCommitShaShort()}"
+    }
+
+    artifactCommonSettings.initialize(deployConfig, environmentVariables, pipelineParameters, git, releaseVersion, artifactVersion)
 
     if (pipelineParameters.onlyPipelineUpdate) {
         logger.logInfo('Pipeline parameters updated, ignore build, exit from pipeline')
@@ -164,7 +161,7 @@ def call() {
 
             if (pipelineParameters.stageAvailable(PipelineStage.BuildApplication)) {
                 runStage('Build application', 'docker') {
-                    make.buildApplication(version)
+                    make.buildApplication(artifactVersion)
                 }
             }
 
@@ -206,7 +203,7 @@ def call() {
                 } else {
                     if (pipelineParameters.stageAvailable(PipelineStage.PackPackage)) {
                         runStage('Pack package', 'docker') {
-                            make.packPackage(version, artifactVariables)
+                            make.packPackage(artifactVersion, artifactVariables)
                         }
 
                         if (pipelineParameters.stageAvailable(PipelineStage.PushPackage)) {
