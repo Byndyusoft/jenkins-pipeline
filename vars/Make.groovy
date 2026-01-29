@@ -35,8 +35,9 @@ class Make {
         script.sh("make ${commonConfig.makeOption} pack-application outputDir=${artifactVariables.get('outputDir')} ${commonConfig.makeFileEnvString} ${artifactVariables.get('serviceConfig').makeFileEnvString}")
     }
 
-    void buildImage(def artifactVariables) {
-        script.sh("make ${commonConfig.makeOption} build-image appImage=${artifactVariables.get('fullImagePath')} outputDir=${artifactVariables.get('outputDir')} ${commonConfig.makeFileEnvString} ${artifactVariables.get('serviceConfig').makeFileEnvString}")
+    void buildImage(DeployConfig deployConfig, def artifactVariables) {
+        String fullImagePath = "${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.imageFolder}/${artifactVariables.get('artifactName')}:${artifactCommonSettings.imageTag}"
+        script.sh("make ${commonConfig.makeOption} build-image appImage=${fullImagePath} outputDir=${artifactVariables.get('outputDir')} ${commonConfig.makeFileEnvString} ${artifactVariables.get('serviceConfig').makeFileEnvString}")
     }
 
     void packPackage(String packageVersion, def artifactVariables) {
