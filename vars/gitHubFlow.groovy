@@ -91,22 +91,6 @@ def call() {
     logger.logInfo("Pipeline parameters \"deploy environment\" is pipelineParameters.deployEnvironment=${pipelineParameters.deployEnvironment}")
     logger.logInfo('###################################################################')
 
-    Git git = new Git(this, deployConfig)
-
-    SemanticVersion latestTag = git.findLatestSemVerTag()
-    SemanticVersion releaseVersion = new SemanticVersion(latestTag.toString())
-
-    String artifactVersion
-    if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
-        releaseVersion.increaseVersion(pipelineParameters.patchLevel)
-        artifactVersion = releaseVersion.toString()
-    } else {
-        def getCurrentTagForBranch = git.getCurrentTagForBranch()
-        artifactVersion = "${getCurrentTagForBranch != null ? getCurrentTagForBranch.toString() : latestTag.toString()}-${utils.prepareName(environmentVariables.BRANCH_NAME)}-${environmentVariables.BUILD_NUMBER}-${git.getCommitShaShort()}"
-    }
-
-    artifactCommonSettings.initialize(deployConfig, environmentVariables, pipelineParameters, git, releaseVersion, artifactVersion)
-
     if (pipelineParameters.onlyPipelineUpdate) {
         logger.logInfo('Pipeline parameters updated, ignore build, exit from pipeline')
         return
@@ -135,6 +119,22 @@ def call() {
             stage('Checkout SCM') {
                 checkout scm
             }
+
+            Git git = new Git(this, deployConfig)
+
+            SemanticVersion latestTag = git.findLatestSemVerTag()
+            SemanticVersion releaseVersion = new SemanticVersion(latestTag.toString())
+
+            String artifactVersion
+            if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
+                releaseVersion.increaseVersion(pipelineParameters.patchLevel)
+                artifactVersion = releaseVersion.toString()
+            } else {
+                def getCurrentTagForBranch = git.getCurrentTagForBranch()
+                artifactVersion = "${getCurrentTagForBranch != null ? getCurrentTagForBranch.toString() : latestTag.toString()}-${utils.prepareName(environmentVariables.BRANCH_NAME)}-${environmentVariables.BUILD_NUMBER}-${git.getCommitShaShort()}"
+            }
+
+            artifactCommonSettings.initialize(deployConfig, environmentVariables, pipelineParameters, git, releaseVersion, artifactVersion)
 
             Nexus nexus = new Nexus(this, deployConfig, environmentVariables, logger)
 
