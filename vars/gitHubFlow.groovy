@@ -29,7 +29,6 @@ def call() {
 
     def artifactsVariables = [:]
 
-    def fileIndir = findFiles(glob: "deploy/*").collect { file -> file.name }
     def excludedFileName = ["common.yaml", "deploy.yaml"]
 
     Utils utils = new Utils()
@@ -63,6 +62,8 @@ def call() {
                 }
 
                 artifactCommonSettings.initialize(deployConfig, environmentVariables, pipelineParameters, git, releaseVersion, version)
+
+                def fileIndir = findFiles(glob: "deploy/*").collect { file -> file.name }
 
                 for (fileName in fileIndir) {
                     if (!excludedFileName.contains(fileName)) {
