@@ -192,7 +192,7 @@ def call() {
 
                     if (pipelineParameters.stageAvailable(PipelineStage.BuildDockerImage)) {
                         runStage('Build image', 'docker') {
-                            make.buildImage(deployConfig, artifactVariables)
+                            make.buildImage(deployConfig, artifactCommonSettings, artifactVariables)
                         }
 
                         runStage('Push image', 'docker') {
