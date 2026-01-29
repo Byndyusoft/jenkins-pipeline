@@ -196,7 +196,7 @@ def call() {
                         }
 
                         runStage('Push image', 'docker') {
-                            nexus.pushImage(artifactVariables)
+                            nexus.pushImage(artifactCommonSettings)
                         }
                     }
 
