@@ -114,7 +114,7 @@ class Nexus {
             for (pkg in listPackages) {
                 if (!checkPackage(pkg.replaceFirst(/\.(\d+.\d+.\d+.+$)/, '/$1').replaceFirst(/\.nupkg/, ''))) {
                     // ToDo: check exist package post upload
-                    script.sh("curl -v --user '${script.userRegistry}:${script.passRegistry}' -F \"package=@${nugetFileDirectory}/${pkg}\" ${deployConfig.registryProvider.registryPackageUrl}")
+                    script.sh("curl -v --user '${script.userRegistry}:${script.passRegistry}' -X PUT -F \"package=@${nugetFileDirectory}/${pkg}\" ${deployConfig.registryProvider.registryPackageUrl}")
                 }
             }
         }
