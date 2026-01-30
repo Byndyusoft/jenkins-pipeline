@@ -53,17 +53,6 @@ class Nexus {
         return imageExist
     }
 
-    boolean checkNugetPackage(String namePackage) {
-        runWithCredentials {
-            URL url = new URL("${deployConfig.registryProvider.registryPackageUrl}")
-
-            return (script.sh(
-                returnStdout: true,
-                script: """curl -s --output /dev/null -u ${script.userRegistry}:${script.passRegistry} -X GET --write-out '%{http_code}' \
-                    ${url.protocol}://${url.host}${url.path.replaceFirst(/index\.json/, '')}${namePackage}""") == '200') ? true : false
-        }
-    }
-
     void pushImage(ArtifactCommonSettings artifactCommonSettings, String artifactName) {
         script.sh("docker push ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactCommonSettings.imageFolder}/${artifactName}:${artifactCommonSettings.imageTag}")
     }
@@ -96,6 +85,15 @@ class Nexus {
         }
     }
 
+    boolean checkPackage(String name) {
+        runWithCredentials {
+            return (script.sh(
+                returnStdout: true,
+                script: """curl -s --output /dev/null -u ${script.userRegistry}:${script.passRegistry} -X GET --write-out '%{http_code}' \
+                    ${deployConfig.registryProvider.registryPackageUrl}/${name}""") == '200') ? true : false
+        }
+    }
+
     void pushPythonPackage() {
         runWithCredentials {
             script.sh("twine upload -u ${script.userRegistry} -p ${script.passRegistry} --repository-url ${deployConfig.registryProvider.registryPackageUrl} ./dist/* --verbose")
@@ -111,19 +109,12 @@ class Nexus {
     void pushNugetPackage(def artifactVariables) {
         runWithCredentials {
             String nugetFileDirectory = "${artifactVariables.get('outputDir')}"
-
-            script.sh("mono /usr/local/bin/nuget.exe sources Add -Name \"local-nuget-push\" \
-                -Source \"${deployConfig.registryProvider.registryPackageUrl}\" \
-                -Username ${script.userRegistry} \
-                -password ${script.passRegistry} \
-                -StorePasswordInClearText")
-
             List listPackages = script.sh(returnStdout: true, script: """ls -1 ${nugetFileDirectory}""").split("\n")
 
             for (pkg in listPackages) {
-                if (!checkNugetPackage(pkg.replaceFirst(/\.(\d+.\d+.\d+)/, '/$1').replaceFirst(/\.nupkg/, ''))) {
-                    script.sh("cd ${nugetFileDirectory} && mono /usr/local/bin/nuget.exe push \"${pkg}\" \
-                        -Source \"${deployConfig.registryProvider.registryPackageUrl}\" -SkipDuplicate -Verbosity detailed")
+                if (!checkPackage(pkg.replaceFirst(/\.(\d+.\d+.\d+.+$)/, '/$1').replaceFirst(/\.nupkg/, ''))) {
+                    // ToDo: check exist package post upload
+                    script.sh("curl -v --user '${script.userRegistry}:${script.passRegistry}' -F \"package=@${nugetFileDirectory}/${pkg}\" ${deployConfig.registryProvider.registryPackageUrl}")
                 }
             }
         }
