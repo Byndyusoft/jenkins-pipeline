@@ -152,6 +152,7 @@ def call() {
                 runStage('Check image exists', 'docker') {
                     artifactsVariables.each{ artifactName, artifactVariables ->
                         if (nexus.checkImage(artifactCommonSettings, artifactName)) {
+                            logger.logInfo("Image ${artifactName} does not exist")
                             pipelineParameters.deleteStage([PipelineStage.InstallDependencies, PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.PackApplication, PipelineStage.BuildDockerImage])
                         }
                     }
@@ -185,23 +186,23 @@ def call() {
             artifactsVariables.each{ artifactName, artifactVariables ->
                 if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.Service])) {
                     if (pipelineParameters.stageAvailable(PipelineStage.PackApplication)) {
-                        runStage('Pack application', 'docker') {
+                        runStage("Pack application ${artifactName}", 'docker') {
                             make.packApplication(artifactVariables)
                         }
                     }
 
                     if (pipelineParameters.stageAvailable(PipelineStage.BuildDockerImage)) {
-                        runStage('Build image', 'docker') {
+                        runStage("Build image ${artifactName}", 'docker') {
                             make.buildImage(deployConfig, artifactCommonSettings, artifactVariables)
                         }
 
-                        runStage('Push image', 'docker') {
+                        runStage("Push image ${artifactName}", 'docker') {
                             nexus.pushImage(artifactCommonSettings, artifactName)
                         }
                     }
 
                     if (pipelineParameters.stageAvailable(PipelineStage.CreateReleaseImage)) {
-                        runStage('Push release image', 'docker') {
+                        runStage("Push release image ${artifactName}", 'docker') {
                             nexus.createReleaseImage(artifactCommonSettings, artifactName)
                         }
                     }
