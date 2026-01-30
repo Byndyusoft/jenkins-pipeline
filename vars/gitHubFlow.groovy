@@ -150,11 +150,16 @@ def call() {
 
             if (pipelineParameters.stageAvailable(PipelineStage.CheckImage)) {
                 runStage('Check image exists', 'docker') {
+                    boolean artifactExist = true
                     artifactsVariables.each{ artifactName, artifactVariables ->
-                        if (nexus.checkImage(artifactCommonSettings, artifactName)) {
-                            logger.logInfo("Image ${artifactName} does not exist")
-                            pipelineParameters.deleteStage([PipelineStage.InstallDependencies, PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.PackApplication, PipelineStage.BuildDockerImage])
+                        if (!nexus.checkImage(artifactCommonSettings, artifactName)) {
+                            artifactExist = false
+                            return true // each break
                         }
+                    }
+
+                    if (artifactExist) {
+                        pipelineParameters.deleteStage([PipelineStage.InstallDependencies, PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.PackApplication, PipelineStage.BuildDockerImage])
                     }
                 }
             }
