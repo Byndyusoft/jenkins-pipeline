@@ -35,7 +35,10 @@ class Helm {
     void prepareServiceYamlConfigs(DeployConfig deployConfig, CommonConfig commonConfig, def artifactVariables) {
         Utils utils = new Utils()
 
-        Map fullValues = new Yaml(readYaml(file: deployConfig.microServiceValuesFilePath)).get('/')
+        Map fullValues = [:]
+        if (fileExists(deployConfig.microServiceValuesFilePath)) {
+            fullValues = new Yaml(readYaml(file: deployConfig.microServiceValuesFilePath)).get('/')
+        }
 
         Map valuesOverrides = utils.merge(commonConfig.common, artifactVariables.get('ServiceConfig').microservice)
 

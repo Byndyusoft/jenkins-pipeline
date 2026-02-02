@@ -143,7 +143,10 @@ def call() {
             }
 
             CommonConfig commonConfig = new CommonConfig()
-            Yaml commonYaml = new Yaml(readYaml(file: "${configDir}/common.yaml"))
+            Yaml commonYaml = null
+            if (fileExists("${configDir}/common.yaml")) {
+                commonYaml = new Yaml(readYaml(file: "${configDir}/common.yaml"))
+            }
             commonConfig.initialize(commonYaml)
 
             Make make = new Make(this, commonConfig, logger)
