@@ -159,7 +159,7 @@ def call() {
                         }
                     }
 
-                    if (artifactNotExist) {
+                    if (!artifactNotExist) {
                         pipelineParameters.deleteStage([PipelineStage.InstallDependencies, PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.PackApplication, PipelineStage.BuildDockerImage])
                     }
                 }
