@@ -27,7 +27,7 @@ class ArtifactCommonSettings {
         imageTag = (environmentVariables.TAG_NAME) ?: "${environmentVariables.BRANCH_NAME.replace('/', '-')}-${gitCommitShort}"
         releaseTag = releaseVersion.toString()
 
-        this.artifactVersion = artifactVersion
-        this.releaseVersion = releaseVersion
+        artifactVersion = artifactVersion
+        releaseVersion = releaseVersion
     }
 }
