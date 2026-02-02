@@ -3,6 +3,7 @@ class ArtifactCommonSettings {
     String gitCommitShort
     String cluster
     String deployEnvironment
+    String serviceIdentifier
     String imageFolder
     String releaseImageFolder
     String namespace
@@ -22,7 +23,7 @@ class ArtifactCommonSettings {
 
         deployEnvironment = pipelineParameters.deployEnvironment
 
-        String serviceIdentifier = utils.prepareName([deployConfig.projectName, deployConfig.serviceName].findAll { it } .join('-'))
+        serviceIdentifier = utils.prepareName([deployConfig.projectName, deployConfig.serviceName].findAll { it } .join('-'))
 
         imageFolder = environmentVariables.TAG_NAME ? "${serviceIdentifier}/release" : "${serviceIdentifier}/feature"
         releaseImageFolder = "${serviceIdentifier}/release"
