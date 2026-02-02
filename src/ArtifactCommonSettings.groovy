@@ -28,8 +28,8 @@ class ArtifactCommonSettings {
         imageFolder = environmentVariables.TAG_NAME ? "${serviceIdentifier}/release" : "${serviceIdentifier}/feature"
         releaseImageFolder = "${serviceIdentifier}/release"
 
-        namespace = utils.prepareName([serviceIdentifier, pipelineParameters.deployEnvironment].findAll { it } .join('-'))
-        releaseName = utils.prepareName([serviceIdentifier, pipelineParameters.deployEnvironment].findAll { it } .join('-'))
+        namespace = utils.prepareName([serviceIdentifier, deployEnvironment].findAll { it } .join('-'))
+        releaseName = utils.prepareName([serviceIdentifier, deployEnvironment].findAll { it } .join('-'))
 
         imageTag = (environmentVariables.TAG_NAME) ?: "${environmentVariables.BRANCH_NAME.replace('/', '-')}-${gitCommitShort}"
         releaseTag = releaseVersion.toString()

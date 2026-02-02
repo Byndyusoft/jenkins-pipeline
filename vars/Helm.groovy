@@ -42,30 +42,39 @@ class Helm {
 
         Map valuesOverrides = utils.merge(commonConfig.common, artifactVariables.get('serviceConfig').microservice)
 
-        fullValues.put(artifactVariables.get('artifactName'), valuesOverrides)
-
-        // valuesOverrides["microservice"] = [name: deployConfig.serviceName, registryUrl: deployConfig.registryProvider.registryImagePushUrl, imageFolder: artifactCommonSettings.imageFolder, image: deployConfig.serviceName, tag: artifactCommonSettings.imageTag]
-        // valuesOverrides["projectName"] = deployConfig.projectName
-        // valuesOverrides["serviceName"] = deployConfig.serviceName
-        // valuesOverrides["environment"] = "${artifactCommonSettings.deployEnvironment}"
-        // valuesOverrides["gitCommitShort"] = artifactCommonSettings.gitCommitShort
-        // valuesOverrides["namespace"] = artifactCommonSettings.namespace
+        valuesOverrides["microservice"] = [name: deployConfig.serviceName, registryUrl: deployConfig.registryProvider.registryImagePushUrl, imageFolder: artifactCommonSettings.imageFolder, image: artifactVariables.get('artifactName'), tag: artifactCommonSettings.imageTag]
+        valuesOverrides["projectName"] = deployConfig.projectName
+        valuesOverrides["serviceName"] = deployConfig.serviceName
+        valuesOverrides["environment"] = artifactCommonSettings.deployEnvironment
+        valuesOverrides["gitCommitShort"] = artifactCommonSettings.gitCommitShort
+        valuesOverrides["namespace"] = artifactCommonSettings.namespace
+        valuesOverrides["weight"] = artifactVariables.get('serviceConfig')artifactSetting.get('weight')
         // valuesOverrides["makefile"] = [env: serviceConfig.makeFileEnv]
 
+        fullValues.put(artifactVariables.get('artifactName'), valuesOverrides)
+
         script.writeYaml file: deployConfig.microServiceValuesFilePath, overwrite: true, data: fullValues
+
+        // Secrets
+        Map fullValuesSecret = [:]
+        Map valuesOverridesSecret  = [:]
+        if (script.fileExists(deployConfig.secretValuesFilePath)) {
+            fullValuesSecret = new Yaml(script.readYaml(file: deployConfig.secretValuesFilePath)).get('/')
+        }
 
         switch (deployConfig.secretProvider.providerName) {
             case 'vault':
                 Vault vault = new Vault(script, deployConfig)
                 String vaultPathSecret = "${artifactCommonSettings.cluster}/${artifactCommonSettings.serviceIdentifier}/${artifactVariables.get('artifactName')}/${artifactCommonSettings.deployEnvironment}"
-                Map valuesOverridesSecret = [secret: vault.getVaultSecret(vaultPathSecret)]
-
-                script.writeYaml file: deployConfig.secretValuesFilePath, overwrite: true, data: valuesOverridesSecret
+                valuesOverridesSecret = [secret: vault.getVaultSecret(vaultPathSecret)]
                 break
             default:
                 script.writeYaml file: deployConfig.secretValuesFilePath, overwrite: true, data: [:]
                 break
         }
+
+        fullValuesSecret.put(artifactVariables.get('artifactName'), valuesOverridesSecret)
+        script.writeYaml file: deployConfig.secretValuesFilePath, overwrite: true, data: valuesOverridesSecret
 
         // !!!!!!!!!!Testing
         sleep(30000)
