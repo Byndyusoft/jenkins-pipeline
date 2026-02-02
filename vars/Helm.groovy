@@ -74,7 +74,7 @@ class Helm {
         }
 
         fullValuesSecret.put(artifactVariables.get('artifactName'), valuesOverridesSecret)
-        script.writeYaml file: deployConfig.secretValuesFilePath, overwrite: true, data: valuesOverridesSecret
+        script.writeYaml file: deployConfig.secretValuesFilePath, overwrite: true, data: fullValuesSecret
 
         // !!!!!!!!!!Testing
         sleep(30000)
