@@ -208,7 +208,7 @@ def call() {
                     }
                 }
 
-                runStage("Push image ${artifactName}", 'docker') {
+                runStage('Push image', 'docker') {
                     artifactsVariables.each { artifactName, artifactVariables ->
                         if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.Service])) {
                             nexus.pushImage(artifactCommonSettings, artifactName)
@@ -218,7 +218,7 @@ def call() {
             }
 
             if (pipelineParameters.stageAvailable(PipelineStage.CreateReleaseImage)) {
-                runStage("Push release image ${artifactName}", 'docker') {
+                runStage('Push release image', 'docker') {
                     artifactsVariables.each { artifactName, artifactVariables ->
                         if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.Service])) {
                             nexus.createReleaseImage(artifactCommonSettings, artifactName)
