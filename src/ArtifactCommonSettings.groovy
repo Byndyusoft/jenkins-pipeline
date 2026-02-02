@@ -16,16 +16,18 @@ class ArtifactCommonSettings {
 
         gitCommitShort = git.getCommitShaShort()
 
-        imageFolder = environmentVariables.TAG_NAME ? 'release' : 'feature'
-        releaseImageFolder = 'release'
+        String serviceIdentifier = utils.prepareName([${deployConfig.projectName}, ${deployConfig.serviceName}].findAll { it } .join('-'))
 
-        namespace = utils.prepareName("${deployConfig.projectName}-${pipelineParameters.deployEnvironment}")
-        releaseName = utils.prepareName("${deployConfig.projectName}-${deployConfig.serviceName}-${pipelineParameters.deployEnvironment}")
+        imageFolder = environmentVariables.TAG_NAME ? "${serviceIdentifier}/release" : "${serviceIdentifier}/feature"
+        releaseImageFolder = "${serviceIdentifier}/release"
+
+        namespace = utils.prepareName([${serviceIdentifier}, ${pipelineParameters.deployEnvironment}].findAll { it } .join('-'))
+        releaseName = utils.prepareName([${serviceIdentifier}, ${pipelineParameters.deployEnvironment}].findAll { it } .join('-'))
 
         imageTag = (environmentVariables.TAG_NAME) ?: "${environmentVariables.BRANCH_NAME.replace('/', '-')}-${gitCommitShort}"
         releaseTag = releaseVersion.toString()
 
-        artifactVersion = artifactVersion
-        releaseVersion = releaseVersion
+        this.artifactVersion = artifactVersion
+        this.releaseVersion = releaseVersion
     }
 }

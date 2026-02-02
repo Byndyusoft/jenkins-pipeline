@@ -150,15 +150,16 @@ def call() {
 
             if (pipelineParameters.stageAvailable(PipelineStage.CheckImage)) {
                 runStage('Check image exists', 'docker') {
-                    boolean artifactExist = true
-                    artifactsVariables.each{ artifactName, artifactVariables ->
+                    boolean artifactNotExist = false
+                    artifactsVariables.each { artifactName, artifactVariables ->
                         if (!nexus.checkImage(artifactCommonSettings, artifactName)) {
-                            artifactExist = false
+                            artifactNotExist = true
+                            logger.logInfo("artifactNotExist=${artifactNotExist}")
                             return true // each break
                         }
                     }
 
-                    if (artifactExist) {
+                    if (artifactNotExist) {
                         pipelineParameters.deleteStage([PipelineStage.InstallDependencies, PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.PackApplication, PipelineStage.BuildDockerImage])
                     }
                 }
@@ -190,7 +191,7 @@ def call() {
 
             if (pipelineParameters.stageAvailable(PipelineStage.PackApplication)) {
                 runStage('Pack application', 'docker') {
-                    artifactsVariables.each{ artifactName, artifactVariables ->
+                    artifactsVariables.each { artifactName, artifactVariables ->
                         if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.Service])) {
                             make.packApplication(artifactVariables)
                         }
@@ -200,7 +201,7 @@ def call() {
 
             if (pipelineParameters.stageAvailable(PipelineStage.BuildDockerImage)) {
                 runStage('Build image', 'docker') {
-                    artifactsVariables.each{ artifactName, artifactVariables ->
+                    artifactsVariables.each { artifactName, artifactVariables ->
                         if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.Service])) {
                             make.buildImage(deployConfig, artifactCommonSettings, artifactVariables)
                         }
@@ -208,7 +209,7 @@ def call() {
                 }
 
                 runStage("Push image ${artifactName}", 'docker') {
-                    artifactsVariables.each{ artifactName, artifactVariables ->
+                    artifactsVariables.each { artifactName, artifactVariables ->
                         if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.Service])) {
                             nexus.pushImage(artifactCommonSettings, artifactName)
                         }
@@ -218,7 +219,7 @@ def call() {
 
             if (pipelineParameters.stageAvailable(PipelineStage.CreateReleaseImage)) {
                 runStage("Push release image ${artifactName}", 'docker') {
-                    artifactsVariables.each{ artifactName, artifactVariables ->
+                    artifactsVariables.each { artifactName, artifactVariables ->
                         if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.Service])) {
                             nexus.createReleaseImage(artifactCommonSettings, artifactName)
                         }
@@ -228,7 +229,7 @@ def call() {
 
             if (pipelineParameters.stageAvailable(PipelineStage.PackPackage)) {
                 runStage('Pack package', 'docker') {
-                    artifactsVariables.each{ artifactName, artifactVariables ->
+                    artifactsVariables.each { artifactName, artifactVariables ->
                         if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.NugetPackage, ArtifactType.PythonPackage, ArtifactType.RawPackage])) {
                             make.packPackage(artifactVersion, artifactVariables)
                         }
@@ -237,7 +238,7 @@ def call() {
 
                 if (pipelineParameters.stageAvailable(PipelineStage.PushPackage)) {
                     runStage('Push package', 'docker') {
-                        artifactsVariables.each{ artifactName, artifactVariables ->
+                        artifactsVariables.each { artifactName, artifactVariables ->
                             if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.NugetPackage, ArtifactType.PythonPackage, ArtifactType.RawPackage])) {
                                 nexus.pushPackage(artifactVariables)
                             }
