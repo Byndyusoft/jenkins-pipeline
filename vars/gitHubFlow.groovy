@@ -27,7 +27,7 @@ def call() {
 
     DeployConfig deployConfig = new DeployConfig(logger)
 
-    def artifactsVariables = [:]
+    Map artifactsVariables = [:]
     List<ArtifactType> artifactsTypes = []
 
     Utils utils = new Utils()
@@ -247,25 +247,21 @@ def call() {
                 }
             }
 
-            // if (pipelineParameters.stageAvailable(PipelineStage.DeployApplication)) {
-            //     Helm helm = new Helm(this, logger)
+            if (pipelineParameters.stageAvailable(PipelineStage.DeployApplication)) {
+                Helm helm = new Helm(this, logger)
 
-            //     stage('Prepare microservice yaml configs') {
-            //         Yaml commonYaml = null
-            //         String commonYamlPath = "${configDir}/common.yaml"
+                stage('Prepare yaml configs') {
+                    artifactsVariables.each { artifactName, artifactVariables ->
+                        if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.Service])) {
+                            helm.prepareServiceYamlConfigs(deployConfig, commonConfig, artifactVariables))
+                        }
+                    }
+                }
 
-            //         if (fileExists(commonYamlPath)) {
-            //             commonYaml = new Yaml(readYaml(file: commonYamlPath))
-            //         }
-
-            //         helm.prepareServiceYamlConfigs(deployConfig, artifactVariables.get('serviceConfig'), commonYaml,
-            //                  artifactTypes, pipelineParameters, artifactCommonSettings)
-            //     }
-
-            //     runStage("Deployment $artifactTypes to ${pipelineParameters.deployEnvironment}", 'helm') {
-            //         helm.deployApplication(deployConfig, artifactVariables.get('serviceConfig'), artifactCommonSettings, environmentVariables)
-            //     }
-            // }
+                // runStage("Deployment $artifactTypes to ${pipelineParameters.deployEnvironment}", 'helm') {
+                //     helm.deployApplication(deployConfig, artifactVariables.get('serviceConfig'), artifactCommonSettings, environmentVariables)
+                // }
+            }
 
             if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
                 runStage('Make release', 'docker') {

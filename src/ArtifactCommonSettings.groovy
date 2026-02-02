@@ -1,6 +1,8 @@
 /** Application image settings class */
 class ArtifactCommonSettings {
     String gitCommitShort
+    String cluster
+    String deployEnvironment
     String imageFolder
     String releaseImageFolder
     String namespace
@@ -15,6 +17,10 @@ class ArtifactCommonSettings {
         Utils utils = new Utils()
 
         gitCommitShort = git.getCommitShaShort()
+
+        cluster = pipelineParameters.cluster
+
+        deployEnvironment = pipelineParameters.deployEnvironment
 
         String serviceIdentifier = utils.prepareName([deployConfig.projectName, deployConfig.serviceName].findAll { it } .join('-'))
 

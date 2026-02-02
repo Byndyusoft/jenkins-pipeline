@@ -32,28 +32,29 @@ class Helm {
         }
     }
 
-    void prepareServiceYamlConfigs(DeployConfig deployConfig, ServiceConfig serviceConfig, Yaml commonYaml,
-                                   ArtifactType artifactTypes, PipelineParameters pipelineParameters,
-                                   ArtifactCommonSettings artifactCommonSettings) {
-
+    void prepareServiceYamlConfigs(DeployConfig deployConfig, CommonConfig commonConfig, def artifactVariables) {
         Utils utils = new Utils()
-        Map commonEnv = commonYaml == null ? [:] : commonYaml.get('common') as Map
-        Map valuesOverrides = utils.merge(commonEnv, serviceConfig.microservice)
 
-        valuesOverrides["microservice"] = [name: deployConfig.serviceName, registryUrl: deployConfig.registryProvider.registryImagePushUrl, imageFolder: artifactCommonSettings.imageFolder, image: deployConfig.serviceName, tag: artifactCommonSettings.imageTag]
-        valuesOverrides["projectName"] = deployConfig.projectName
-        valuesOverrides["serviceName"] = deployConfig.serviceName
-        valuesOverrides["environment"] = "${pipelineParameters.deployEnvironment}"
-        valuesOverrides["gitCommitShort"] = artifactCommonSettings.gitCommitShort
-        valuesOverrides["namespace"] = artifactCommonSettings.namespace
-        valuesOverrides["makefile"] = [env: serviceConfig.makeFileEnv]
+        Map fullValues = new Yaml(readYaml(file: deployConfig.microServiceValuesFilePath)).get('/')
 
-        script.writeYaml file: deployConfig.microServiceValuesFilePath, overwrite: true, data: valuesOverrides
+        Map valuesOverrides = utils.merge(commonConfig.common, artifactVariables.get('ServiceConfig').microservice)
+
+        fullValues.put(artifactVariables.get('artifactName'), valuesOverrides)
+
+        // valuesOverrides["microservice"] = [name: deployConfig.serviceName, registryUrl: deployConfig.registryProvider.registryImagePushUrl, imageFolder: artifactCommonSettings.imageFolder, image: deployConfig.serviceName, tag: artifactCommonSettings.imageTag]
+        // valuesOverrides["projectName"] = deployConfig.projectName
+        // valuesOverrides["serviceName"] = deployConfig.serviceName
+        // valuesOverrides["environment"] = "${artifactCommonSettings.deployEnvironment}"
+        // valuesOverrides["gitCommitShort"] = artifactCommonSettings.gitCommitShort
+        // valuesOverrides["namespace"] = artifactCommonSettings.namespace
+        // valuesOverrides["makefile"] = [env: serviceConfig.makeFileEnv]
+
+        script.writeYaml file: deployConfig.microServiceValuesFilePath, overwrite: true, data: fullValues
 
         switch (deployConfig.secretProvider.providerName) {
             case 'vault':
                 Vault vault = new Vault(script, deployConfig)
-                String vaultPathSecret = "${pipelineParameters.cluster}/${artifactCommonSettings.serviceIdentifier}/${deployConfig.serviceName}/${pipelineParameters.deployEnvironment}"
+                String vaultPathSecret = "${artifactCommonSettings.cluster}/${artifactCommonSettings.serviceIdentifier}/${artifactVariables.get('artifactName')}/${artifactCommonSettings.deployEnvironment}"
                 Map valuesOverridesSecret = [secret: vault.getVaultSecret(vaultPathSecret)]
 
                 script.writeYaml file: deployConfig.secretValuesFilePath, overwrite: true, data: valuesOverridesSecret
@@ -62,6 +63,8 @@ class Helm {
                 script.writeYaml file: deployConfig.secretValuesFilePath, overwrite: true, data: [:]
                 break
         }
-    }
 
+        // !!!!!!!!!!Testing
+        script.timeout(time: 300, unit: "SECONDS")
+    }
 }

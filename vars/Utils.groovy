@@ -3,16 +3,15 @@ class Utils {
     /** Merge two maps */
     Map merge(Map lhs, Map rhs) {
         if (!lhs.isEmpty() && !rhs.isEmpty()) {
-            return rhs.inject(lhs.clone()) { map, entry ->
-                String key = entry.key
-
-                if (map[key] instanceof Map && entry.value instanceof Map) {
-                    map[key] = merge(map[key] as Map, entry.value as Map)
+            def result = new HashMap(lhs)
+            rhs.each { k, v ->
+                if (result[k] instanceof Map && v instanceof Map) {
+                    result[k] = merge(result[k], v)
                 } else {
-                    map[key] = entry.value
+                    result[k] = v
                 }
-                return map
-            } as Map
+            }
+            return result
         } else {
             if (!lhs.isEmpty()) {
                 return lhs
