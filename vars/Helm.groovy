@@ -68,6 +68,6 @@ class Helm {
         }
 
         // !!!!!!!!!!Testing
-        script.timeout(time: 300, unit: "SECONDS")
+        sleep(30000)
     }
 }
