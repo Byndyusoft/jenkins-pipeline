@@ -37,7 +37,7 @@ class Helm {
 
         Map fullValues = [:]
         if (script.fileExists(deployConfig.microServiceValuesFilePath)) {
-            fullValues = new Yaml(readYaml(file: deployConfig.microServiceValuesFilePath)).get('/')
+            fullValues = new Yaml(script.readYaml(file: deployConfig.microServiceValuesFilePath)).get('/')
         }
 
         Map valuesOverrides = utils.merge(commonConfig.common, artifactVariables.get('serviceConfig').microservice)
