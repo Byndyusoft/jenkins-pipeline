@@ -67,7 +67,7 @@ class Nexus {
         artifactCommonSettings.imageTag = artifactCommonSettings.releaseTag
     }
 
-    void pushPackage(def artifactVariables) {
+    void pushPackage(Map artifactVariables) {
         for (artifactType in artifactVariables.get('artifactTypes')) {
             switch (artifactType) {
                 case ArtifactType.PythonPackage:
@@ -106,7 +106,7 @@ class Nexus {
         }
     }
 
-    void pushNugetPackage(def artifactVariables) {
+    void pushNugetPackage(Map artifactVariables) {
         runWithCredentials {
             String nugetFileDirectory = "${artifactVariables.get('outputDir')}"
             List listPackages = script.sh(returnStdout: true, script: """ls -1 ${nugetFileDirectory}""").split("\n")

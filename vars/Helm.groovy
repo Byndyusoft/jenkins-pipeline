@@ -32,7 +32,7 @@ class Helm {
         }
     }
 
-    void prepareServiceYamlConfigs(DeployConfig deployConfig, CommonConfig commonConfig, def artifactVariables) {
+    void prepareServiceYamlConfigs(DeployConfig deployConfig, CommonConfig commonConfig, Map artifactVariables) {
         Utils utils = new Utils()
 
         Map fullValues = [:]
@@ -40,7 +40,7 @@ class Helm {
             fullValues = new Yaml(readYaml(file: deployConfig.microServiceValuesFilePath)).get('/')
         }
 
-        Map valuesOverrides = utils.merge(commonConfig.common, artifactVariables.get('ServiceConfig').microservice)
+        Map valuesOverrides = utils.merge(commonConfig.common, artifactVariables.get('serviceConfig').microservice)
 
         fullValues.put(artifactVariables.get('artifactName'), valuesOverrides)
 
