@@ -36,7 +36,7 @@ class Helm {
         Utils utils = new Utils()
 
         Map fullValues = [:]
-        if (fileExists(deployConfig.microServiceValuesFilePath)) {
+        if (script.fileExists(deployConfig.microServiceValuesFilePath)) {
             fullValues = new Yaml(readYaml(file: deployConfig.microServiceValuesFilePath)).get('/')
         }
 
