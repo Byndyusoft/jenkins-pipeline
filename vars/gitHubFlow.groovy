@@ -253,7 +253,7 @@ def call() {
                 stage('Prepare yaml configs') {
                     artifactsVariables.each { artifactName, artifactVariables ->
                         if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.Service])) {
-                            helm.prepareServiceYamlConfigs(deployConfig, commonConfig, artifactVariables))
+                            helm.prepareServiceYamlConfigs(deployConfig, commonConfig, artifactVariables)
                         }
                     }
                 }
