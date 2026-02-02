@@ -32,7 +32,7 @@ class Helm {
         }
     }
 
-    void prepareServiceYamlConfigs(DeployConfig deployConfig, CommonConfig commonConfig, Map artifactVariables) {
+    void prepareServiceYamlConfigs(DeployConfig deployConfig, CommonConfig commonConfig, Map artifactVariables, ArtifactCommonSettings artifactCommonSettings) {
         Utils utils = new Utils()
 
         Map fullValues = [:]
