@@ -155,10 +155,12 @@ def call() {
                 runStage('Check image exists', 'docker') {
                     boolean artifactNotExist = false
                     artifactsVariables.each { artifactName, artifactVariables ->
-                        if (!nexus.checkImage(artifactCommonSettings, artifactName)) {
-                            artifactNotExist = true
-                            logger.logInfo("artifactNotExist=${artifactNotExist}")
-                            return true // each break
+                        if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.Service])) {
+                            if (!nexus.checkImage(artifactCommonSettings, artifactName)) {
+                                artifactNotExist = true
+                                logger.logInfo("artifactNotExist=${artifactNotExist}")
+                                return true // each break
+                            }
                         }
                     }
 
