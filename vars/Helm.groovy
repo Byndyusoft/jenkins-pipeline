@@ -35,7 +35,7 @@ class Helm {
     void prepareServiceYamlConfigs(DeployConfig deployConfig, CommonConfig commonConfig, Map artifactVariables, ArtifactCommonSettings artifactCommonSettings) {
         Utils utils = new Utils()
 
-        Map fullValues = [:]
+        Map fullValues = [microservices: [:]]
         if (script.fileExists(deployConfig.microServiceValuesFilePath)) {
             fullValues = new Yaml(script.readYaml(file: deployConfig.microServiceValuesFilePath)).get('/')
         }
@@ -51,12 +51,12 @@ class Helm {
         valuesOverrides["weight"] = artifactVariables.get('serviceConfig')artifactSetting.get('weight')
         // valuesOverrides["makefile"] = [env: serviceConfig.makeFileEnv]
 
-        fullValues.put("- ${artifactVariables.get('artifactName')}", valuesOverrides)
+        fullValues.microservices.putAll([artifactVariables.get('artifactName'), valuesOverrides])
 
         script.writeYaml file: deployConfig.microServiceValuesFilePath, overwrite: true, data: fullValues
 
         // Secrets
-        Map fullValuesSecret = [:]
+        Map fullValuesSecret = [microservices: [:]]
         Map valuesOverridesSecret  = [:]
         if (script.fileExists(deployConfig.secretValuesFilePath)) {
             fullValuesSecret = new Yaml(script.readYaml(file: deployConfig.secretValuesFilePath)).get('/')
@@ -73,7 +73,7 @@ class Helm {
                 break
         }
 
-        fullValuesSecret.put("- ${artifactVariables.get('artifactName')}", valuesOverridesSecret)
+        fullValuesSecret.microservices.putAll([artifactVariables.get('artifactName'), valuesOverridesSecret])
         script.writeYaml file: deployConfig.secretValuesFilePath, overwrite: true, data: fullValuesSecret
 
         // !!!!!!!!!!Testing
