@@ -40,16 +40,16 @@ class Helm {
             fullValues = new Yaml(script.readYaml(file: deployConfig.microServiceValuesFilePath)).get('/')
         }
 
-        Map valuesOverrides = utils.merge(commonConfig.common, artifactVariables.get('serviceConfig').microservice)
+        Map valuesOverrides = utils.merge(commonConfig.common, artifactVariables.get('serviceConfig').microservice) as LinkedHashMap
 
-        valuesOverrides["name"] = artifactVariables.get('artifactName')
-        valuesOverrides["microservice"] = [registryUrl: deployConfig.registryProvider.registryImagePushUrl, imageFolder: artifactCommonSettings.imageFolder, image: artifactVariables.get('artifactName'), tag: artifactCommonSettings.imageTag]
-        valuesOverrides["projectName"] = deployConfig.projectName
-        valuesOverrides["serviceName"] = deployConfig.serviceName
-        valuesOverrides["environment"] = artifactCommonSettings.deployEnvironment
-        valuesOverrides["gitCommitShort"] = artifactCommonSettings.gitCommitShort
-        valuesOverrides["namespace"] = artifactCommonSettings.namespace
-        valuesOverrides["weight"] = artifactVariables.get('serviceConfig')artifactSetting.get('weight')
+        valuesOverrides['microservice'] = [registryUrl: deployConfig.registryProvider.registryImagePushUrl, imageFolder: artifactCommonSettings.imageFolder, image: artifactVariables.get('artifactName'), tag: artifactCommonSettings.imageTag]
+        valuesOverrides['projectName'] = deployConfig.projectName
+        valuesOverrides['serviceName'] = deployConfig.serviceName
+        valuesOverrides['environment'] = artifactCommonSettings.deployEnvironment
+        valuesOverrides['gitCommitShort'] = artifactCommonSettings.gitCommitShort
+        valuesOverrides['namespace'] = artifactCommonSettings.namespace
+        valuesOverrides['weight'] = artifactVariables.get('serviceConfig')artifactSetting.get('weight')
+        valuesOverrides['name'] = artifactVariables.get('artifactName')
 
         // Secrets
         Map valuesOverridesSecret  = [:]
@@ -58,7 +58,7 @@ class Helm {
             case 'vault':
                 Vault vault = new Vault(script, deployConfig)
                 String vaultPathSecret = "${artifactCommonSettings.cluster}/${artifactCommonSettings.serviceIdentifier}/${artifactVariables.get('artifactName')}/${artifactCommonSettings.deployEnvironment}"
-                valuesOverridesSecret = [envSecret: vault.getVaultSecret(vaultPathSecret)]
+                valuesOverridesSecret = [envSecret: vault.getVaultSecret(vaultPathSecret)] as LinkedHashMap
                 break
             default:
                 script.writeYaml file: deployConfig.secretValuesFilePath, overwrite: true, data: [:]
