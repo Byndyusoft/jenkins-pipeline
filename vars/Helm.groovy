@@ -67,6 +67,7 @@ class Helm {
         }
 
         logger.logInfo("${fullValues.getClass()}")
+        logger.logInfo("${fullValues.microservices.getClass()}")
         fullValues.microservices.put(artifactVariables.get('artifactName'), utils.merge(valuesOverrides, valuesOverridesSecret))
         script.writeYaml file: deployConfig.microServiceValuesFilePath, overwrite: true, data: fullValues
 
