@@ -35,15 +35,14 @@ class Helm {
     void prepareServiceYamlConfigs(DeployConfig deployConfig, CommonConfig commonConfig, Map artifactVariables, ArtifactCommonSettings artifactCommonSettings) {
         Utils utils = new Utils()
 
-        Map fullValues = [microservices: [:]]
-        logger.logInfo("${fullValues.getClass()}")
+        Map fullValues = [microservices: []]
         if (script.fileExists(deployConfig.microServiceValuesFilePath)) {
             fullValues = new Yaml(script.readYaml(file: deployConfig.microServiceValuesFilePath)).get('/')
         }
-        logger.logInfo("${fullValues.getClass()}")
 
         Map valuesOverrides = utils.merge(commonConfig.common, artifactVariables.get('serviceConfig').microservice)
 
+        valuesOverrides["name"] = artifactVariables.get('artifactName')
         valuesOverrides["microservice"] = [name: artifactVariables.get('artifactName'), registryUrl: deployConfig.registryProvider.registryImagePushUrl, imageFolder: artifactCommonSettings.imageFolder, image: artifactVariables.get('artifactName'), tag: artifactCommonSettings.imageTag]
         valuesOverrides["projectName"] = deployConfig.projectName
         valuesOverrides["serviceName"] = deployConfig.serviceName
@@ -66,9 +65,7 @@ class Helm {
                 break
         }
 
-        logger.logInfo("${fullValues.getClass()}")
-        logger.logInfo("${fullValues.microservices.getClass()}")
-        fullValues.microservices.put(artifactVariables.get('artifactName'), utils.merge(valuesOverrides, valuesOverridesSecret))
+        fullValues.microservices.add(utils.merge(valuesOverrides, valuesOverridesSecret))
         script.writeYaml file: deployConfig.microServiceValuesFilePath, overwrite: true, data: fullValues
 
         // !!!!!!!!!!Testing
