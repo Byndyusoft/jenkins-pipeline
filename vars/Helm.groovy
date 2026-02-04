@@ -43,7 +43,7 @@ class Helm {
         Map valuesOverrides = utils.merge(commonConfig.common, artifactVariables.get('serviceConfig').microservice)
 
         valuesOverrides["name"] = artifactVariables.get('artifactName')
-        valuesOverrides["microservice"] = [name: artifactVariables.get('artifactName'), registryUrl: deployConfig.registryProvider.registryImagePushUrl, imageFolder: artifactCommonSettings.imageFolder, image: artifactVariables.get('artifactName'), tag: artifactCommonSettings.imageTag]
+        valuesOverrides["microservice"] = [registryUrl: deployConfig.registryProvider.registryImagePushUrl, imageFolder: artifactCommonSettings.imageFolder, image: artifactVariables.get('artifactName'), tag: artifactCommonSettings.imageTag]
         valuesOverrides["projectName"] = deployConfig.projectName
         valuesOverrides["serviceName"] = deployConfig.serviceName
         valuesOverrides["environment"] = artifactCommonSettings.deployEnvironment
