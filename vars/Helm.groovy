@@ -49,18 +49,9 @@ class Helm {
         valuesOverrides["gitCommitShort"] = artifactCommonSettings.gitCommitShort
         valuesOverrides["namespace"] = artifactCommonSettings.namespace
         valuesOverrides["weight"] = artifactVariables.get('serviceConfig')artifactSetting.get('weight')
-        // valuesOverrides["makefile"] = [env: serviceConfig.makeFileEnv]
-
-        fullValues.microservices.putAll([artifactVariables.get('artifactName'), valuesOverrides])
-
-        script.writeYaml file: deployConfig.microServiceValuesFilePath, overwrite: true, data: fullValues
 
         // Secrets
-        Map fullValuesSecret = [microservices: [:]]
         Map valuesOverridesSecret  = [:]
-        if (script.fileExists(deployConfig.secretValuesFilePath)) {
-            fullValuesSecret = new Yaml(script.readYaml(file: deployConfig.secretValuesFilePath)).get('/')
-        }
 
         switch (deployConfig.secretProvider.providerName) {
             case 'vault':
@@ -73,8 +64,8 @@ class Helm {
                 break
         }
 
-        fullValuesSecret.microservices.putAll([artifactVariables.get('artifactName'), valuesOverridesSecret])
-        script.writeYaml file: deployConfig.secretValuesFilePath, overwrite: true, data: fullValuesSecret
+        fullValues['microservices'].put(artifactVariables.get('artifactName'), utils.merge(valuesOverrides, valuesOverridesSecret))
+        script.writeYaml file: deployConfig.microServiceValuesFilePath, overwrite: true, data: fullValues
 
         // !!!!!!!!!!Testing
         sleep(30000)
