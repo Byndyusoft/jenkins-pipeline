@@ -36,11 +36,11 @@ class Helm {
         Utils utils = new Utils()
 
         Map fullValues = [microservices: [:]]
-        logger.logInfo("${fullValues..getClass()}")
+        logger.logInfo("${fullValues.getClass()}")
         if (script.fileExists(deployConfig.microServiceValuesFilePath)) {
             fullValues = new Yaml(script.readYaml(file: deployConfig.microServiceValuesFilePath)).get('/')
         }
-        logger.logInfo("${fullValues..getClass()}")
+        logger.logInfo("${fullValues.getClass()}")
 
         Map valuesOverrides = utils.merge(commonConfig.common, artifactVariables.get('serviceConfig').microservice)
 
@@ -66,7 +66,7 @@ class Helm {
                 break
         }
 
-        logger.logInfo("${fullValues..getClass()}")
+        logger.logInfo("${fullValues.getClass()}")
         fullValues.microservices.put(artifactVariables.get('artifactName'), utils.merge(valuesOverrides, valuesOverridesSecret))
         script.writeYaml file: deployConfig.microServiceValuesFilePath, overwrite: true, data: fullValues
 
