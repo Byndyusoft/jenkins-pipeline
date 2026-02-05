@@ -263,14 +263,14 @@ def call() {
                     }
                 }
 
-                // runStage("Deployment $artifactTypes to ${pipelineParameters.deployEnvironment}", 'helm') {
-                //     helm.deployApplication(deployConfig, artifactVariables.get('serviceConfig'), artifactCommonSettings, environmentVariables)
-                // }
+                runStage("Deployment to ${pipelineParameters.deployEnvironment}", 'helm') {
+                    helm.deployApplication(deployConfig, artifactCommonSettings, environmentVariables)
+                }
             }
 
             if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
                 runStage('Make release', 'docker') {
-                    git.createTag(releaseVersion)
+                    git.createTag(artifactCommonSettings.releaseVersion)
                 }
             }
         }

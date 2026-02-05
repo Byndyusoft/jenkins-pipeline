@@ -12,8 +12,7 @@
 - `registryPackageUrl` - url registry for deploy package
 - `serviceAccount` - for deploy jenkins agent
 - `defaultValues` - path default values file
-- `microserviceValues` - path final values file for deploy service
-- `secretValues` - path final values-secret file for deploy service
+- `serviceValues` - path final values file for deploy service
 - `secret` - setting secrets provider
   - `provider` - module name secret(vault, ...) provider
   - `vaultUrl` - url to vault
@@ -33,7 +32,7 @@ additionalDeployEnvironments: ["test", "development"]
 registryCredentialsId: "nexus_admin"
 registryImageUrl: "artifacts-docker.example.com"
 defaultValues: "./.helm/values.yaml"
-microserviceValues: "./.helm/microservice_values.yaml"
+serviceValues: "./.helm/service_values.yaml"
 secretValues: "./.helm/secret_values.yaml"
 serviceAccount: "deploy-agent"
 gitCredentialsId: "jenkins-cicd"

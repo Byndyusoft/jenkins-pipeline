@@ -15,8 +15,7 @@ class DeployConfig {
     String defaultValuesFilePath
     /** path final values file for deploy service */
     String microServiceValuesFilePath
-    /** path final values-secret file for deploy service */
-    String secretValuesFilePath
+
     /** custom yaml for "Pod Templates jenkins agent(k8s)" */
     String yaml
     /** volumes for "Pod Templates jenkins agent(k8s)" */
@@ -42,8 +41,7 @@ class DeployConfig {
         additionalDeployEnvironments = Utils.listToString(deployYaml.get('additionalDeployEnvironments'))
 
         defaultValuesFilePath = deployYaml.get('defaultValues')
-        microServiceValuesFilePath = deployYaml.get('microserviceValues')
-        secretValuesFilePath = deployYaml.get('secretValues')
+        microServiceValuesFilePath = deployYaml.get('serviceValues')
 
         yaml = deployYaml.get('yaml')
         volumes = deployYaml.get('volumes') as Map

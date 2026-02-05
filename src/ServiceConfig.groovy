@@ -5,7 +5,6 @@ class ServiceConfig {
     String makeOption
     Map makeFileEnv
     String makeFileEnvString
-    String helmOption
 
     void initialize(Yaml serviceYaml) {
         Utils utils = new Utils()
@@ -17,7 +16,5 @@ class ServiceConfig {
         makeOption = serviceYaml.get('make/option') ?: ''
         makeFileEnv = serviceYaml.get('makefile/env') as Map ?: [:]
         makeFileEnvString = utils.mapToString(makeFileEnv) ?: ''
-
-        helmOption = serviceYaml.get('helm/option') ?: ''
     }
 }

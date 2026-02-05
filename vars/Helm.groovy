@@ -10,7 +10,7 @@ class Helm {
         deployTimeoutSeconds = 300
     }
 
-    void deployApplication(DeployConfig deployConfig, ServiceConfig serviceConfig, ArtifactCommonSettings artifactCommonSettings, EnvironmentVariables environmentVariables) {
+    void deployApplication(DeployConfig deployConfig, ArtifactCommonSettings artifactCommonSettings, EnvironmentVariables environmentVariables) {
         try {
             script.sh("""helm upgrade --atomic --install \
                             ${(environmentVariables.DEBUG ? '--debug' : '')} \
@@ -18,8 +18,7 @@ class Helm {
                             --create-namespace \
                             --namespace ${artifactCommonSettings.namespace} \
                             -f ${deployConfig.defaultValuesFilePath} \
-                            -f ${deployConfig.microServiceValuesFilePath} \
-                            -f ${deployConfig.secretValuesFilePath} ${serviceConfig.helmOption} \
+                            -f ${deployConfig.microServiceValuesFilePath} ${artifactCommonSettings.helmOption} \
                             ${artifactCommonSettings.releaseName} .helm/""")
         } catch (e) {
             logger.logInfo("Helm's work ended with an error")
@@ -61,14 +60,10 @@ class Helm {
                 valuesOverridesSecret = [envSecret: vault.getVaultSecret(vaultPathSecret)]
                 break
             default:
-                script.writeYaml file: deployConfig.secretValuesFilePath, overwrite: true, data: [:]
                 break
         }
 
         fullValues.microservices.add(utils.merge(valuesOverrides, valuesOverridesSecret))
         script.writeYaml file: deployConfig.microServiceValuesFilePath, overwrite: true, data: fullValues
-
-        // !!!!!!!!!!Testing
-        sleep(30000)
     }
 }
