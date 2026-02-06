@@ -60,7 +60,7 @@ class PipelineParameters {
         } else {
             if (!deployEnvironment) {
                 logger.logInfo("The required parameter 'Deployment environment' for deploy is not set")
-                System.exit(3)
+                return null
             }
         }
 
