@@ -264,7 +264,7 @@ def call() {
                 }
 
                 runStage("Deployment to ${pipelineParameters.deployEnvironment}", 'helm') {
-                    helm.deployApplication(deployConfig, artifactCommonSettings, environmentVariables)
+                    helm.deployApplication(deployConfig, commonConfig, artifactCommonSettings, environmentVariables)
                 }
             }
 

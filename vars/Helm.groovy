@@ -10,7 +10,7 @@ class Helm {
         deployTimeoutSeconds = 300
     }
 
-    void deployApplication(DeployConfig deployConfig, ArtifactCommonSettings artifactCommonSettings, EnvironmentVariables environmentVariables) {
+    void deployApplication(DeployConfig deployConfig, CommonConfig commonConfig, ArtifactCommonSettings artifactCommonSettings, EnvironmentVariables environmentVariables) {
         try {
             script.sh("""helm upgrade --atomic --install \
                             ${(environmentVariables.DEBUG ? '--debug' : '')} \
@@ -18,7 +18,7 @@ class Helm {
                             --create-namespace \
                             --namespace ${artifactCommonSettings.namespace} \
                             -f ${deployConfig.defaultValuesFilePath} \
-                            -f ${deployConfig.microServiceValuesFilePath} ${artifactCommonSettings.helmOption} \
+                            -f ${deployConfig.microServiceValuesFilePath} ${commonConfig.helmOption} \
                             ${artifactCommonSettings.releaseName} .helm/""")
         } catch (e) {
             logger.logInfo("Helm's work ended with an error ${e}")
