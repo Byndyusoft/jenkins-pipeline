@@ -50,7 +50,7 @@ def call() {
 
                 for (fileName in fileIndir) {
                     if (!excludedFileName.contains(fileName)) {
-                        logger.logInfo("fileName=${fileName}")
+                        logger.logDebug("fileName=${fileName}")
 
                         ServiceConfig serviceConfig = new ServiceConfig()
                         Yaml serviceYaml = new Yaml(readYaml(file: "${configDir}/${fileName}"))
@@ -72,11 +72,10 @@ def call() {
                             "serviceConfig": serviceConfig,
                             "outputDir": "./out/${microserviceName}"
                         ])
-
-                        logger.logInfo("artifactsVariables=${artifactsVariables}")
                     }
                 }
 
+                logger.logDebug("artifactsVariables=${artifactsVariables}")
                 artifactsTypes = artifactsTypes.unique()
             }
         }
@@ -158,7 +157,7 @@ def call() {
                         if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.Service])) {
                             if (!nexus.checkImage(artifactCommonSettings, artifactName)) {
                                 artifactNotExist = true
-                                logger.logInfo("artifactNotExist=${artifactNotExist}")
+                                logger.logInfo("Microservice ${artifactName} image does not exist")
                                 return true // each break
                             }
                         }

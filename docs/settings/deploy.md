@@ -18,7 +18,7 @@
   - `vaultUrl` - url to vault
   - `vaultAppRoleCredential` - credentials from jenkins for get secret
 - `yaml` - custom settings for "Pod Templates jenkins agent(k8s)"
-- `volumes` - volumes for "Pod Templates jenkins agent(k8s)". 
+- `volumes` - volumes for "Pod Templates jenkins agent(k8s)".
   - `persistentVolumeClaim` - an existing persistent volume claim by name
      - `claimName` - claim name
      - `mountPath` - path to mount this volume inside the pod

@@ -2,6 +2,7 @@
 class Tracing {
     void initialize(Logger logger) {
         decorateWithTracing(ArtifactCommonSettings, logger)
+        decorateWithTracing(CommonConfig, logger)
         decorateWithTracing(DeployConfig, logger)
         decorateWithTracing(KubernetesConfig, logger)
         decorateWithTracing(PipelineParameters, logger)

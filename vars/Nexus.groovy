@@ -30,8 +30,8 @@ class Nexus {
         runWithCredentials {
             // ToDo: Think about how to remove if
             if ((deployConfig.registryProvider.registryImagePullUrl) && (deployConfig.registryProvider.registryImagePushUrl)) {
-                script.sh("docker login -u ${script.userRegistry} -p ${script.passRegistry} ${deployConfig.registryProvider.registryImagePullUrl}")
-                script.sh("docker login -u ${script.userRegistry} -p ${script.passRegistry} ${deployConfig.registryProvider.registryImagePushUrl}")
+                script.sh("echo ${script.passRegistry} | docker login -u ${script.userRegistry} --password-stdin ${deployConfig.registryProvider.registryImagePullUrl}")
+                script.sh("echo ${script.passRegistry} | docker login -u ${script.userRegistry} --password-stdin ${deployConfig.registryProvider.registryImagePushUrl}")
             } else {
                 logger.logInfo("Parameters 'registryImagePullUrl' or 'registryImagePushUrl' are empty!")
             }
