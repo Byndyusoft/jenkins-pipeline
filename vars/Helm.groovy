@@ -21,7 +21,7 @@ class Helm {
                             -f ${deployConfig.microServiceValuesFilePath} ${artifactCommonSettings.helmOption} \
                             ${artifactCommonSettings.releaseName} .helm/""")
         } catch (e) {
-            logger.logInfo("Helm's work ended with an error")
+            logger.logInfo("Helm's work ended with an error ${e}")
             script.timeout(time: 300, unit: "SECONDS") {
                 script.input 'Stop this?'
             }
