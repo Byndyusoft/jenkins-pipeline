@@ -57,6 +57,11 @@ class PipelineParameters {
 
         if (script.params[titleBuildParameters].contains(deployApplication) == false) {
             deleteStage([PipelineStage.DeployApplication])
+        } else {
+            if (!deployEnvironment) {
+                logger.logInfo("The required parameter 'Deployment environment' for deploy is not set")
+                script.exit(3)
+            }
         }
 
         if (script.params[titleBuildParameters].contains(runTests) == false) {
