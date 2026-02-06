@@ -14,7 +14,7 @@ class Helm {
         try {
             script.sh("""helm upgrade --atomic --install \
                             ${(environmentVariables.DEBUG ? '--debug' : '')} \
-                            --timeout ${deployTimeoutSeconds}s \
+                            --timeout ${deployTimeoutSeconds}s --wait-for-jobs \
                             --create-namespace \
                             --namespace ${artifactCommonSettings.namespace} \
                             -f ${deployConfig.defaultValuesFilePath} \
