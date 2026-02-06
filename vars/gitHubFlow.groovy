@@ -95,8 +95,8 @@ def call() {
     }
 
     if (pipelineParameters.stageAvailable(PipelineStage.DeployApplication)) {
-        if (pipelineParameters.deployEnvironment == null) {
-            logger.logInfo("Pipeline parameters deploy environment is not set. pipelineParameters.deployEnvironment = ${pipelineParameters.deployEnvironment}")
+        if (pipelineParameters.deployEnvironment == null || pipelineParameters.deployEnvironment.isEmpty()) {
+            logger.logInfo("The required parameter 'Deployment environment' for deploy is not set")
             currentBuild.result = 'FAILURE'
             return
         }
