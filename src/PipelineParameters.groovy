@@ -52,7 +52,7 @@ class PipelineParameters {
         cluster = deployEnvironment == DeployEnvironment.prod.name() ? 'prod' : 'stage'
 
         if (script.params[titleBuildParameters].contains(buildApplication) == false) {
-            deleteStage([PipelineStage.BuildApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication])
+            deleteStage([PipelineStage.InstallDependencies, PipelineStage.RunTests, PipelineStage.BuildApplication, PipelineStage.PackApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication, PipelineStage.PackPackage, PipelineStage.PushPackage])
         }
 
         if (script.params[titleBuildParameters].contains(deployApplication) == false) {
