@@ -62,9 +62,6 @@ class Nexus {
         script.sh("""docker tag ${deployConfig.registryProvider.registryImagePushUrl}/${artifactCommonSettings.imageFolder}/${artifactName}:${artifactCommonSettings.imageTag} \
             ${deployConfig.registryProvider.registryImagePushUrl}/${artifactCommonSettings.releaseImageFolder}/${artifactName}:${artifactCommonSettings.releaseTag}""")
         script.sh("docker push ${deployConfig.registryProvider.registryImagePushUrl}/${artifactCommonSettings.releaseImageFolder}/${artifactName}:${artifactCommonSettings.releaseTag}")
-
-        artifactCommonSettings.imageFolder = artifactCommonSettings.releaseImageFolder
-        artifactCommonSettings.imageTag = artifactCommonSettings.releaseTag
     }
 
     void pushPackage(Map artifactVariables) {

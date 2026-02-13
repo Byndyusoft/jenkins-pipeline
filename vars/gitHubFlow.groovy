@@ -228,6 +228,9 @@ def call() {
                             nexus.createReleaseImage(artifactCommonSettings, artifactName)
                         }
                     }
+
+                    artifactCommonSettings.imageFolder = artifactCommonSettings.releaseImageFolder
+                    artifactCommonSettings.imageTag = artifactCommonSettings.releaseTag
                 }
             }
 
