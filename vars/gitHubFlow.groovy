@@ -164,7 +164,11 @@ def call() {
                     }
 
                     if (!artifactNotExist) {
-                        pipelineParameters.deleteStage([PipelineStage.InstallDependencies, PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.PackApplication, PipelineStage.BuildDockerImage])
+                        if (pipelineParameters.stageAvailable(PipelineStage.PackApplication)) {
+                            pipelineParameters.deleteStage([PipelineStage.BuildDockerImage])
+                        } else {
+                            pipelineParameters.deleteStage([PipelineStage.InstallDependencies, PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.PackApplication, PipelineStage.BuildDockerImage])
+                        }
                     }
                 }
             }
