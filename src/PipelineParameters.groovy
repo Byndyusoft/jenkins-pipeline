@@ -93,7 +93,7 @@ class PipelineParameters {
         List<String> buildVariants = []
 
         if (stageAvailable(PipelineStage.BuildApplication)) {
-            buildVariants.add("\'<b>${buildApplication}</b>:selected${mandatoryStages.contains(PipelineStage.BuildApplication) ? ':disabled' : ''}\'")
+            buildVariants.add("\'${buildApplication}<b>(!)</b>:selected:disabled${mandatoryStages.contains(PipelineStage.BuildApplication) ? ':disabled' : ''}\'")
         }
 
         if (stageAvailable(PipelineStage.DeployApplication)) {
