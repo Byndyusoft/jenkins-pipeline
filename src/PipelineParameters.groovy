@@ -104,7 +104,7 @@ class PipelineParameters {
         }
 
         if (stageAvailable(PipelineStage.PackAndPushPackage)) {
-            buildVariants.add("\'${packPackage}:selected${mandatoryStages.contains(PipelineStage.RunCodeStyleCheck) ? ':disabled' : ''}\'")
+            buildVariants.add("\'${packAndPushPackage}:selected${mandatoryStages.contains(PipelineStage.PackAndPushPackage) ? ':disabled' : ''}\'")
         }
 
         // the order of parameters is important, so the dry run flag should be on top.
