@@ -12,9 +12,9 @@ class Helm {
 
     void deployApplication(DeployConfig deployConfig, CommonConfig commonConfig, ArtifactCommonSettings artifactCommonSettings, EnvironmentVariables environmentVariables) {
         try {
-            script.sh("""helm upgrade --atomic --install \
+            script.sh("""helm upgrade --rollback-on-failure --install \
                             ${(environmentVariables.DEBUG ? '--debug' : '')} \
-                            --timeout ${deployTimeoutSeconds}s \
+                            --timeout ${deployTimeoutSeconds}s --wait-for-jobs \
                             --create-namespace \
                             --namespace ${artifactCommonSettings.namespace} \
                             -f ${deployConfig.defaultValuesFilePath} \
