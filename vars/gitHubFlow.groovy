@@ -238,21 +238,13 @@ def call() {
                 }
             }
 
-            if (pipelineParameters.stageAvailable(PipelineStage.PackPackage)) {
-                runStage('Pack package', 'docker') {
+            if (pipelineParameters.stageAvailable(PipelineStage.PackAndPushPackage)) {
+                runStage('Pack and push package', 'docker') {
                     artifactsVariables.each { artifactName, artifactVariables ->
                         if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.NugetPackage, ArtifactType.PythonPackage, ArtifactType.RawPackage])) {
                             make.packPackage(artifactVersion, artifactVariables)
-                        }
-                    }
-                }
 
-                if (pipelineParameters.stageAvailable(PipelineStage.PushPackage)) {
-                    runStage('Push package', 'docker') {
-                        artifactsVariables.each { artifactName, artifactVariables ->
-                            if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.NugetPackage, ArtifactType.PythonPackage, ArtifactType.RawPackage])) {
-                                nexus.pushPackage(artifactVariables)
-                            }
+                            nexus.pushPackage(artifactVariables)
                         }
                     }
                 }

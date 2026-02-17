@@ -14,8 +14,7 @@ class PipelineParameters {
     private final String releaseType = 'Release Type'
     private final String runTests = 'Run tests'
     private final String runCodeStyleCheck = 'Run code style check'
-    private final String packPackage = 'Pack package'
-    private final String publishPackage = 'Publish package'
+    private final String packAndPushPackage = 'Pack and push package'
     private final String masterBranchName = 'master'
 
     boolean onlyPipelineUpdate = false
@@ -52,7 +51,7 @@ class PipelineParameters {
         cluster = deployEnvironment == DeployEnvironment.prod.name() ? 'prod' : 'stage'
 
         if (script.params[titleBuildParameters].contains(buildApplication) == false) {
-            deleteStage([PipelineStage.InstallDependencies, PipelineStage.RunTests, PipelineStage.BuildApplication, PipelineStage.PackApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication, PipelineStage.PackPackage, PipelineStage.PushPackage])
+            deleteStage([PipelineStage.InstallDependencies, PipelineStage.RunTests, PipelineStage.BuildApplication, PipelineStage.PackApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication, PipelineStage.PackAndPushPackage])
         }
 
         if (script.params[titleBuildParameters].contains(deployApplication) == false) {
@@ -67,12 +66,8 @@ class PipelineParameters {
             deleteStage([PipelineStage.RunCodeStyleCheck])
         }
 
-        if (script.params[titleBuildParameters].contains(packPackage) == false) {
-            deleteStage([PipelineStage.PackPackage, PipelineStage.PushPackage])
-        }
-
-        if (script.params[titleBuildParameters].contains(publishPackage) == false) {
-            deleteStage([PipelineStage.PushPackage])
+        if (script.params[titleBuildParameters].contains(packAndPushPackage) == false) {
+            deleteStage([PipelineStage.PackAndPushPackage])
         }
     }
 
@@ -108,12 +103,8 @@ class PipelineParameters {
             buildVariants.add("\'${runCodeStyleCheck}${mandatoryStages.contains(PipelineStage.RunCodeStyleCheck) ? ':selected:disabled' : ''}\'")
         }
 
-        if (stageAvailable(PipelineStage.PackPackage)) {
+        if (stageAvailable(PipelineStage.PackAndPushPackage)) {
             buildVariants.add("\'${packPackage}:selected${mandatoryStages.contains(PipelineStage.RunCodeStyleCheck) ? ':disabled' : ''}\'")
-        }
-
-        if (stageAvailable(PipelineStage.PushPackage)) {
-            buildVariants.add("\'${publishPackage}:selected${mandatoryStages.contains(PipelineStage.RunCodeStyleCheck) ? ':disabled' : ''}\'")
         }
 
         // the order of parameters is important, so the dry run flag should be on top.
@@ -155,31 +146,31 @@ class PipelineParameters {
                 case ArtifactType.NugetPackage:
                     if (environmentVariables.BRANCH_NAME == masterBranchName) {
                         mandatoryStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.CreateTag,
-                                PipelineStage.PackPackage, PipelineStage.PushPackage])
+                                PipelineStage.PackAndPushPackage])
                         break
                     }
 
-                    optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.PackPackage, PipelineStage.PushPackage])
+                    optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.PackAndPushPackage])
                     break
 
                 case ArtifactType.RawPackage:
                     if (environmentVariables.BRANCH_NAME == masterBranchName) {
                         mandatoryStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.CreateTag,
-                                PipelineStage.PackPackage, PipelineStage.PushPackage])
+                                PipelineStage.PackAndPushPackage])
                         break
                     }
 
-                    optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.PackPackage, PipelineStage.PushPackage])
+                    optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.PackAndPushPackage])
                     break
 
                 case ArtifactType.PythonPackage:
                     if (environmentVariables.BRANCH_NAME == masterBranchName) {
                         mandatoryStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.CreateTag,
-                                PipelineStage.PackPackage, PipelineStage.PushPackage])
+                                PipelineStage.PackAndPushPackage])
                         break
                     }
 
-                    optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.PackPackage, PipelineStage.PushPackage])
+                    optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.PackAndPushPackage])
                     break
 
                 // By default

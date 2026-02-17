@@ -8,8 +8,7 @@ enum PipelineStage {
     RunTests,
     RunCodeStyleCheck,
     CreateReleaseImage,
-    PackPackage,
-    PushPackage,
+    PackAndPushPackage,
     CreateTag,
     DeployApplication
 }
