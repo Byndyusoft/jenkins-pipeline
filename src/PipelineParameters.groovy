@@ -143,7 +143,6 @@ class PipelineParameters {
 
         for (artifactType in artifactsTypes) {
             mandatoryStages.addAll([PipelineStage.InstallDependencies, PipelineStage.BuildApplication])
-            optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck])
             switch (artifactType) {
                 case ArtifactType.NugetPackage:
                     if (environmentVariables.BRANCH_NAME == masterBranchName) {
@@ -151,7 +150,11 @@ class PipelineParameters {
                         break
                     }
 
-                    optionalStages.addAll([PipelineStage.PackAndPushPackage])
+                    if (environmentVariables.TAG_NAME) {
+                        break
+                    }
+
+                    optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.PackAndPushPackage])
                     break
 
                 case ArtifactType.RawPackage:
@@ -160,7 +163,11 @@ class PipelineParameters {
                         break
                     }
 
-                    optionalStages.addAll([PipelineStage.PackAndPushPackage])
+                    if (environmentVariables.TAG_NAME) {
+                        break
+                    }
+
+                    optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.PackAndPushPackage])
                     break
 
                 case ArtifactType.PythonPackage:
@@ -169,7 +176,11 @@ class PipelineParameters {
                         break
                     }
 
-                    optionalStages.addAll([PipelineStage.PackAndPushPackage])
+                    if (environmentVariables.TAG_NAME) {
+                        break
+                    }
+
+                    optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.PackAndPushPackage])
                     break
 
                 // By default
