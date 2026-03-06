@@ -13,7 +13,7 @@ class Kubernetes {
                 containers       : constructContainer(kubernetesConfig.podTemplateJenkinsAgentImage,
                         kubernetesConfig.podTemplateContainer,
                         kubernetesConfig.podTemplateDockerImage,
-                        kubernetesConfig.podTemplateHelmImage),
+                        kubernetesConfig.podTemplateNelmImage),
                 yamlMergeStrategy: script.merge(),
                 serviceAccount   : kubernetesConfig.podTemplateServiceAccount,
                 nodeSelector     : kubernetesConfig.podTemplateNodeSelector
@@ -44,10 +44,10 @@ class Kubernetes {
      * @param jenkinsAgentImage - image for jnlp container
      * @param images - which containers to start
      * @param DockerImage - image for docker container
-     * @param HelmImage - image for helm container
+     * @param NelmImage - image for nelm container
      * @return container structure ready for transfer to podTemplate
      */
-    private Object[] constructContainer(String jenkinsAgentImage, String[] images, String DockerImage, String HelmImage) {
+    private Object[] constructContainer(String jenkinsAgentImage, String[] images, String DockerImage, String NelmImage) {
         def res = [
                 script.containerTemplate(
                         name: "jnlp", image: jenkinsAgentImage,
@@ -63,8 +63,8 @@ class Kubernetes {
             )
         }
 
-        if (images.contains("helm")) {
-            res << script.containerTemplate(name: "helm", image: HelmImage, command: "sleep", "args": "99d")
+        if (images.contains("nelm")) {
+            res << script.containerTemplate(name: "nelm", image: NelmImage, command: "sleep", "args": "99d")
         }
 
         return res

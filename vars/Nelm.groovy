@@ -1,10 +1,10 @@
 /** Class for working with helm */
-class Helm {
+class Nelm {
     private final def script
     private final int deployTimeoutSeconds
     private final Logger logger
 
-    Helm(script, Logger logger) {
+    Nelm(script, Logger logger) {
         this.script = script
         this.logger = logger
         deployTimeoutSeconds = 300
@@ -12,16 +12,15 @@ class Helm {
 
     void deployApplication(DeployConfig deployConfig, CommonConfig commonConfig, ArtifactCommonSettings artifactCommonSettings, EnvironmentVariables environmentVariables) {
         try {
-            script.sh("""helm upgrade --atomic --install \
-                            ${(environmentVariables.DEBUG ? '--debug' : '')} \
-                            --timeout ${deployTimeoutSeconds}s --wait-for-jobs \
-                            --create-namespace \
-                            --namespace ${artifactCommonSettings.namespace} \
-                            -f ${deployConfig.defaultValuesFilePath} \
-                            -f ${deployConfig.microServiceValuesFilePath} ${commonConfig.helmOption} \
-                            ${artifactCommonSettings.releaseName} .helm/""")
+            script.sh("""nelm release install --auto-rollback \
+                        ${(environmentVariables.DEBUG ? '--log-level="debug"' : '')} \
+                        --timeout=${deployTimeoutSeconds}s \
+                        -n ${artifactCommonSettings.namespace} \
+                        --values=${deployConfig.defaultValuesFilePath} \
+                        --values=${deployConfig.microServiceValuesFilePath} ${commonConfig.nelmOption} \
+                        -r ${artifactCommonSettings.releaseName} .nelm/""")
         } catch (e) {
-            logger.logInfo("Helm's work ended with an error ${e}")
+            logger.logInfo("Nelm's work ended with an error ${e}")
             script.timeout(time: 300, unit: "SECONDS") {
                 script.input 'Stop this?'
             }

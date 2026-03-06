@@ -6,8 +6,8 @@ class KubernetesConfig {
     String podTemplateJenkinsAgentImage
     /**image for docker container*/
     String podTemplateDockerImage
-    /**image for helm container*/
-    String podTemplateHelmImage
+    /**image for nelm container*/
+    String podTemplateNelmImage
     /**which containers to start*/
     String[] podTemplateContainer
     /**custom yaml for agent cloud*/
@@ -32,8 +32,8 @@ class KubernetesConfig {
         cloud = cloud ?: 'kubernetes'
         podTemplateJenkinsAgentImage = k8sCloud.podTemplateJenkinsAgentImage ?: 'jenkins/inbound-agent:3261.v9c670a_4748a_9-2-alpine3.20-jdk21'
         podTemplateDockerImage = k8sCloud.podTemplateDockerImage ?: 'byndyusoft/build-essentials:0.0.5'
-        podTemplateHelmImage = k8sCloud.podTemplateHelmImage ?: 'alpine/helm:3.15.4'
-        podTemplateContainer = k8sCloud.podTemplateContainer ?: ['docker', 'helm']
+        podTemplateNelmImage = k8sCloud.podTemplateNelmImage ?: 'byndyusoft/nelm:1.19.1'
+        podTemplateContainer = k8sCloud.podTemplateContainer ?: ['docker', 'nelm']
         podTemplateYaml = k8sCloud.yaml ?: deployConfig?.yaml ?: ''
         podTemplateServiceAccount = k8sCloud.serviceAccount ?: deployConfig?.serviceAccount ?: 'default'
         podTemplateNodeSelector = k8sCloud.nodeSelector ?: ''

@@ -11,9 +11,9 @@ Main module
 This module is for working with git
 ```
 
-- Module: [getDeployConfig.groovy](.././vars/Helm.groovy)
+- Module: [getDeployConfig.groovy](.././vars/Nelm.groovy)
 ```
-This module is for working with helm
+This module is for working with nelm
 ```
 
 - Module: [kubernetesUtils.groovy](.././vars/Kubernetes.groovy)

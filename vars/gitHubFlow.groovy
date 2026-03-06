@@ -251,18 +251,18 @@ def call() {
             }
 
             if (pipelineParameters.stageAvailable(PipelineStage.DeployApplication)) {
-                Helm helm = new Helm(this, logger)
+                Nelm nelm = new Nelm(this, logger)
 
                 stage('Prepare yaml configs') {
                     artifactsVariables.each { artifactName, artifactVariables ->
                         if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.Service])) {
-                            helm.prepareServiceYamlConfigs(deployConfig, commonConfig, artifactVariables, artifactCommonSettings)
+                            nelm.prepareServiceYamlConfigs(deployConfig, commonConfig, artifactVariables, artifactCommonSettings)
                         }
                     }
                 }
 
-                runStage("Deployment to ${pipelineParameters.deployEnvironment}", 'helm') {
-                    helm.deployApplication(deployConfig, commonConfig, artifactCommonSettings, environmentVariables)
+                runStage("Deployment to ${pipelineParameters.deployEnvironment}", 'nelm') {
+                    nelm.deployApplication(deployConfig, commonConfig, artifactCommonSettings, environmentVariables)
                 }
             }
 

@@ -31,9 +31,9 @@ project: "project1"
 additionalDeployEnvironments: ["test", "development"]
 registryCredentialsId: "nexus_admin"
 registryImageUrl: "artifacts-docker.example.com"
-defaultValues: "./.helm/values.yaml"
-serviceValues: "./.helm/service_values.yaml"
-secretValues: "./.helm/secret_values.yaml"
+defaultValues: "./.nelm/values.yaml"
+serviceValues: "./.nelm/service_values.yaml"
+secretValues: "./.nelm/secret_values.yaml"
 serviceAccount: "deploy-agent"
 gitCredentialsId: "jenkins-cicd"
 secret:

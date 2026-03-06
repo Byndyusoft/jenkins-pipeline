@@ -4,7 +4,7 @@ class CommonConfig {
     String makeOption
     Map makeFileEnv
     String makeFileEnvString
-    String helmOption
+    String nelmOption
 
     void initialize(Yaml commonYaml) {
         Utils utils = new Utils()
@@ -15,6 +15,6 @@ class CommonConfig {
         makeFileEnv = commonYaml.get('makefile/env') as Map ?: [:]
         makeFileEnvString = utils.mapToString(makeFileEnv) ?: ''
 
-        helmOption = commonYaml.get('helm/option') ?: ''
+        nelmOption = commonYaml.get('nelm/option') ?: ''
     }
 }

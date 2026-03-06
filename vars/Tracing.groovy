@@ -9,7 +9,7 @@ class Tracing {
         // decorateWithTracing(SemanticVersion, logger)
         decorateWithTracing(ServiceConfig, logger)
         decorateWithTracing(Git, logger)
-        decorateWithTracing(Helm, logger)
+        decorateWithTracing(Nelm, logger)
         decorateWithTracing(Kubernetes, logger)
         decorateWithTracing(Make, logger)
         decorateWithTracing(Nexus, logger)
