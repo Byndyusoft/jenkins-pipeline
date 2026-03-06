@@ -1,4 +1,4 @@
-/** Class for working with helm */
+/** Class for working with Nelm */
 class Nelm {
     private final def script
     private final int deployTimeoutSeconds
