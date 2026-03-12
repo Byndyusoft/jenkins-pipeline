@@ -35,7 +35,7 @@ class DeployConfig {
         gitCredentialsId = deployYaml.get('gitCredentialsId')
 
         projectName = deployYaml.get('project')
-        serviceName = deployYaml.get('serviceName') ?: ""
+        serviceName = deployYaml.get('serviceName') ?: ''
 
         clusterNames = deployYaml.get('clusterName') as List
         additionalDeployEnvironments = Utils.listToString(deployYaml.get('additionalDeployEnvironments'))
