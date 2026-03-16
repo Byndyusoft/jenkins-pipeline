@@ -32,7 +32,7 @@ class KubernetesConfig {
         cloud = cloud ?: 'kubernetes'
         podTemplateJenkinsAgentImage = k8sCloud.podTemplateJenkinsAgentImage ?: 'jenkins/inbound-agent:3261.v9c670a_4748a_9-2-alpine3.20-jdk21'
         podTemplateDockerImage = k8sCloud.podTemplateDockerImage ?: 'byndyusoft/build-essentials:0.0.5'
-        podTemplateNelmImage = k8sCloud.podTemplateNelmImage ?: 'byndyusoft/nelm:1.19.1'
+        podTemplateNelmImage = k8sCloud.podTemplateNelmImage ?: 'byndyusoft/nelm:feature-nelm'
         podTemplateContainer = k8sCloud.podTemplateContainer ?: ['docker', 'nelm']
         podTemplateYaml = k8sCloud.yaml ?: deployConfig?.yaml ?: ''
         podTemplateServiceAccount = k8sCloud.serviceAccount ?: deployConfig?.serviceAccount ?: 'default'
