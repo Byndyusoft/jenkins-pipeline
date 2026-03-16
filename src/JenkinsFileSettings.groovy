@@ -4,11 +4,20 @@ class JenkinsFileSettings {
     String artifactName
     /** Repository type */
     List<RepositoryType> repositoryTypes
+    
+    boolean hasAutotests = false
+    String autotestsJobPath = ''
+    List autotestsJobParameters = []
+    String autotestsEnvParamName = 'TARGET_ENV_NAME'
 
     void initialize(Map serviceSetting) {
         Utils utils = new Utils()
         artifactName = utils.prepareName(serviceSetting.artifact_name as String)
         repositoryTypes = mapRepositoryType(serviceSetting.type as List<String> ?: [])
+        this.hasAutotests = serviceSetting.has_autotests ?: false
+        this.autotestsJobPath = serviceSetting.autotests_job_path ?: ''
+        this.autotestsJobParameters = serviceSetting.autotests_job_parameters as List ?: []
+        this.autotestsEnvParamName = serviceSetting.autotests_env_param_name ?: 'TARGET_ENV_NAME'
     }
 
     private List<RepositoryType> mapRepositoryType(List<String> repositoryTypeOptions) {

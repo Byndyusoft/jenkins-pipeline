@@ -4,6 +4,7 @@ enum PipelineStage {
     BuildApplication,
     BuildDockerImage,
     RunTests,
+    RunAutoTests,
     RunCodeStyleCheck,
     CreateReleaseImage,
     BuildPackage,

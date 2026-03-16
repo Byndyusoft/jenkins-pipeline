@@ -13,6 +13,7 @@ class PipelineParameters {
     private final String deployApplication = 'Deploy application'
     private final String releaseType = 'Release Type'
     private final String runTests = 'Run tests'
+    private final String runAutoTests = 'Run automated tests'
     private final String runCodeStyleCheck = 'Run code style check'
     private final String buildPackage = 'Build package'
     private final String publishPackage = 'Publish package'
@@ -63,6 +64,10 @@ class PipelineParameters {
             deleteStage([PipelineStage.RunTests])
         }
 
+        if (script.params[titleBuildParameters].contains(runAutoTests) == false) {
+            deleteStage([PipelineStage.RunAutoTests])
+        }
+
         if (script.params[titleBuildParameters].contains(runCodeStyleCheck) == false) {
             deleteStage([PipelineStage.RunCodeStyleCheck])
         }
@@ -102,6 +107,10 @@ class PipelineParameters {
 
         if (stageAvailable(PipelineStage.RunTests)) {
             buildVariants.add("\'${runTests}:selected${mandatoryStages.contains(PipelineStage.RunTests) ? ':disabled' : ''}\'")
+        }
+
+        if (stageAvailable(PipelineStage.RunAutoTests)) {
+            buildVariants.add("\'${runAutoTests}:selected${mandatoryStages.contains(PipelineStage.RunAutoTests) ? ':disabled' : ''}\'")
         }
 
         if (stageAvailable(PipelineStage.RunCodeStyleCheck)) {
@@ -148,7 +157,9 @@ class PipelineParameters {
     }
 
     private initializeDefaultStages(JenkinsFileSettings jenkinsFileSettings, EnvironmentVariables environmentVariables, DeployConfig deployConfig) {
+        boolean hasAutotests = jenkinsFileSettings.hasAutotests
         logger.logDebug("PipelineParameters:initializeDefaultStages jenkinsFileSettings.repositoryTypes = ${jenkinsFileSettings.repositoryTypes}")
+        logger.logDebug("PipelineParameters:initializeDefaultStages hasAutotests = ${hasAutotests}")
 
         for (repositoryType in jenkinsFileSettings.repositoryTypes) {
             switch (repositoryType) {
@@ -194,11 +205,19 @@ class PipelineParameters {
                     }
 
                     if (environmentVariables.BRANCH_NAME == masterBranchName) {
-                        mandatoryStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.CreateReleaseImage, PipelineStage.BuildApplication, PipelineStage.BuildDockerImage, PipelineStage.CreateTag])
+                        mandatoryStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.CreateReleaseImage, PipelineStage.BuildApplication, PipelineStage.BuildDockerImage])
+                        if (hasAutotests) {
+                            mandatoryStages.addAll([PipelineStage.DeployApplication, PipelineStage.RunAutoTests, PipelineStage.CreateTag])
+                        } else {
+                            mandatoryStages.add(PipelineStage.CreateTag)
+                        }
                         break
                     }
 
                     optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication])
+                    if (hasAutotests) {
+                        optionalStages.add(PipelineStage.RunAutoTests)
+                    }
                     environments.addAll(deployConfig.additionalDeployEnvironments)
                     environments.add(DeployEnvironment.preprod.name())
                     break
