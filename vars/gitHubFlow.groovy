@@ -170,6 +170,52 @@ def call(Map serviceSetting = [:], List<String> checks = [], Map k8sCloud = [:],
                 }
             }
 
+            if (pipelineParameters.stageAvailable(PipelineStage.RunAutoTests)) {
+                runStage("Running Remote Autotests", 'jnlp') {
+                    String autoTestsJob = jenkinsFileSettings.autotestsJobPath
+
+                    if (!autoTestsJob) {
+                        error("RunAutoTests stage is enabled but 'autotests_job_path' is not set in Jenkinsfile")
+                    }
+
+                    List jobParameters = [
+                        string(name: jenkinsFileSettings.autotestsEnvParamName, value: pipelineParameters.deployEnvironment)
+                    ] + (jenkinsFileSettings.autotestsJobParameters ?: [])
+
+                    logger.logInfo("Triggering autotests: job=${autoTestsJob}")
+                    
+                    int maxAttempts = 3
+                    int attempt = 0
+                    boolean success = false
+
+                    while (!success) {
+                        attempt++
+                        try {
+                            build(
+                                job: autoTestsJob,
+                                parameters: jobParameters,
+                                wait: true,
+                                propagate: true
+                            )
+                            success = true
+
+                        } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
+                            if (attempt < maxAttempts) {
+                                logger.logWarning("Attempt ${attempt}/${maxAttempts}: autotests aborted (likely preempted VM). Retrying in 30s...")
+                                sleep(30)
+                            } else {
+                                logger.logError("All ${maxAttempts} attempts aborted. Giving up.")
+                                throw e
+                            }
+
+                        } catch (Exception e) {
+                            logger.logError("Attempt ${attempt}: autotests failed with application/test error. No retry.")
+                            throw e
+                        }
+                    }
+                }
+            }
+
             if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
                 runStage('Make release', 'docker') {
                     git.createTag(releaseVersion)
