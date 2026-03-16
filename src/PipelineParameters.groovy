@@ -110,7 +110,7 @@ class PipelineParameters {
         }
 
         if (stageAvailable(PipelineStage.RunAutoTests)) {
-            buildVariants.add("\'${runAutoTests}:selected${mandatoryStages.contains(PipelineStage.RunAutoTests) ? ':disabled' : ''}\'")
+            buildVariants.add("\'${runAutoTests}${mandatoryStages.contains(PipelineStage.RunAutoTests) ? ':selected' : ''}\'")
         }
 
         if (stageAvailable(PipelineStage.RunCodeStyleCheck)) {
