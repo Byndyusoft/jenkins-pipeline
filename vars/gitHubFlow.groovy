@@ -152,19 +152,19 @@ def call() {
 
             if (pipelineParameters.stageAvailable(PipelineStage.CheckImage)) {
                 runStage('Check image exists', 'docker') {
-                    boolean artifactNotExist = false
+                    boolean artifactExist = true
                     artifactsVariables.each { artifactName, artifactVariables ->
                         if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.Service])) {
                             if (!nexus.checkImage(artifactCommonSettings, artifactName)) {
-                                artifactNotExist = true
+                                artifactExist = false
                                 logger.logInfo("Microservice ${artifactName} image does not exist")
                                 return true // each break
                             }
                         }
                     }
 
-                    if (!artifactNotExist) {
-                        if (pipelineParameters.stageAvailable(PipelineStage.PackApplication)) {
+                    if (artifactExist) {
+                        if (pipelineParameters.stageAvailable(PipelineStage.PackAndPushPackage)) {
                             pipelineParameters.deleteStage([PipelineStage.BuildDockerImage])
                         } else {
                             pipelineParameters.deleteStage([PipelineStage.InstallDependencies, PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.PackApplication, PipelineStage.BuildDockerImage])
