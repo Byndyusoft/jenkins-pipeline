@@ -39,7 +39,7 @@ class PipelineParameters {
         script.properties([this.script.parameters(params)])
 
         def isGitIndexed = false
-        script {
+        script.script {
             def causes = currentBuild.rawBuild.getCauses()
 
             isGitIndexed = causes.any { cause ->
