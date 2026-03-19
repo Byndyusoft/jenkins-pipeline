@@ -20,17 +20,18 @@ def call() {
     logger.logInfo("Debug mode is env.DEBUG=${environmentVariables.DEBUG}")
     logger.logInfo('###################################################################')
 
+    def isGitIndexed = false
     script {
         def causes = currentBuild.rawBuild.getCauses()
 
-        def isGitIndexed = causes.any { cause ->
+        isGitIndexed = causes.any { cause ->
             cause instanceof hudson.triggers.SCMTrigger.SCMTriggerCause
         }
+    }
 
-        if (environmentVariables.BUILD_NUMBER == '1' || isGitIndexed) {
-            logger.logInfo('Pipeline parameters updated, ignore build, exit from pipeline')
-            return
-        }
+    if (environmentVariables.BUILD_NUMBER == '1' || isGitIndexed) {
+        logger.logInfo('Pipeline parameters updated, ignore build, exit from pipeline')
+        return
     }
 
     Kubernetes kubernetes = new Kubernetes(this)
