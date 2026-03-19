@@ -38,17 +38,7 @@ class PipelineParameters {
 
         script.properties([this.script.parameters(params)])
 
-        def causes = currentBuild.rawBuild.getCauses()
-
-        def isGitIndexed = causes.any { cause ->
-            cause instanceof hudson.triggers.SCMTrigger.SCMTriggerCause
-        }
-
-        if (environmentVariables.BUILD_NUMBER == '1') {
-            onlyPipelineUpdate = true
-        } else if (script.params.reload == true) {
-            onlyPipelineUpdate = true
-        } else if (isGitIndexed) {
+        if (script.params.reload == true) {
             onlyPipelineUpdate = true
         }
 

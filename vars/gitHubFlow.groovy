@@ -20,7 +20,13 @@ def call() {
     logger.logInfo("Debug mode is env.DEBUG=${environmentVariables.DEBUG}")
     logger.logInfo('###################################################################')
 
-    if (pipelineParameters.onlyPipelineUpdate) {
+    def causes = currentBuild.rawBuild.getCauses()
+
+    def isGitIndexed = causes.any { cause ->
+        cause instanceof hudson.triggers.SCMTrigger.SCMTriggerCause
+    }
+
+    if (environmentVariables.BUILD_NUMBER == '1' || isGitIndexed) {
         logger.logInfo('Pipeline parameters updated, ignore build, exit from pipeline')
         return
     }
@@ -93,6 +99,11 @@ def call() {
     logger.logInfo("Deploy to cluster=${pipelineParameters.cluster}")
     logger.logInfo("Pipeline parameters \"deploy environment\" is pipelineParameters.deployEnvironment=${pipelineParameters.deployEnvironment}")
     logger.logInfo('###################################################################')
+
+    if (pipelineParameters.onlyPipelineUpdate) {
+        logger.logInfo('Pipeline parameters updated, ignore build, exit from pipeline')
+        return
+    }
 
     if (pipelineParameters.stageAvailable(PipelineStage.DeployApplication)) {
         if (pipelineParameters.deployEnvironment == null || pipelineParameters.deployEnvironment.isEmpty()) {
