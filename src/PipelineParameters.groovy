@@ -40,7 +40,7 @@ class PipelineParameters {
 
         def isGitIndexed = false
         script.script {
-            def causes = currentBuild.rawBuild.getCauses()
+            def causes = script.currentBuild.rawBuild.getCauses()
 
             isGitIndexed = causes.any { cause ->
                 cause instanceof hudson.triggers.SCMTrigger.SCMTriggerCause
