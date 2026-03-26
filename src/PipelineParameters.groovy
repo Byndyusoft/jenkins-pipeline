@@ -20,7 +20,6 @@ class PipelineParameters {
 
     boolean onlyPipelineUpdate = false
     boolean makeRelease = false
-    boolean tagOnly = false
     String deployEnvironment
     PatchLevel patchLevel
     String cluster
@@ -42,7 +41,6 @@ class PipelineParameters {
             makeRelease = (environmentVariables.BRANCH_NAME == masterBranchName)
         }
 
-        tagOnly = (script.params['tag_only'] ?: false) as boolean
 
         initializeDefaultStages(jenkinsFileSettings, environmentVariables, deployConfig)
 
@@ -54,11 +52,6 @@ class PipelineParameters {
             onlyPipelineUpdate = true
         } else if (script.params.reload == true) {
             onlyPipelineUpdate = true
-        }
-
-        if (tagOnly) {
-            mandatoryStages.retainAll([PipelineStage.CreateTag])
-            optionalStages.clear()
         }
 
         if (!deployEnvironment) {
@@ -76,7 +69,7 @@ class PipelineParameters {
 
         cluster = deployEnvironment == DeployEnvironment.prod.name() ? 'prod' : 'stage'
 
-        if (!makeRelease && !tagOnly) {
+        if (!makeRelease) {
 
             deleteStage([PipelineStage.CreateTag, PipelineStage.CreateReleaseImage])
 
