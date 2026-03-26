@@ -81,6 +81,12 @@ def call(Map serviceSetting = [:], List<String> checks = [], Map k8sCloud = [:],
             SemanticVersion releaseVersion = new SemanticVersion(latestTag.toString())
             releaseVersion.increaseVersion(pipelineParameters.patchLevel)
 
+            if (pipelineParameters.tagOnly && pipelineParameters.exactVersion) {
+                releaseVersion = new SemanticVersion(pipelineParameters.exactVersion)
+            }
+
+            env.RELEASE_VERSION = releaseVersion.toString()
+
             ArtifactSettings artifactSettings = new ArtifactSettings()
             artifactSettings.initialize(deployConfig, jenkinsFileSettings, environmentVariables, pipelineParameters,
                     git, releaseVersion)

@@ -19,9 +19,13 @@ class PipelineParameters {
     private final String masterBranchName = 'master'
 
     boolean onlyPipelineUpdate = false
+    boolean makeRelease = false
     String deployEnvironment
     PatchLevel patchLevel
     String cluster
+    boolean skipCreateTag = false
+    boolean tagOnly = false
+    String exactVersion = ''
 
     PipelineParameters(script, Logger logger) {
         this.script = script
@@ -32,6 +36,15 @@ class PipelineParameters {
         mandatoryStages = []
         optionalStages = []
         environments = []
+
+        def makeReleaseParam = script.params['make_release']
+        if (makeReleaseParam != null) {
+            makeRelease = makeReleaseParam.toString().contains('Make Release')
+        } else {
+            makeRelease = (environmentVariables.BRANCH_NAME == masterBranchName)
+        }
+        skipCreateTag = (script.params['skip_create_tag'] ?: false) as boolean
+        tagOnly = (script.params['tag_only'] ?: false) as boolean
 
         initializeDefaultStages(jenkinsFileSettings, environmentVariables, deployConfig)
 
@@ -45,34 +58,57 @@ class PipelineParameters {
             onlyPipelineUpdate = true
         }
 
-        deployEnvironment = script.params[titleDeploymentEnvironment]
+        if (skipCreateTag) {
+            deleteStage([PipelineStage.CreateTag])
+            if (!stageAvailable(PipelineStage.DeployApplication)) {
+                mandatoryStages.add(PipelineStage.DeployApplication)
+            }
+            deployEnvironment = (script.params['Deployment environment'] ?: '') as String
+        }
 
-        patchLevel = script.params.version_type ?: PatchLevel.PATCH
+        if (tagOnly) {
+            mandatoryStages.retainAll([PipelineStage.CreateTag])
+            optionalStages.clear()
+            exactVersion = (script.params['exact_version'] ?: '') as String
+        }
+
+        if (!deployEnvironment) {
+            deployEnvironment = script.params[titleDeploymentEnvironment]
+        }
+
+        if (makeRelease && !deployEnvironment && environments) {
+            def preprodName = DeployEnvironment.preprod.name()
+            deployEnvironment = environments.contains(preprodName) ? preprodName : environments[0]
+            logger.logDebug("PipelineParameters: auto-selecting environment for release: ${deployEnvironment}")
+        }
+
+        def versionTypeParam = script.params.version_type
+        patchLevel = versionTypeParam ? PatchLevel.valueOf(versionTypeParam.toString()) : PatchLevel.PATCH
 
         cluster = deployEnvironment == DeployEnvironment.prod.name() ? 'prod' : 'stage'
 
-        if (script.params[titleBuildParameters].contains(buildApplication) == false) {
-            deleteStage([PipelineStage.BuildApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication,])
-        }
+        if (!makeRelease && !skipCreateTag && !tagOnly) {
 
-        if (script.params[titleBuildParameters].contains(deployApplication) == false) {
-            deleteStage([PipelineStage.DeployApplication])
-        }
+            deleteStage([PipelineStage.CreateTag, PipelineStage.CreateReleaseImage])
 
-        if (script.params[titleBuildParameters].contains(runTests) == false) {
-            deleteStage([PipelineStage.RunTests])
-        }
-
-        if (script.params[titleBuildParameters].contains(runCodeStyleCheck) == false) {
-            deleteStage([PipelineStage.RunCodeStyleCheck])
-        }
-
-        if (script.params[titleBuildParameters].contains(buildPackage) == false) {
-            deleteStage([PipelineStage.BuildPackage, PipelineStage.PushPackage])
-        }
-
-        if (script.params[titleBuildParameters].contains(publishPackage) == false) {
-            deleteStage([PipelineStage.PushPackage])
+            if (script.params[titleBuildParameters].contains(buildApplication) == false) {
+                deleteStage([PipelineStage.BuildApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication])
+            }
+            if (script.params[titleBuildParameters].contains(deployApplication) == false) {
+                deleteStage([PipelineStage.DeployApplication])
+            }
+            if (script.params[titleBuildParameters].contains(runTests) == false) {
+                deleteStage([PipelineStage.RunTests])
+            }
+            if (script.params[titleBuildParameters].contains(runCodeStyleCheck) == false) {
+                deleteStage([PipelineStage.RunCodeStyleCheck])
+            }
+            if (script.params[titleBuildParameters].contains(buildPackage) == false) {
+                deleteStage([PipelineStage.BuildPackage, PipelineStage.PushPackage])
+            }
+            if (script.params[titleBuildParameters].contains(publishPackage) == false) {
+                deleteStage([PipelineStage.PushPackage])
+            }
         }
     }
 
@@ -120,28 +156,77 @@ class PipelineParameters {
         // if you move it to the end, all dependent parameters will stop working
         parameters.add(script.booleanParam(defaultValue: false, description: 'Update pipeline', name: 'reload'))
 
-        parameters.add(script.reactiveChoice(choiceType: 'PT_CHECKBOX', filterLength: 1, filterable: false, name: titleBuildParameters, referencedParameters: 'reload',
-                script: script.groovyScript(fallbackScript: [classpath: [], oldScript: '', sandbox: true, script: 'return \'<p>ERROR</p>\''],
-                        script: [classpath: [], oldScript: '', sandbox: true, script: '''if (reload) {
-                return []
-            } else {
-                return [''' + buildVariants.join(',') + ''']
-            }'''])))
+        if (script.env.BRANCH_NAME == masterBranchName) {
+            parameters.add(script.reactiveChoice(
+                choiceType        : 'PT_CHECKBOX',
+                filterable        : false,
+                filterLength      : 1,
+                name              : 'make_release',
+                description       : 'Make Release: full release cycle with tag creation. When unchecked — deploy to non-prod without tag creating.',
+                referencedParameters: 'reload',
+                script            : script.groovyScript(
+                    fallbackScript: [classpath: [], oldScript: '', sandbox: true, script: "return ['Make Release:selected']"],
+                    script        : [classpath: [], oldScript: '', sandbox: true, script: """
+                        def isReload = (reload?.toString() == 'true')
+                        if (isReload) {
+                            return []
+                        }
+                        return ['Make Release:selected']
+                    """]
+                )
+            ))
+        }
 
-        if (environments) {
-            if (stageAvailable(PipelineStage.DeployApplication)) {               
-                parameters.add(script.reactiveChoice(choiceType: 'PT_RADIO', filterLength: 1, filterable: false, name: titleDeploymentEnvironment, referencedParameters: 'reload',
-                        script: script.groovyScript(fallbackScript: [classpath: [], oldScript: '', sandbox: true, script: 'return \'<p>ERROR</p>\''],
-                                script: [classpath: [], oldScript: '', sandbox: true, script: """if (reload) {
-                    return []
-                } else {
-                    return [${Utils.toJenkinsChoiceFormat(environments)}]
-                }"""])))
-            }
+        parameters.add(script.reactiveChoice(
+            choiceType: 'PT_CHECKBOX', 
+            filterLength: 1, 
+            filterable: false, 
+            name: titleBuildParameters, 
+            referencedParameters: 'reload,make_release',
+            script: script.groovyScript(
+                fallbackScript: [classpath: [], oldScript: '', sandbox: true, script: 'return ["<p>ERROR</p>"]'],
+                script: [classpath: [], oldScript: '', sandbox: true, script: """
+                    def isReload = (reload?.toString() == 'true')
+                    def isRelease = make_release?.toString()?.contains('Make Release')
+
+                    if (isReload || isRelease) {
+                        return []
+                    } else {
+                        return [${buildVariants.join(',')}]
+                    }
+                """]
+            )
+        ))
+
+        if (environments) {            
+            parameters.add(script.reactiveChoice(
+                choiceType: 'PT_RADIO', 
+                filterLength: 1, 
+                filterable: false, 
+                name: titleDeploymentEnvironment, 
+                referencedParameters: 'reload,make_release',
+                script: script.groovyScript(
+                    fallbackScript: [classpath: [], oldScript: '', sandbox: true, script: 'return ["<p>ERROR</p>"]'],
+                    script: [classpath: [], oldScript: '', sandbox: true, script: """
+                        def isReload = (reload?.toString() == 'true')
+                        def isRelease = make_release?.toString()?.contains('Make Release')
+
+                        if (isReload || isRelease) {
+                            return []
+                        } else {
+                            return [${Utils.toJenkinsChoiceFormat(environments)}]
+                        }
+                    """]
+                )
+            ))
         }
 
         if (stageAvailable(PipelineStage.CreateTag)) {
-            parameters.add(script.choice(choices: [PatchLevel.PATCH, PatchLevel.MINOR, PatchLevel.MAJOR], description: releaseType, name: 'version_type'))
+            parameters.add(script.choice(
+                choices: [PatchLevel.PATCH, PatchLevel.MINOR, PatchLevel.MAJOR], 
+                description: 'Release version increment (only for Make Release)', 
+                name: 'version_type'
+            ))
         }
 
         return parameters
@@ -194,7 +279,14 @@ class PipelineParameters {
                     }
 
                     if (environmentVariables.BRANCH_NAME == masterBranchName) {
-                        mandatoryStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.CreateReleaseImage, PipelineStage.BuildApplication, PipelineStage.BuildDockerImage, PipelineStage.CreateTag])
+                        optionalStages.add(PipelineStage.CreateTag) 
+                        optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication])
+                        environments.addAll(deployConfig.additionalDeployEnvironments)
+                        environments.add(DeployEnvironment.preprod.name())
+
+                        if (makeRelease) {
+                            mandatoryStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.CreateReleaseImage, PipelineStage.BuildApplication, PipelineStage.BuildDockerImage, PipelineStage.CreateTag])
+                        }
                         break
                     }
 
