@@ -3,16 +3,15 @@ class Utils {
     /** Merge two maps */
     Map merge(Map lhs, Map rhs) {
         if (!lhs.isEmpty() && !rhs.isEmpty()) {
-            return rhs.inject(lhs.clone()) { map, entry ->
-                String key = entry.key
-
-                if (map[key] instanceof Map && entry.value instanceof Map) {
-                    map[key] = merge(map[key] as Map, entry.value as Map)
+            def result = new HashMap(lhs)
+            rhs.each { k, v ->
+                if (result[k] instanceof Map && v instanceof Map) {
+                    result[k] = merge(result[k], v)
                 } else {
-                    map[key] = entry.value
+                    result[k] = v
                 }
-                return map
-            } as Map
+            }
+            return result
         } else {
             if (!lhs.isEmpty()) {
                 return lhs
@@ -80,5 +79,29 @@ class Utils {
             safe = safe.replace("'", "\\'")
             return "'${safe}'"
         }.join(',')
+    }
+
+    /**  */
+    static List<ArtifactType> mapArtifactType(List<String> repositoryTypeOptions) {
+        List repoTypes = []
+
+        for (repositoryTypeOption in repositoryTypeOptions) {
+            switch (repositoryTypeOption) {
+                case 'python-package':
+                    repoTypes.add(ArtifactType.PythonPackage)
+                    break
+                case 'raw-package':
+                    repoTypes.add(ArtifactType.RawPackage)
+                    break
+                case 'nuget-package':
+                    repoTypes.add(ArtifactType.NugetPackage)
+                    break
+                case 'service':
+                    repoTypes.add(ArtifactType.Service)
+                    break
+            }
+        }
+
+        return (repoTypes) ?: [ArtifactType.Service]
     }
 }

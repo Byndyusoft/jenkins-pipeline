@@ -30,25 +30,51 @@ class Nexus {
         runWithCredentials {
             // ToDo: Think about how to remove if
             if ((deployConfig.registryProvider.registryImagePullUrl) && (deployConfig.registryProvider.registryImagePushUrl)) {
-                script.sh("docker login -u ${script.userRegistry} -p ${script.passRegistry} ${deployConfig.registryProvider.registryImagePullUrl}")
-                script.sh("docker login -u ${script.userRegistry} -p ${script.passRegistry} ${deployConfig.registryProvider.registryImagePushUrl}")
+                script.sh("echo ${script.passRegistry} | docker login -u ${script.userRegistry} --password-stdin ${deployConfig.registryProvider.registryImagePullUrl}")
+                script.sh("echo ${script.passRegistry} | docker login -u ${script.userRegistry} --password-stdin ${deployConfig.registryProvider.registryImagePushUrl}")
             } else {
                 logger.logInfo("Parameters 'registryImagePullUrl' or 'registryImagePushUrl' are empty!")
             }
         }
     }
 
-    void pushPackage(JenkinsFileSettings jenkinsFileSettings, ServiceConfig serviceConfig) {
-        for (repositoryType in jenkinsFileSettings.repositoryTypes) {
-            switch (repositoryType) {
-                case RepositoryType.PythonPackage:
+    boolean checkImage(ArtifactCommonSettings artifactCommonSettings, String artifactName) {
+        boolean imageExist = false
+
+        runWithCredentials {
+            String url = "https://${deployConfig.registryProvider.registryImagePushUrl}/v2/${artifactCommonSettings.imageFolder}/${artifactName}/tags/list"
+            imageExist = script.sh(
+                    returnStdout: true,
+                    script: """curl ${environmentVariables.DEBUG ? '-v' : '-s'} -u ${script.userRegistry}:${script.passRegistry} -X GET \
+                        ${url} | jq -e '.tags | contains([\"${artifactCommonSettings.imageTag}\"])' || echo false"""
+            ).toBoolean()
+        }
+
+        return imageExist
+    }
+
+    void pushImage(ArtifactCommonSettings artifactCommonSettings, String artifactName) {
+        script.sh("docker push ${deployConfig.registryProvider.registryImagePushUrl}/${artifactCommonSettings.imageFolder}/${artifactName}:${artifactCommonSettings.imageTag}")
+    }
+
+    void createReleaseImage(ArtifactCommonSettings artifactCommonSettings, String artifactName) {
+        script.sh("docker pull ${deployConfig.registryProvider.registryImagePushUrl}/${artifactCommonSettings.imageFolder}/${artifactName}:${artifactCommonSettings.imageTag}")
+        script.sh("""docker tag ${deployConfig.registryProvider.registryImagePushUrl}/${artifactCommonSettings.imageFolder}/${artifactName}:${artifactCommonSettings.imageTag} \
+            ${deployConfig.registryProvider.registryImagePushUrl}/${artifactCommonSettings.releaseImageFolder}/${artifactName}:${artifactCommonSettings.releaseTag}""")
+        script.sh("docker push ${deployConfig.registryProvider.registryImagePushUrl}/${artifactCommonSettings.releaseImageFolder}/${artifactName}:${artifactCommonSettings.releaseTag}")
+    }
+
+    void pushPackage(Map artifactVariables) {
+        for (artifactType in artifactVariables.get('artifactTypes')) {
+            switch (artifactType) {
+                case ArtifactType.PythonPackage:
                     pushPythonPackage()
                     break
-                case RepositoryType.RawPackage:
-                    pushRawPackage(jenkinsFileSettings.artifactName)
+                case ArtifactType.RawPackage:
+                    pushRawPackage(deployConfig.serviceName)
                     break
-                case RepositoryType.NugetPackage:
-                    pushNugetPackage(serviceConfig)
+                case ArtifactType.NugetPackage:
+                    pushNugetPackage(artifactVariables)
                     break
                 default:
                     logger.logInfo('Did not determine the type package')
@@ -56,44 +82,13 @@ class Nexus {
         }
     }
 
-    boolean checkImage(ArtifactSettings artifactSettings) {
-        boolean imageExist = false
-
+    boolean checkPackage(String name) {
         runWithCredentials {
-            String url = "https://${deployConfig.registryProvider.registryImagePushUrl}/v2/${deployConfig.projectName}/${artifactSettings.imageFolder}/${artifactSettings.imageName}/tags/list"
-            imageExist = script.sh(
-                    returnStdout: true,
-                    script: """curl ${environmentVariables.DEBUG ? '-v' : '-s'} -u ${script.userRegistry}:${script.passRegistry} -X GET \
-                        ${url} | jq -e '.tags | contains([\"${artifactSettings.imageTag}\"])' || echo false"""
-            ).toBoolean()
-        }
-
-        return imageExist
-    }
-
-    boolean checkNugetPackage(String namePackage) {
-        runWithCredentials {
-            URL url = new URL("${deployConfig.registryProvider.registryPackageUrl}")
-
             return (script.sh(
                 returnStdout: true,
                 script: """curl -s --output /dev/null -u ${script.userRegistry}:${script.passRegistry} -X GET --write-out '%{http_code}' \
-                    ${url.protocol}://${url.host}${url.path.replaceFirst(/index\.json/, '')}${namePackage}""") == '200') ? true : false
+                    ${deployConfig.registryProvider.registryPackageUrl}/${name}""") == '200') ? true : false
         }
-    }
-
-    void pushImage(ArtifactSettings artifactSettings) {
-        script.sh("docker push ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactSettings.imageFolder}/${artifactSettings.imageName}:${artifactSettings.imageTag}")
-    }
-
-    void createReleaseImage(ArtifactSettings artifactSettings) {
-        script.sh("docker pull ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactSettings.imageFolder}/${artifactSettings.imageName}:${artifactSettings.imageTag}")
-        script.sh("""docker tag ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactSettings.imageFolder}/${artifactSettings.imageName}:${artifactSettings.imageTag} \
-            ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactSettings.releaseImageFolder}/${artifactSettings.imageName}:${artifactSettings.releaseTag}""")
-        script.sh("docker push ${deployConfig.registryProvider.registryImagePushUrl}/${deployConfig.projectName}/${artifactSettings.releaseImageFolder}/${artifactSettings.imageName}:${artifactSettings.releaseTag}")
-
-        artifactSettings.imageFolder = artifactSettings.releaseImageFolder
-        artifactSettings.imageTag = artifactSettings.releaseTag
     }
 
     void pushPythonPackage() {
@@ -108,22 +103,15 @@ class Nexus {
         }
     }
 
-    void pushNugetPackage(serviceConfig) {
+    void pushNugetPackage(Map artifactVariables) {
         runWithCredentials {
-            String nugetFileDirectory = serviceConfig.makeFileEnv.nuget_file_directory ?: '/app/nuget'
+            String nugetFileDirectory = "${artifactVariables.get('outputDir')}"
+            List listPackages = script.sh(returnStdout: true, script: """ls -1 ${nugetFileDirectory}""").split("\n")
 
-            script.sh("mono /usr/local/bin/nuget.exe sources Add -Name \"local-nuget-push\" \
-                -Source \"${deployConfig.registryProvider.registryPackageUrl}\" \
-                -Username ${script.userRegistry} \
-                -password ${script.passRegistry} \
-                -StorePasswordInClearText")
-
-            List listPackage = script.sh(returnStdout: true, script: """ls -1 ${nugetFileDirectory}""").split("\n")
-
-            for (i in listPackage) {
-                if (!checkNugetPackage(i.replaceFirst(/\.(\d+.\d+.\d+)/, '/$1').replaceFirst(/\.nupkg/, ''))) {
-                    script.sh("cd ${nugetFileDirectory} && mono /usr/local/bin/nuget.exe push \"${i}\" \
-                        -Source \"${deployConfig.registryProvider.registryPackageUrl}\" -SkipDuplicate -Verbosity detailed")
+            for (pkg in listPackages) {
+                if (!checkPackage(pkg.replaceFirst(/\.(\d+.\d+.\d+.+$)/, '/$1').replaceFirst(/\.nupkg/, ''))) {
+                    // ToDo: check exist package post upload
+                    script.sh("curl -v --user '${script.userRegistry}:${script.passRegistry}' -X PUT -F \"package=@${nugetFileDirectory}/${pkg}\" ${deployConfig.registryProvider.registryPackageUrl}")
                 }
             }
         }

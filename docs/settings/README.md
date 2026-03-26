@@ -12,11 +12,11 @@ Contains settings for pipeline and deploy
 
 - File *optional* [`./deploy/common.yaml`](./common.md)
 ```
-Contains settings for all service, helm and makefile.
+Contains settings for all service, nelm and makefile.
 Used for mono repository!
 ```
 
 - File **required** [`./deploy/<artifact name>.yaml`](./service.md)
 ```
-Contains settings for service, helm and makefile
+Contains settings for service, nelm and makefile
 ```

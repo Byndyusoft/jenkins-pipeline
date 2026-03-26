@@ -12,14 +12,13 @@
 - `registryPackageUrl` - url registry for deploy package
 - `serviceAccount` - for deploy jenkins agent
 - `defaultValues` - path default values file
-- `microserviceValues` - path final values file for deploy service
-- `secretValues` - path final values-secret file for deploy service
+- `serviceValues` - path final values file for deploy service
 - `secret` - setting secrets provider
   - `provider` - module name secret(vault, ...) provider
   - `vaultUrl` - url to vault
   - `vaultAppRoleCredential` - credentials from jenkins for get secret
 - `yaml` - custom settings for "Pod Templates jenkins agent(k8s)"
-- `volumes` - volumes for "Pod Templates jenkins agent(k8s)". 
+- `volumes` - volumes for "Pod Templates jenkins agent(k8s)".
   - `persistentVolumeClaim` - an existing persistent volume claim by name
      - `claimName` - claim name
      - `mountPath` - path to mount this volume inside the pod
@@ -32,9 +31,9 @@ project: "project1"
 additionalDeployEnvironments: ["test", "development"]
 registryCredentialsId: "nexus_admin"
 registryImageUrl: "artifacts-docker.example.com"
-defaultValues: "./.helm/values.yaml"
-microserviceValues: "./.helm/microservice_values.yaml"
-secretValues: "./.helm/secret_values.yaml"
+defaultValues: "./.nelm/values.yaml"
+serviceValues: "./.nelm/service_values.yaml"
+secretValues: "./.nelm/secret_values.yaml"
 serviceAccount: "deploy-agent"
 gitCredentialsId: "jenkins-cicd"
 secret:
