@@ -19,10 +19,10 @@ class KubernetesConfig {
     /**Volumes that are defined for the pod and are mounted by ALL containers for agent cloud*/
     Map podTemplateVolumes
 
-    void initialize(Map k8sCloud, DeployConfig deployConfig, PipelineParameters pipelineFlow) {
+    void initialize(Map k8sCloud, DeployConfig deployConfig, PipelineParameters pipelineParameters) {
         if (k8sCloud.cloud == null) {
             for (clusterName in deployConfig.clusterNames) {
-                if (clusterName =~ pipelineFlow.cluster) {
+                if (clusterName =~ pipelineParameters.cluster) {
                     cloud = clusterName
                     break
                 }
