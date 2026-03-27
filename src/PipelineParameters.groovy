@@ -171,12 +171,22 @@ class PipelineParameters {
                 fallbackScript: [classpath: [], oldScript: '', sandbox: true, script: 'return ["<p>ERROR</p>"]'],
                 script: [classpath: [], oldScript: '', sandbox: true, script: """
                     def isReload = (reload?.toString() == 'true')
+                    def isRelease = make_release?.toString()?.contains('Make Release')
 
                     if (isReload) {
                         return []
-                    } else {
-                        return [${buildVariants.join(',')}]
                     }
+
+                    def variants = []
+                    variants << '${buildApplication}:selected' + (isRelease ? ':disabled' : '')
+                    variants << '${runTests}:selected' + (isRelease ? ':disabled' : '')
+                    variants << '${runCodeStyleCheck}:selected' + (isRelease ? ':disabled' : '')
+
+                    if (!isRelease) {
+                        variants << '${deployApplication}:selected'
+                    }
+
+                    return variants
                 """]
             )
         ))
@@ -192,12 +202,16 @@ class PipelineParameters {
                     fallbackScript: [classpath: [], oldScript: '', sandbox: true, script: 'return ["<p>ERROR</p>"]'],
                     script: [classpath: [], oldScript: '', sandbox: true, script: """
                         def isReload = (reload?.toString() == 'true')
+                        def isRelease = make_release?.toString()?.contains('Make Release')
 
                         if (isReload) {
                             return []
-                        } else {
-                            return [${Utils.toJenkinsChoiceFormat(environments)}]
                         }
+                        if (isRelease) {
+                            return ['${DeployEnvironment.preprod.name()}:selected:disabled']
+                        }
+
+                        return [${Utils.toJenkinsChoiceFormat(environments)}]
                     """]
                 )
             ))
