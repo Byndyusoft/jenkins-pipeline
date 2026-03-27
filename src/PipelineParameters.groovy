@@ -261,13 +261,19 @@ class PipelineParameters {
                     }
 
                     if (environmentVariables.BRANCH_NAME == masterBranchName) {
-                        optionalStages.add(PipelineStage.CreateTag) 
-                        optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication])
                         environments.addAll(deployConfig.additionalDeployEnvironments)
                         environments.add(DeployEnvironment.preprod.name())
 
                         if (makeRelease) {
-                            mandatoryStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.CreateReleaseImage, PipelineStage.BuildApplication, PipelineStage.BuildDockerImage, PipelineStage.CreateTag])
+                            mandatoryStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck,
+                                PipelineStage.CreateReleaseImage, PipelineStage.BuildApplication,
+                                PipelineStage.BuildDockerImage, PipelineStage.CreateTag])
+                            optionalStages.add(PipelineStage.CreateTag)
+                        } else {
+                            optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck,
+                                PipelineStage.BuildApplication, PipelineStage.BuildDockerImage,
+                                PipelineStage.DeployApplication])
+                            optionalStages.add(PipelineStage.CreateTag)
                         }
                         break
                     }
