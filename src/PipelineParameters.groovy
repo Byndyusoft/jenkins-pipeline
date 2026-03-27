@@ -283,7 +283,7 @@ class PipelineParameters {
                             PipelineStage.RunCodeStyleCheck,
                             PipelineStage.BuildApplication, 
                             PipelineStage.BuildDockerImage,
-                            PipelineStage.DeployApplication // Теперь он не пропадет
+                            PipelineStage.DeployApplication
                         ])
 
                         if (makeRelease) {
