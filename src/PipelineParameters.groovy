@@ -69,7 +69,9 @@ class PipelineParameters {
 
         cluster = deployEnvironment == DeployEnvironment.prod.name() ? 'prod' : 'stage'
 
-        if (!makeRelease) {
+        if (makeRelease) {
+            deleteStage([PipelineStage.DeployApplication])
+        } else {
 
             deleteStage([PipelineStage.CreateTag, PipelineStage.CreateReleaseImage])
 
