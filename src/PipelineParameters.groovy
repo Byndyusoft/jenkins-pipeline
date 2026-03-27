@@ -111,19 +111,19 @@ class PipelineParameters {
         List<String> buildVariants = []
 
         if (stageAvailable(PipelineStage.BuildApplication)) {
-            buildVariants.add("\'${buildApplication}:selected${mandatoryStages.contains(PipelineStage.BuildApplication) ? ':disabled' : ''}\'")
+            buildVariants.add("\'${buildApplication}:selected${(makeRelease && mandatoryStages.contains(PipelineStage.BuildApplication)) ? ':disabled' : ''}\'")
         }
 
         if (stageAvailable(PipelineStage.DeployApplication)) {
-            buildVariants.add("\'${deployApplication}:selected${mandatoryStages.contains(PipelineStage.DeployApplication) ? ':disabled' : ''}\'")
+            buildVariants.add("\'${deployApplication}:selected${(makeRelease && mandatoryStages.contains(PipelineStage.DeployApplication)) ? ':disabled' : ''}\'")
         }
 
         if (stageAvailable(PipelineStage.RunTests)) {
-            buildVariants.add("\'${runTests}:selected${mandatoryStages.contains(PipelineStage.RunTests) ? ':disabled' : ''}\'")
+            buildVariants.add("\'${runTests}:selected${(makeRelease && mandatoryStages.contains(PipelineStage.RunTests)) ? ':disabled' : ''}\'")
         }
 
         if (stageAvailable(PipelineStage.RunCodeStyleCheck)) {
-            buildVariants.add("\'${runCodeStyleCheck}${mandatoryStages.contains(PipelineStage.RunCodeStyleCheck) ? ':selected:disabled' : ''}\'")
+            buildVariants.add("\'${runCodeStyleCheck}${(makeRelease && mandatoryStages.contains(PipelineStage.RunCodeStyleCheck)) ? ':selected:disabled' : ''}\'")
         }
 
         if (stageAvailable(PipelineStage.BuildPackage)) {
@@ -264,15 +264,24 @@ class PipelineParameters {
                         environments.addAll(deployConfig.additionalDeployEnvironments)
                         environments.add(DeployEnvironment.preprod.name())
 
+                        optionalStages.addAll([
+                            PipelineStage.RunTests, 
+                            PipelineStage.RunCodeStyleCheck,
+                            PipelineStage.BuildApplication, 
+                            PipelineStage.BuildDockerImage,
+                            PipelineStage.DeployApplication // Теперь он не пропадет
+                        ])
+
                         if (makeRelease) {
-                            mandatoryStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck,
-                                PipelineStage.CreateReleaseImage, PipelineStage.BuildApplication,
-                                PipelineStage.BuildDockerImage, PipelineStage.CreateTag])
-                            optionalStages.add(PipelineStage.CreateTag)
+                            mandatoryStages.addAll([
+                                PipelineStage.RunTests, 
+                                PipelineStage.RunCodeStyleCheck,
+                                PipelineStage.CreateReleaseImage, 
+                                PipelineStage.BuildApplication,
+                                PipelineStage.BuildDockerImage, 
+                                PipelineStage.CreateTag
+                            ])
                         } else {
-                            optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck,
-                                PipelineStage.BuildApplication, PipelineStage.BuildDockerImage,
-                                PipelineStage.DeployApplication])
                             optionalStages.add(PipelineStage.CreateTag)
                         }
                         break
