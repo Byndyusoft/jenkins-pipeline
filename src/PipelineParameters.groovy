@@ -169,9 +169,8 @@ class PipelineParameters {
                 fallbackScript: [classpath: [], oldScript: '', sandbox: true, script: 'return ["<p>ERROR</p>"]'],
                 script: [classpath: [], oldScript: '', sandbox: true, script: """
                     def isReload = (reload?.toString() == 'true')
-                    def isRelease = make_release?.toString()?.contains('Make Release')
 
-                    if (isReload || isRelease) {
+                    if (isReload) {
                         return []
                     } else {
                         return [${buildVariants.join(',')}]
@@ -191,9 +190,8 @@ class PipelineParameters {
                     fallbackScript: [classpath: [], oldScript: '', sandbox: true, script: 'return ["<p>ERROR</p>"]'],
                     script: [classpath: [], oldScript: '', sandbox: true, script: """
                         def isReload = (reload?.toString() == 'true')
-                        def isRelease = make_release?.toString()?.contains('Make Release')
 
-                        if (isReload || isRelease) {
+                        if (isReload) {
                             return []
                         } else {
                             return [${Utils.toJenkinsChoiceFormat(environments)}]
