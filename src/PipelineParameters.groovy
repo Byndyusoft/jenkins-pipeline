@@ -208,7 +208,7 @@ class PipelineParameters {
                             return []
                         }
                         if (isRelease) {
-                            return ['${DeployEnvironment.preprod.name()}:selected:disabled']
+                            return []
                         }
 
                         return [${Utils.toJenkinsChoiceFormat(environments)}]
