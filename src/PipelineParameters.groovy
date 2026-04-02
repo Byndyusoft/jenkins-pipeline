@@ -11,7 +11,7 @@ class PipelineParameters {
     private final String titleBuildParameters = 'Build parameters'
     private final String buildApplication = 'Build application'
     private final String deployApplication = 'Deploy application'
-    private final String releaseType = 'Release Type'
+    private final String releaseVersionTypeDescription = 'Release version increment (only for Make Release)'
     private final String runTests = 'Run tests'
     private final String runCodeStyleCheck = 'Run code style check'
     private final String buildPackage = 'Build package'
@@ -37,10 +37,7 @@ class PipelineParameters {
         def makeReleaseParam = script.params['make_release']
         if (makeReleaseParam != null) {
             makeRelease = makeReleaseParam.toString().contains('Make Release')
-        } else {
-            makeRelease = (environmentVariables.BRANCH_NAME == masterBranchName)
         }
-
 
         initializeDefaultStages(jenkinsFileSettings, environmentVariables, deployConfig)
 
@@ -54,15 +51,7 @@ class PipelineParameters {
             onlyPipelineUpdate = true
         }
 
-        if (!deployEnvironment) {
-            deployEnvironment = script.params[titleDeploymentEnvironment]
-        }
-
-        if (makeRelease && !deployEnvironment && environments) {
-            def preprodName = DeployEnvironment.preprod.name()
-            deployEnvironment = environments.contains(preprodName) ? preprodName : environments[0]
-            logger.logDebug("PipelineParameters: auto-selecting environment for release: ${deployEnvironment}")
-        }
+        deployEnvironment = script.params[titleDeploymentEnvironment]
 
         def versionTypeParam = script.params.version_type
         patchLevel = versionTypeParam ? PatchLevel.valueOf(versionTypeParam.toString()) : PatchLevel.PATCH
@@ -72,7 +61,6 @@ class PipelineParameters {
         if (makeRelease) {
             deleteStage([PipelineStage.DeployApplication])
         } else {
-
             deleteStage([PipelineStage.CreateTag, PipelineStage.CreateReleaseImage])
 
             if (script.params[titleBuildParameters].contains(buildApplication) == false) {
@@ -220,7 +208,7 @@ class PipelineParameters {
         if (stageAvailable(PipelineStage.CreateTag)) {
             parameters.add(script.choice(
                 choices: [PatchLevel.PATCH, PatchLevel.MINOR, PatchLevel.MAJOR], 
-                description: 'Release version increment (only for Make Release)', 
+                description: releaseVersionTypeDescription, 
                 name: 'version_type'
             ))
         }
