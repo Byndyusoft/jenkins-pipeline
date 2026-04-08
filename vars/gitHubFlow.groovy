@@ -14,7 +14,7 @@ def call(Map serviceSetting = [:], List<String> checks = [], Map k8sCloud = [:],
 
     jenkinsFileSettings.initialize(serviceSetting)
 
-    final String pipelineVersion = '1.0.6'
+    final String pipelineVersion = '1.0.7'
     final String configDir = './deploy'
 
     logger.logInfo('###################################################################')
@@ -85,13 +85,16 @@ def call(Map serviceSetting = [:], List<String> checks = [], Map k8sCloud = [:],
             artifactSettings.initialize(deployConfig, jenkinsFileSettings, environmentVariables, pipelineParameters,
                     git, releaseVersion)
 
+            def useReleaseVersion = params.use_release_version?.toString()?.toBoolean() ?: false
             String version
-            if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
+            if (pipelineParameters.stageAvailable(PipelineStage.CreateTag) || useReleaseVersion) {
                 version = releaseVersion.toString()
+                logger.logInfo("Using RELEASE version: ${version}")
             } else {
                 Utils utils = new Utils()
                 def getCurrentTagForBranch = git.getCurrentTagForBranch()
                 version = "${getCurrentTagForBranch != null ? getCurrentTagForBranch.toString() : latestTag.toString()}-${utils.prepareName(environmentVariables.BRANCH_NAME)}-${environmentVariables.BUILD_NUMBER}-${artifactSettings.gitCommitShort}"
+                logger.logInfo("Using WORK version: ${version}")
             }
 
             Make make = new Make(this, serviceConfig, logger)
