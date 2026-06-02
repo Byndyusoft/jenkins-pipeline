@@ -22,6 +22,7 @@ This mode allows you to treat the `master` branch like a feature branch.
     - Run code style check
     - Deploy application
 * **Deployment**: The **Deployment environment** selector becomes available (e.g., `preprod`, `test`).
+* **Deploy Timeout**: The **Deploy timeout (seconds)** field becomes available for longer helm rollouts. Default value is `300`.
 * **Git Tag**: No tag will be created.
 
 ---

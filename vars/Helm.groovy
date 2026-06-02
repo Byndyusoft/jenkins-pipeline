@@ -4,10 +4,10 @@ class Helm {
     private final int deployTimeoutSeconds
     private final Logger logger
 
-    Helm(script, Logger logger) {
+    Helm(script, Logger logger, int deployTimeoutSeconds = 300) {
         this.script = script
         this.logger = logger
-        deployTimeoutSeconds = 300
+        this.deployTimeoutSeconds = deployTimeoutSeconds > 0 ? deployTimeoutSeconds : 300
     }
 
     void deployApplication(DeployConfig deployConfig, ServiceConfig serviceConfig, ArtifactSettings artifactSettings, EnvironmentVariables environmentVariables) {
@@ -23,10 +23,10 @@ class Helm {
                             ${artifactSettings.releaseName} .helm/""")
         } catch (e) {
             logger.logInfo("Helm's work ended with an error")
-            script.timeout(time: 300, unit: "SECONDS") {
+            script.timeout(time: deployTimeoutSeconds, unit: "SECONDS") {
                 script.input 'Stop this?'
             }
-            catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+            script.catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                 script.sh("exit 1")
             }
         }

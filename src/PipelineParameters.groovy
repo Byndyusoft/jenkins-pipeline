@@ -8,6 +8,7 @@ class PipelineParameters {
     private List<String> environments
 
     private final String titleDeploymentEnvironment = 'Deployment environment'
+    private final String titleDeployTimeoutSeconds = 'Deploy timeout (seconds)'
     private final String titleBuildParameters = 'Build parameters'
     private final String buildApplication = 'Build application'
     private final String deployApplication = 'Deploy application'
@@ -17,10 +18,12 @@ class PipelineParameters {
     private final String buildPackage = 'Build package'
     private final String publishPackage = 'Publish package'
     private final String masterBranchName = 'master'
+    private final int defaultDeployTimeoutSeconds = 300
 
     boolean onlyPipelineUpdate = false
     boolean makeRelease = false
     String deployEnvironment
+    int deployTimeoutSeconds = defaultDeployTimeoutSeconds
     PatchLevel patchLevel
     String cluster
 
@@ -52,6 +55,7 @@ class PipelineParameters {
         }
 
         deployEnvironment = script.params[titleDeploymentEnvironment]
+        deployTimeoutSeconds = parseDeployTimeoutSeconds(script.params[titleDeployTimeoutSeconds])
 
         def versionTypeParam = script.params.version_type
         patchLevel = versionTypeParam ? PatchLevel.valueOf(versionTypeParam.toString()) : PatchLevel.PATCH
@@ -205,6 +209,15 @@ class PipelineParameters {
             ))
         }
 
+        if (stageAvailable(PipelineStage.DeployApplication)) {
+            parameters.add(script.string(
+                defaultValue: defaultDeployTimeoutSeconds.toString(),
+                description: 'Helm deployment timeout in seconds. Default: 300.',
+                name: titleDeployTimeoutSeconds,
+                trim: true
+            ))
+        }
+
         if (stageAvailable(PipelineStage.CreateTag)) {
             parameters.add(script.choice(
                 choices: [PatchLevel.PATCH, PatchLevel.MINOR, PatchLevel.MAJOR], 
@@ -302,5 +315,24 @@ class PipelineParameters {
         logger.logDebug("PipelineParameters:initializeDefaultStages mandatoryStages = ${mandatoryStages}")
         logger.logDebug("PipelineParameters:initializeDefaultStages optionalStages = ${optionalStages}")
         logger.logDebug("PipelineParameters:initializeDefaultStages environments = ${environments}")
+    }
+
+    private int parseDeployTimeoutSeconds(def rawValue) {
+        if (rawValue == null || rawValue.toString().trim().isEmpty()) {
+            return defaultDeployTimeoutSeconds
+        }
+
+        try {
+            int parsedValue = rawValue.toString().trim().toInteger()
+            if (parsedValue > 0) {
+                return parsedValue
+            }
+        } catch (NumberFormatException ignored) {
+            logger.logInfo("Deploy timeout value \"${rawValue}\" is invalid. Fallback to ${defaultDeployTimeoutSeconds} seconds.")
+            return defaultDeployTimeoutSeconds
+        }
+
+        logger.logInfo("Deploy timeout value \"${rawValue}\" must be greater than zero. Fallback to ${defaultDeployTimeoutSeconds} seconds.")
+        return defaultDeployTimeoutSeconds
     }
 }

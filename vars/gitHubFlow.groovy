@@ -154,7 +154,7 @@ def call(Map serviceSetting = [:], List<String> checks = [], Map k8sCloud = [:],
             }
 
             if (pipelineParameters.stageAvailable(PipelineStage.DeployApplication)) {
-                Helm helm = new Helm(this, logger)
+                Helm helm = new Helm(this, logger, pipelineParameters.deployTimeoutSeconds)
 
                 stage('Prepare microservice yaml configs') {
                     Yaml commonYaml = null

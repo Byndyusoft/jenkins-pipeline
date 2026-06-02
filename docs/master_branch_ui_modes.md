@@ -36,6 +36,7 @@ This reveals the manual configuration options.
 ### Step 2: Select required stages and environment
 * **Build parameters**: Manually choose which stages to run (e.g., skip tests if necessary).
 * **Deployment environment**: Choose the target environment (e.g., `test`, `feature`, `alpha`).
+* **Deploy timeout (seconds)**: Optionally increase the helm deploy timeout for long-running migrations. Default value is `300`.
 <br>
 <br>
 
