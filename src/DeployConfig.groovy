@@ -7,6 +7,7 @@ class DeployConfig {
     String projectName
     /** service name */
     String serviceName
+    Map clouds = []
     /** list of available environments */
     List deployEnvironments = []
     String cloudBuildName
