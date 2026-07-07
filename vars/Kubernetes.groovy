@@ -1,7 +1,6 @@
 /** Wrapper over the podTemplate */
 class Kubernetes {
     private final def script
-    private List volumes
 
     Kubernetes(script) {
         this.script = script
@@ -9,14 +8,7 @@ class Kubernetes {
 
     def customPodTemplate(KubernetesConfig kubernetesConfig, Closure closure) {
         Map podParams = [
-                cloud            : kubernetesConfig.cloud,
-                containers       : constructContainer(kubernetesConfig.podTemplateJenkinsAgentImage,
-                        kubernetesConfig.podTemplateContainer,
-                        kubernetesConfig.podTemplateDockerImage,
-                        kubernetesConfig.podTemplateNelmImage),
-                yamlMergeStrategy: script.merge(),
-                serviceAccount   : kubernetesConfig.podTemplateServiceAccount,
-                nodeSelector     : kubernetesConfig.podTemplateNodeSelector
+                cloud            : kubernetesConfig.cloudName
         ]
 
         if (kubernetesConfig.podTemplateYaml) {
@@ -36,37 +28,5 @@ class Kubernetes {
         script.podTemplate(podParams) {
             closure()
         }
-    }
-
-    /**
-     * A method for constructing containers for a function podTemplate
-     * https://www.jenkins.io/doc/pipeline/steps/kubernetes/#podtemplate-define-a-podtemplate-to-use-in-the-kubernetes-plugin
-     * @param jenkinsAgentImage - image for jnlp container
-     * @param images - which containers to start
-     * @param DockerImage - image for docker container
-     * @param NelmImage - image for nelm container
-     * @return container structure ready for transfer to podTemplate
-     */
-    private Object[] constructContainer(String jenkinsAgentImage, String[] images, String DockerImage, String NelmImage) {
-        def res = [
-                script.containerTemplate(
-                        name: "jnlp", image: jenkinsAgentImage,
-                        resourceRequestMemory: "100Mi", resourceRequestCpu: "100m"
-                )
-        ]
-
-        if (images.contains("docker")) {
-            res << script.containerTemplate(
-                    name: "docker", image: DockerImage, privileged: true,
-                    resourceRequestMemory: "100Mi", resourceRequestCpu: "100m",
-                    envVars: [script.containerEnvVar(key: "DOCKER_TLS_CERTDIR", value: '')]
-            )
-        }
-
-        if (images.contains("nelm")) {
-            res << script.containerTemplate(name: "nelm", image: NelmImage, command: "sleep", "args": "99d")
-        }
-
-        return res
     }
 }

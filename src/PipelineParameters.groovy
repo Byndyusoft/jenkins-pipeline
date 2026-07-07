@@ -59,7 +59,12 @@ class PipelineParameters {
 
         patchLevel = script.params.version_type ?: PatchLevel.PATCH
 
-        cluster = deployEnvironment == DeployEnvironment.prod.name() ? 'prod' : 'stage'
+        for (deployCluster in deployConfig.clouds.values()) {
+            if (deployConfig.clouds?.(deployCluster)?.environment?.contains($deployEnvironment)) {
+                cluster = $deployCluster
+                break
+            }
+        }
 
         if (script.params[titleBuildParameters].contains(buildApplication) == false) {
             deleteStage([PipelineStage.InstallDependencies, PipelineStage.RunTests, PipelineStage.BuildApplication, PipelineStage.PackApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication, PipelineStage.PackAndPushPackage])
@@ -200,8 +205,8 @@ class PipelineParameters {
 
                     if (environmentVariables.TAG_NAME) {
                         mandatoryStages.addAll([PipelineStage.PackApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication])
-                        environments.addAll(deployConfig.additionalDeployEnvironments)
-                        environments.addAll([DeployEnvironment.preprod.name(), DeployEnvironment.prod.name()])
+                        environments.addAll(deployConfig.deployEnvironments)
+                        // environments.addAll([DeployEnvironment.preprod.name(), DeployEnvironment.prod.name()])
                         break
                     }
 
@@ -211,8 +216,8 @@ class PipelineParameters {
                     }
 
                     optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.PackApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication])
-                    environments.addAll(deployConfig.additionalDeployEnvironments)
-                    environments.add(DeployEnvironment.preprod.name())
+                    environments.addAll(deployConfig.deployEnvironments)
+                    // environments.add(DeployEnvironment.preprod.name())
                     break
 
                 case ArtifactType.None:

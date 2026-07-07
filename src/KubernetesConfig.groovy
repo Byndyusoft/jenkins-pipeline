@@ -1,42 +1,15 @@
 /** Deployment configuration class */
 class KubernetesConfig {
     /**cloud*/
-    String cloud
-    /**image for jnlp container*/
-    String podTemplateJenkinsAgentImage
-    /**image for docker container*/
-    String podTemplateDockerImage
-    /**image for nelm container*/
-    String podTemplateNelmImage
-    /**which containers to start*/
-    String[] podTemplateContainer
+    String cloudName
     /**custom yaml for agent cloud*/
     String podTemplateYaml
-    /**service account for use agent cloud*/
-    String podTemplateServiceAccount
-    /**select node for agent cloud*/
-    String podTemplateNodeSelector
     /**Volumes that are defined for the pod and are mounted by ALL containers for agent cloud*/
     Map podTemplateVolumes
 
-    void initialize(Map k8sCloud, DeployConfig deployConfig, PipelineParameters pipelineParameters) {
-        if (k8sCloud.cloud == null) {
-            for (clusterName in deployConfig.clusterNames) {
-                if (clusterName =~ pipelineParameters.cluster) {
-                    cloud = clusterName
-                    break
-                }
-            }
-        }
-
-        cloud = cloud ?: 'kubernetes'
-        podTemplateJenkinsAgentImage = k8sCloud.podTemplateJenkinsAgentImage ?: 'jenkins/inbound-agent:3261.v9c670a_4748a_9-2-alpine3.20-jdk21'
-        podTemplateDockerImage = k8sCloud.podTemplateDockerImage ?: 'byndyusoft/build-essentials:0.0.5'
-        podTemplateNelmImage = k8sCloud.podTemplateNelmImage ?: 'byndyusoft/nelm:1.19.1'
-        podTemplateContainer = k8sCloud.podTemplateContainer ?: ['docker', 'nelm']
-        podTemplateYaml = k8sCloud.yaml ?: deployConfig?.yaml ?: ''
-        podTemplateServiceAccount = k8sCloud.serviceAccount ?: deployConfig?.serviceAccount ?: 'default'
-        podTemplateNodeSelector = k8sCloud.nodeSelector ?: ''
-        podTemplateVolumes = k8sCloud.volumes ?: deployConfig?.volumes ?: [:]
+    void initialize(Map k8sCloud) {
+        cloudName = k8sCloud.cloudName ?: 'kubernetes'
+        podTemplateYaml = k8sCloud.yaml ?: ''
+        podTemplateVolumes = k8sCloud.volumes ?: [:]
     }
 }

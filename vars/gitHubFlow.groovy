@@ -10,7 +10,7 @@ def call() {
         tracing.initialize(logger)
     }
 
-    final String pipelineVersion = '2.0.0'
+    final String pipelineVersion = '2.0.1'
     final String configDir = './deploy'
 
     logger.logInfo('###################################################################')
@@ -23,7 +23,7 @@ def call() {
     Kubernetes kubernetes = new Kubernetes(this)
 
     KubernetesConfig customConfig = new KubernetesConfig()
-    customConfig.initialize([cloud: 'kubernetes', podTemplateContainer: ['jnlp']], null, null)
+    customConfig.initialize([cloudName: 'kubernetes'])
 
     DeployConfig deployConfig = new DeployConfig(logger)
 
@@ -35,7 +35,15 @@ def call() {
     kubernetes.customPodTemplate(customConfig) {
         node(POD_LABEL) {
             stage('Get configs') {
-                checkout scm
+                // checkout scm
+                checkout([
+                    $class: 'GitSCM',
+                    doGenerateSubmoduleConfigurations: false,
+                    extensions: [
+                        [$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: "${configDir}"]]],
+                        [$class: 'CloneOption', depth: 1, noTags: true, shallow: true]
+                    ]
+                ])
 
                 if (!fileExists(configDir)) {
                     currentBuild.result = 'FAILURE'
@@ -103,7 +111,7 @@ def call() {
     }
 
     KubernetesConfig kubernetesConfig = new KubernetesConfig()
-    kubernetesConfig.initialize([:], deployConfig, pipelineParameters)
+    kubernetesConfig.initialize([cloudName: deployConfig.cloudBuildName, yaml: deployConfig.yaml, volumes: deployConfig.volumes])
 
     kubernetes.customPodTemplate(kubernetesConfig) {
         node(POD_LABEL) {
@@ -250,6 +258,19 @@ def call() {
                 }
             }
 
+            if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
+                runStage('Make release', 'docker') {
+                    git.createTag(artifactCommonSettings.releaseVersion)
+                }
+            }
+        }
+    }
+
+    KubernetesConfig kubernetesConfig = new KubernetesConfig()
+    kubernetesConfig.initialize([cloudName: deployConfig.cloudBuildName, yaml: deployConfig.yaml, volumes: deployConfig.volumes])
+
+    kubernetes.customPodTemplate(kubernetesConfig) {
+        node(POD_LABEL) {
             if (pipelineParameters.stageAvailable(PipelineStage.DeployApplication)) {
                 Nelm nelm = new Nelm(this, logger)
 
@@ -263,12 +284,6 @@ def call() {
 
                 runStage("Deployment to ${pipelineParameters.deployEnvironment}", 'nelm') {
                     nelm.deployApplication(deployConfig, commonConfig, artifactCommonSettings, environmentVariables)
-                }
-            }
-
-            if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
-                runStage('Make release', 'docker') {
-                    git.createTag(artifactCommonSettings.releaseVersion)
                 }
             }
         }

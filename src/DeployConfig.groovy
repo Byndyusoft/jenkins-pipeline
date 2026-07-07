@@ -10,7 +10,7 @@ class DeployConfig {
     /** list of available agents */
     List clusterNames = []
     /** list of available environments */
-    List additionalDeployEnvironments = []
+    List deployEnvironments = []
     /** path default values file */
     String defaultValuesFilePath
     /** path final values file for deploy service */
@@ -37,8 +37,10 @@ class DeployConfig {
         projectName = deployYaml.get('project')
         serviceName = deployYaml.get('serviceName') ?: ''
 
-        clusterNames = deployYaml.get('clusterName') as List
-        additionalDeployEnvironments = Utils.listToString(deployYaml.get('additionalDeployEnvironments'))
+        clouds = deployYaml.get('clouds')
+        deployEnvironments = Utils.listToString(clouds.values().collectMany { it.environment ?: [] }.unique())
+
+        cloudBuildName = clouds.values().collectMany { it.cloudBuildNames ?: [] }.unique().first()
 
         defaultValuesFilePath = deployYaml.get('defaultValues')
         microServiceValuesFilePath = deployYaml.get('serviceValues')
