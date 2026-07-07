@@ -110,10 +110,10 @@ def call() {
         }
     }
 
-    KubernetesConfig kubernetesConfig = new KubernetesConfig()
-    kubernetesConfig.initialize([cloudName: deployConfig.cloudBuildName, yaml: deployConfig.yaml, volumes: deployConfig.volumes])
+    KubernetesConfig kubernetesBuild = new KubernetesConfig()
+    kubernetesBuild.initialize([cloudName: deployConfig.cloudBuildName, yaml: deployConfig.yaml, volumes: deployConfig.volumes])
 
-    kubernetes.customPodTemplate(kubernetesConfig) {
+    kubernetes.customPodTemplate(kubernetesBuild) {
         node(POD_LABEL) {
             /**
                 ToDo
@@ -266,10 +266,10 @@ def call() {
         }
     }
 
-    KubernetesConfig kubernetesConfig = new KubernetesConfig()
-    kubernetesConfig.initialize([cloudName: deployConfig.cloudBuildName, yaml: deployConfig.yaml, volumes: deployConfig.volumes])
+    KubernetesConfig kubernetesDeploy = new KubernetesConfig()
+    kubernetesDeploy.initialize([cloudName: deployConfig.cloudBuildName, yaml: deployConfig.yaml, volumes: deployConfig.volumes])
 
-    kubernetes.customPodTemplate(kubernetesConfig) {
+    kubernetes.customPodTemplate(kubernetesDeploy) {
         node(POD_LABEL) {
             if (pipelineParameters.stageAvailable(PipelineStage.DeployApplication)) {
                 Nelm nelm = new Nelm(this, logger)
