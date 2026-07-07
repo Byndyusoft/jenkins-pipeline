@@ -23,7 +23,7 @@ def call() {
     Kubernetes kubernetes = new Kubernetes(this)
 
     KubernetesConfig customConfig = new KubernetesConfig()
-    customConfig.initialize([cloudName: 'kubernetes'])
+    customConfig.initialize()
 
     DeployConfig deployConfig = new DeployConfig(logger)
 

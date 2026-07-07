@@ -7,10 +7,9 @@ class DeployConfig {
     String projectName
     /** service name */
     String serviceName
-    /** list of available agents */
-    List clusterNames = []
     /** list of available environments */
     List deployEnvironments = []
+    String cloudBuildName
     /** path default values file */
     String defaultValuesFilePath
     /** path final values file for deploy service */
