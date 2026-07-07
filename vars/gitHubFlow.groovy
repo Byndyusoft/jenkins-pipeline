@@ -35,20 +35,20 @@ def call() {
     kubernetes.customPodTemplate(customConfig) {
         node(POD_LABEL) {
             stage('Get configs') {
-                // checkout scm
-                checkout([
-                    $class: 'GitSCM',
-                    doGenerateSubmoduleConfigurations: false,
-                    extensions: [
-                        [$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: "${configDir}"]]],
-                        [$class: 'CloneOption', depth: 1, noTags: true, shallow: true]
-                    ]
-                ])
+                checkout scm
+                // checkout([
+                //     $class: 'GitSCM',
+                //     doGenerateSubmoduleConfigurations: false,
+                //     extensions: [
+                //         [$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: "${configDir}"]]],
+                //         [$class: 'CloneOption', depth: 1, noTags: true, shallow: true]
+                //     ]
+                // ])
 
-                if (!fileExists(configDir)) {
-                    currentBuild.result = 'FAILURE'
-                    return
-                }
+                // if (!fileExists(configDir)) {
+                //     currentBuild.result = 'FAILURE'
+                //     return
+                // }
 
                 Yaml deployYaml = new Yaml(readYaml(file: "${configDir}/deploy.yaml"))
                 deployConfig.initialize(deployYaml)
