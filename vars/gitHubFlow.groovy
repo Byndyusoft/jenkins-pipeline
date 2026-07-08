@@ -35,25 +35,9 @@ def call() {
     kubernetes.customPodTemplate(customConfig) {
         node(POD_LABEL) {
             stage('Get configs') {
-                // checkout scm
-                def currentExtensions = scm.extensions ?: []
-                def customExtensions = currentExtensions + [
-                        [$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: configDir]]]
-                ]
-                checkout([
-                    $class: 'GitSCM',
-                    branches: scm.branches,
-                    doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
-                    // extensions: customExtensions,
-                    submoduleCfg: scm.submoduleCfg,
-                    userRemoteConfigs: scm.userRemoteConfigs
-                ])
+                checkout scm
 
-                this.timeout(time: 300, unit: "SECONDS") {
-                    this.input 'Stop this?'
-                }
-
-                if (!fileExists(configDir)) {
+                if (!fileExists("${configDir}/deploy.yaml")) {
                     currentBuild.result = 'FAILURE'
                     return
                 }
