@@ -39,6 +39,7 @@ def call() {
                 def currentExtensions = scm.extensions ?: []
                 def customExtensions = currentExtensions + [
                         [$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: configDir]]]
+                ]
                 checkout([
                     $class: 'GitSCM',
                     branches: scm.branches,
