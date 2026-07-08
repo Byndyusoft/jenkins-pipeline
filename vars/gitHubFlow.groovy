@@ -22,7 +22,7 @@ def call() {
 
     Kubernetes kubernetes = new Kubernetes(this)
 
-    KubernetesConfig customConfig = new KubernetesConfig()
+    KubernetesConfig customConfig = new KubernetesConfig(logger)
     customConfig.initialize([:])
 
     DeployConfig deployConfig = new DeployConfig(logger)
@@ -110,7 +110,7 @@ def call() {
         }
     }
 
-    KubernetesConfig kubernetesBuild = new KubernetesConfig()
+    KubernetesConfig kubernetesBuild = new KubernetesConfig(logger)
     kubernetesBuild.initialize([cloudName: deployConfig.cloudBuildName, yaml: deployConfig.yaml, volumes: deployConfig.volumes])
 
     kubernetes.customPodTemplate(kubernetesBuild) {
@@ -266,7 +266,7 @@ def call() {
         }
     }
 
-    KubernetesConfig kubernetesDeploy = new KubernetesConfig()
+    KubernetesConfig kubernetesDeploy = new KubernetesConfig(logger)
     kubernetesDeploy.initialize([cloudName: deployConfig.cloudBuildName, yaml: deployConfig.yaml, volumes: deployConfig.volumes])
 
     kubernetes.customPodTemplate(kubernetesDeploy) {
