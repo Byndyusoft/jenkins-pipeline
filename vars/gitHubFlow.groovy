@@ -110,6 +110,9 @@ def call() {
         }
     }
 
+    CommonConfig commonConfig = new CommonConfig()
+    ArtifactCommonSettings artifactCommonSettings = new ArtifactCommonSettings()
+
     KubernetesConfig kubernetesBuild = new KubernetesConfig(logger)
     kubernetesBuild.initialize([cloudName: deployConfig.cloudBuildName, yaml: deployConfig.yaml, volumes: deployConfig.volumes])
 
@@ -140,7 +143,6 @@ def call() {
                 artifactVersion = "${getCurrentTagForBranch != null ? getCurrentTagForBranch.toString() : latestTag.toString()}-${utils.prepareName(environmentVariables.BRANCH_NAME)}-${environmentVariables.BUILD_NUMBER}-${git.getCommitShaShort()}"
             }
 
-            ArtifactCommonSettings artifactCommonSettings = new ArtifactCommonSettings()
             artifactCommonSettings.initialize(deployConfig, environmentVariables, pipelineParameters, git, releaseVersion, artifactVersion)
 
             Nexus nexus = new Nexus(this, deployConfig, environmentVariables, logger)
@@ -149,7 +151,6 @@ def call() {
                 nexus.initialize()
             }
 
-            CommonConfig commonConfig = new CommonConfig()
             Yaml commonYaml = null
             if (fileExists("${configDir}/common.yaml")) {
                 commonYaml = new Yaml(readYaml(file: "${configDir}/common.yaml"))
