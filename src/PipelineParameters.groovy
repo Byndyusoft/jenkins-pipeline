@@ -60,8 +60,10 @@ class PipelineParameters {
         patchLevel = script.params.version_type ?: PatchLevel.PATCH
 
         for (deployCluster in deployConfig.clouds.values()) {
+            logger.logDebug("PipelineParameters:initialize deployCluster = ${deployCluster}")
             if (deployConfig.clouds?.(deployCluster)?.environment?.contains(deployEnvironment)) {
                 cluster = deployCluster
+                logger.logDebug("PipelineParameters:initialize cluster = ${cluster}")
                 break
             }
         }
@@ -206,6 +208,7 @@ class PipelineParameters {
                     if (environmentVariables.TAG_NAME) {
                         mandatoryStages.addAll([PipelineStage.PackApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication])
                         environments.addAll(deployConfig.deployEnvironments)
+                        environments.addAll(deployConfig.deployEnvironmentsImportant)
                         // environments.addAll([DeployEnvironment.preprod.name(), DeployEnvironment.prod.name()])
                         break
                     }

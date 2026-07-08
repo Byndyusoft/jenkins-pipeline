@@ -10,6 +10,7 @@ class DeployConfig {
     Map clouds
     /** list of available environments */
     List deployEnvironments = []
+    List deployEnvironmentsImportant = []
     String cloudBuildName
     /** path default values file */
     String defaultValuesFilePath
@@ -20,8 +21,6 @@ class DeployConfig {
     String yaml
     /** volumes for "Pod Templates jenkins agent(k8s)" */
     Map volumes
-    /** for deploy jenkins agent */
-    String serviceAccount
     /** setting secrets provider */
     SecretProvider secretProvider
     /** setting registry provider */
@@ -38,7 +37,8 @@ class DeployConfig {
         serviceName = deployYaml.get('serviceName') ?: ''
 
         clouds = deployYaml.get('clouds') as Map
-        deployEnvironments = Utils.listToString(clouds.values().collectMany { it.environment ?: [] }.unique())
+        deployEnvironments = clouds.values().findAll { it.important == true && it.environment }.collect { it.environment }.flatten().unique()
+        deployEnvironmentsImportant = clouds.values().findAll { it.important == true && it.environment }.collect { it.environment }.flatten().unique()
 
         cloudBuildName = clouds.values().collectMany { it.cloudBuildNames ?: [] }.unique().first()
 
