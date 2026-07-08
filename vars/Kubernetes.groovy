@@ -8,7 +8,8 @@ class Kubernetes {
 
     def customPodTemplate(KubernetesConfig kubernetesConfig, Closure closure) {
         Map podParams = [
-                cloud            : kubernetesConfig.cloudName
+                cloud            : kubernetesConfig.cloudName,
+                inheritFrom: 'default'
         ]
 
         if (kubernetesConfig.podTemplateYaml) {
