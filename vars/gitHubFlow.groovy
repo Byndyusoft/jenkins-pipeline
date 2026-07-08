@@ -37,23 +37,20 @@ def call() {
             stage('Get configs') {
                 // checkout scm
                 def currentExtensions = scm.extensions ?: []
+                def customExtensions = currentExtensions + [
+                        [$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: configDir]]]
                 checkout([
                     $class: 'GitSCM',
                     branches: scm.branches,
                     doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
-                    extensions: currentExtensions + [
-                        [$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: configDir]]],
-                        [$class: 'CloneOption', depth: 1, noTags: true, reference: '', shallow: true]
-                    ],
+                    extensions: customExtensions,
                     submoduleCfg: scm.submoduleCfg,
                     userRemoteConfigs: scm.userRemoteConfigs
                 ])
 
-
                 this.timeout(time: 300, unit: "SECONDS") {
                     this.input 'Stop this?'
                 }
-
 
                 if (!fileExists(configDir)) {
                     currentBuild.result = 'FAILURE'
