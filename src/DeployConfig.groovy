@@ -37,7 +37,7 @@ class DeployConfig {
         projectName = deployYaml.get('project')
         serviceName = deployYaml.get('serviceName') ?: ''
 
-        clouds = deployYaml.get('clouds')
+        clouds = deployYaml.get('clouds') as Map
         deployEnvironments = Utils.listToString(clouds.values().collectMany { it.environment ?: [] }.unique())
 
         cloudBuildName = clouds.values().collectMany { it.cloudBuildNames ?: [] }.unique().first()
@@ -47,7 +47,6 @@ class DeployConfig {
 
         yaml = deployYaml.get('yaml')
         volumes = deployYaml.get('volumes') as Map
-        serviceAccount = deployYaml.get('serviceAccount')
 
         secretProvider = new SecretProvider(deployYaml.get('secret') as Map ?: [:])
         registryProvider = new RegistryProvider(logger)
