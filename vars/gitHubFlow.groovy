@@ -44,7 +44,7 @@ def call() {
                     $class: 'GitSCM',
                     branches: scm.branches,
                     doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
-                    extensions: customExtensions,
+                    // extensions: customExtensions,
                     submoduleCfg: scm.submoduleCfg,
                     userRemoteConfigs: scm.userRemoteConfigs
                 ])
