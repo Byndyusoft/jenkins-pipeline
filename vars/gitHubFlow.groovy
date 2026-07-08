@@ -36,13 +36,14 @@ def call() {
         node(POD_LABEL) {
             stage('Get configs') {
                 // checkout scm
+                def currentExtensions = scm.extensions ?: []
                 checkout([
                     $class: 'GitSCM',
                     branches: scm.branches,
                     doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
-                    extensions: [
-                        [$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: "${configDir}"]]],
-                        [$class: 'CloneOption', depth: 1, noTags: true, shallow: true]
+                    extensions: currentExtensions + [
+                        [$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: configDir]]],
+                        [$class: 'CloneOption', depth: 1, noTags: true, reference: '', shallow: true]
                     ],
                     submoduleCfg: scm.submoduleCfg,
                     userRemoteConfigs: scm.userRemoteConfigs
