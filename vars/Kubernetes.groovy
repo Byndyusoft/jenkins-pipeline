@@ -1,6 +1,7 @@
 /** Wrapper over the podTemplate */
 class Kubernetes {
     private final def script
+    private List volumes
 
     Kubernetes(script) {
         this.script = script
