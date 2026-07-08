@@ -48,6 +48,12 @@ def call() {
                     userRemoteConfigs: scm.userRemoteConfigs
                 ])
 
+
+                this.timeout(time: 300, unit: "SECONDS") {
+                    this.input 'Stop this?'
+                }
+
+
                 if (!fileExists(configDir)) {
                     currentBuild.result = 'FAILURE'
                     return
