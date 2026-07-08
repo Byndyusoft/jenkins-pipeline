@@ -37,7 +37,7 @@ class DeployConfig {
         serviceName = deployYaml.get('serviceName') ?: ''
 
         clouds = deployYaml.get('clouds') as Map
-        deployEnvironments = clouds.values().findAll { it.important == true && it.environment }.collect { it.environment }.flatten().unique()
+        deployEnvironments = clouds.values().findAll { it.important != true && it.environment }.collect { it.environment }.flatten().unique()
         deployEnvironmentsImportant = clouds.values().findAll { it.important == true && it.environment }.collect { it.environment }.flatten().unique()
 
         cloudBuildName = clouds.values().collectMany { it.cloudBuildNames ?: [] }.unique().first()
