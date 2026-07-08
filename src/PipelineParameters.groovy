@@ -63,8 +63,8 @@ class PipelineParameters {
             logger.logDebug("PipelineParameters:initialize deployCluster = ${deployCluster}")
 
             logger.logDebug("PipelineParameters:initialize deployEnvironment = ${deployEnvironment}")
-            logger.logDebug("PipelineParameters:initialize test = ${deployConfig.clouds?.(deployCluster)?.environment?.contains(deployEnvironment)}")
-            if (deployConfig.clouds?.(deployCluster)?.environment?.contains(deployEnvironment)) {
+            logger.logDebug("PipelineParameters:initialize test = ${deployConfig.clouds?.get(deployCluster)?.environment?.contains(deployEnvironment)}")
+            if (deployConfig.clouds?.get(deployCluster)?.environment?.contains(deployEnvironment)) {
                 cluster = deployCluster
                 logger.logDebug("PipelineParameters:initialize cluster = ${cluster}")
                 break
