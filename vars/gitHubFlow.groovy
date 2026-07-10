@@ -75,9 +75,6 @@ def call() {
                     }
                 }
 
-                Yaml defaultValuesFilePath = new Yaml(readYaml(file: "${deployConfig.defaultValuesFilePath}"))
-                artifactsVariables["defaultValues"] = defaultValuesFilePath
-
                 logger.logDebug("artifactsVariables=${artifactsVariables}")
                 artifactsTypes = artifactsTypes.unique()
             }
@@ -107,6 +104,7 @@ def call() {
 
     CommonConfig commonConfig = new CommonConfig()
     ArtifactCommonSettings artifactCommonSettings = new ArtifactCommonSettings()
+    Nelm nelm = new Nelm(this, logger)
 
     KubernetesConfig kubernetesConfigBuild = new KubernetesConfig(logger)
     kubernetesConfigBuild.initialize([cloudName: deployConfig.cloudBuildName, yaml: deployConfig.yaml, volumes: deployConfig.volumes])
@@ -259,6 +257,16 @@ def call() {
                     git.createTag(artifactCommonSettings.releaseVersion)
                 }
             }
+
+            if (pipelineParameters.stageAvailable(PipelineStage.DeployApplication)) {
+                stage('Prepare yaml configs') {
+                    artifactsVariables.each { artifactName, artifactVariables ->
+                        if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.Service])) {
+                            nelm.prepareServiceYamlConfigs(deployConfig, commonConfig, artifactVariables, artifactCommonSettings)
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -269,16 +277,6 @@ def call() {
     kubernetes.customPodTemplate(kubernetesConfigDeploy) {
         node(POD_LABEL) {
             if (pipelineParameters.stageAvailable(PipelineStage.DeployApplication)) {
-                Nelm nelm = new Nelm(this, logger)
-
-                stage('Prepare yaml configs') {
-                    artifactsVariables.each { artifactName, artifactVariables ->
-                        if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.Service])) {
-                            nelm.prepareServiceYamlConfigs(deployConfig, commonConfig, artifactVariables, artifactCommonSettings)
-                        }
-                    }
-                }
-
                 runStage("Deployment to ${pipelineParameters.deployEnvironment}", 'nelm') {
                     nelm.deployApplication(deployConfig, commonConfig, artifactCommonSettings, environmentVariables)
                 }

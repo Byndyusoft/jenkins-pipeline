@@ -33,8 +33,6 @@ class Nelm {
     void prepareServiceYamlConfigs(DeployConfig deployConfig, CommonConfig commonConfig, Map artifactVariables, ArtifactCommonSettings artifactCommonSettings) {
         Utils utils = new Utils()
 
-        script.writeYaml file: deployConfig.defaultValuesFilePath, overwrite: true, data: deployConfig.get("defaultValues")
-
         Map fullValues = [microservices: []]
         if (script.fileExists(deployConfig.microServiceValuesFilePath)) {
             fullValues = new Yaml(script.readYaml(file: deployConfig.microServiceValuesFilePath)).get('/')
