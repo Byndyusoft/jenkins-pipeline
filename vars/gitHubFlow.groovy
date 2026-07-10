@@ -260,7 +260,8 @@ def call() {
     }
 
     KubernetesConfig kubernetesConfigDeploy = new KubernetesConfig(logger)
-    kubernetesConfigDeploy.initialize([cloudName: deployConfig.cloudDeployName, yaml: deployConfig.yaml, volumes: deployConfig.volumes])
+    String cloudName = deployConfig.clouds?.get(pipelineParameters.cluster)?.cloudDeployNames?.first()
+    kubernetesConfigDeploy.initialize([cloudName: cloudName, yaml: deployConfig.yaml, volumes: deployConfig.volumes])
 
     kubernetes.customPodTemplate(kubernetesConfigDeploy) {
         node(POD_LABEL) {
