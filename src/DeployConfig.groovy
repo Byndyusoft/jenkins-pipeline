@@ -12,6 +12,7 @@ class DeployConfig {
     List deployEnvironments = []
     List deployEnvironmentsImportant = []
     String cloudBuildName
+    String cloudDeployName
     /** path default values file */
     String defaultValuesFilePath
     /** path final values file for deploy service */
@@ -41,6 +42,7 @@ class DeployConfig {
         deployEnvironmentsImportant = clouds.values().findAll { it.important == true && it.environment }.collect { it.environment }.flatten().unique()
 
         cloudBuildName = clouds.values().collectMany { it.cloudBuildNames ?: [] }.unique().first()
+        cloudDeployName = clouds.values().collectMany { it.cloudDeployNames ?: [] }.unique().first()
 
         defaultValuesFilePath = deployYaml.get('defaultValues')
         microServiceValuesFilePath = deployYaml.get('serviceValues')

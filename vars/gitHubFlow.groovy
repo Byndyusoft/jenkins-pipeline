@@ -105,11 +105,10 @@ def call() {
     CommonConfig commonConfig = new CommonConfig()
     ArtifactCommonSettings artifactCommonSettings = new ArtifactCommonSettings()
 
-    Kubernetes kubernetesBuild = new Kubernetes(this)
     KubernetesConfig kubernetesConfigBuild = new KubernetesConfig(logger)
     kubernetesConfigBuild.initialize([cloudName: deployConfig.cloudBuildName, yaml: deployConfig.yaml, volumes: deployConfig.volumes])
 
-    kubernetesBuild.customPodTemplate(kubernetesConfigBuild) {
+    kubernetes.customPodTemplate(kubernetesConfigBuild) {
         node(POD_LABEL) {
             /**
                 ToDo
@@ -260,11 +259,10 @@ def call() {
         }
     }
 
-    Kubernetes kubernetesDeploy = new Kubernetes(this)
     KubernetesConfig kubernetesConfigDeploy = new KubernetesConfig(logger)
-    kubernetesConfigDeploy.initialize([cloudName: deployConfig.cloudBuildName, yaml: deployConfig.yaml, volumes: deployConfig.volumes])
+    kubernetesConfigDeploy.initialize([cloudName: deployConfig.cloudDeployName, yaml: deployConfig.yaml, volumes: deployConfig.volumes])
 
-    kubernetesDeploy.customPodTemplate(kubernetesConfigDeploy) {
+    kubernetes.customPodTemplate(kubernetesConfigDeploy) {
         node(POD_LABEL) {
             if (pipelineParameters.stageAvailable(PipelineStage.DeployApplication)) {
                 Nelm nelm = new Nelm(this, logger)
