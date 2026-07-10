@@ -75,6 +75,9 @@ def call() {
                     }
                 }
 
+                Yaml defaultValuesFilePath = new Yaml(readYaml(file: "${deployConfig.defaultValuesFilePath}"))
+                artifactsVariables.put("defaultValues": defaultValuesFilePath)
+
                 logger.logDebug("artifactsVariables=${artifactsVariables}")
                 artifactsTypes = artifactsTypes.unique()
             }
