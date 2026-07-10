@@ -105,10 +105,11 @@ def call() {
     CommonConfig commonConfig = new CommonConfig()
     ArtifactCommonSettings artifactCommonSettings = new ArtifactCommonSettings()
 
-    KubernetesConfig kubernetesBuild = new KubernetesConfig(logger)
-    kubernetesBuild.initialize([cloudName: deployConfig.cloudBuildName, yaml: deployConfig.yaml, volumes: deployConfig.volumes])
+    Kubernetes kubernetesBuild = new Kubernetes(this)
+    KubernetesConfig kubernetesConfigBuild = new KubernetesConfig(logger)
+    kubernetesConfigBuild.initialize([cloudName: deployConfig.cloudBuildName, yaml: deployConfig.yaml, volumes: deployConfig.volumes])
 
-    kubernetesBuild.customPodTemplate(kubernetesBuild) {
+    kubernetesBuild.customPodTemplate(kubernetesConfigBuild) {
         node(POD_LABEL) {
             /**
                 ToDo
@@ -259,10 +260,11 @@ def call() {
         }
     }
 
-    KubernetesConfig kubernetesDeploy = new KubernetesConfig(logger)
-    kubernetesDeploy.initialize([cloudName: deployConfig.cloudBuildName, yaml: deployConfig.yaml, volumes: deployConfig.volumes])
+    Kubernetes kubernetesDeploy = new Kubernetes(this)
+    KubernetesConfig kubernetesConfigDeploy = new KubernetesConfig(logger)
+    kubernetesConfigDeploy.initialize([cloudName: deployConfig.cloudBuildName, yaml: deployConfig.yaml, volumes: deployConfig.volumes])
 
-    kubernetesDeploy.customPodTemplate(kubernetesDeploy) {
+    kubernetesDeploy.customPodTemplate(kubernetesConfigDeploy) {
         node(POD_LABEL) {
             if (pipelineParameters.stageAvailable(PipelineStage.DeployApplication)) {
                 Nelm nelm = new Nelm(this, logger)
