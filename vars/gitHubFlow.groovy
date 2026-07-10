@@ -108,7 +108,7 @@ def call() {
     KubernetesConfig kubernetesBuild = new KubernetesConfig(logger)
     kubernetesBuild.initialize([cloudName: deployConfig.cloudBuildName, yaml: deployConfig.yaml, volumes: deployConfig.volumes])
 
-    kubernetes.customPodTemplate(kubernetesBuild) {
+    kubernetesBuild.customPodTemplate(kubernetesBuild) {
         node(POD_LABEL) {
             /**
                 ToDo
@@ -262,7 +262,7 @@ def call() {
     KubernetesConfig kubernetesDeploy = new KubernetesConfig(logger)
     kubernetesDeploy.initialize([cloudName: deployConfig.cloudBuildName, yaml: deployConfig.yaml, volumes: deployConfig.volumes])
 
-    kubernetes.customPodTemplate(kubernetesDeploy) {
+    kubernetesDeploy.customPodTemplate(kubernetesDeploy) {
         node(POD_LABEL) {
             if (pipelineParameters.stageAvailable(PipelineStage.DeployApplication)) {
                 Nelm nelm = new Nelm(this, logger)
