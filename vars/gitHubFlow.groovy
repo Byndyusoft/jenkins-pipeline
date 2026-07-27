@@ -14,7 +14,7 @@ def call(Map serviceSetting = [:], List<String> checks = [], Map k8sCloud = [:],
 
     jenkinsFileSettings.initialize(serviceSetting)
 
-    final String pipelineVersion = '1.0.7'
+    final String pipelineVersion = '1.0.8'
     final String configDir = './deploy'
 
     logger.logInfo('###################################################################')
@@ -113,15 +113,15 @@ def call(Map serviceSetting = [:], List<String> checks = [], Map k8sCloud = [:],
                 }
             }
 
-            if (pipelineParameters.stageAvailable(PipelineStage.RunTests)) {
-                runStage('Unit test', 'docker') {
-                    make.runUnitTests()
-                }
-            }
-
             if (pipelineParameters.stageAvailable(PipelineStage.RunCodeStyleCheck)) {
                 runStage('Style checks', 'docker') {
                     make.runStyleChecks()
+                }
+            }
+
+            if (pipelineParameters.stageAvailable(PipelineStage.RunTests)) {
+                runStage('Unit test', 'docker') {
+                    make.runUnitTests()
                 }
             }
 
