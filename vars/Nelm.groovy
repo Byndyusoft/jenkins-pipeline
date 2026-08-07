@@ -12,6 +12,8 @@ class Nelm {
 
     void deployApplication(DeployConfig deployConfig, CommonConfig commonConfig, ArtifactCommonSettings artifactCommonSettings, EnvironmentVariables environmentVariables) {
         try {
+            unstash valuesFile
+
             script.sh("""nelm release install --auto-rollback \
                         ${(environmentVariables.DEBUG ? '--log-level="debug"' : '')} \
                         --timeout=${deployTimeoutSeconds}s \
@@ -64,5 +66,6 @@ class Nelm {
 
         fullValues.microservices.add(utils.merge(valuesOverrides, valuesOverridesSecret))
         script.writeYaml file: deployConfig.microServiceValuesFilePath, overwrite: true, data: fullValues
+        stash name: valuesFile, includes: includePattern "${deployConfig.defaultValuesFilePath},${deployConfig.microServiceValuesFilePath}"
     }
 }
