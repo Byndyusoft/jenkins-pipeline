@@ -68,6 +68,6 @@ class Nelm {
         script.writeYaml file: deployConfig.microServiceValuesFilePath, overwrite: true, data: fullValues
         script.sh("ls -l ${deployConfig.defaultValuesFilePath}")
         script.sh("ls -l ${deployConfig.microServiceValuesFilePath}")
-        script.stash name: 'valuesFile', includes: "${deployConfig.defaultValuesFilePath},${deployConfig.microServiceValuesFilePath}"
+        script.stash name: 'valuesFile', includes: "${deployConfig.defaultValuesFilePath.toString().replaceFirst(/^\.\//, "")},${deployConfig.microServiceValuesFilePath.toString().replaceFirst(/^\.\//, "")}"
     }
 }
