@@ -66,6 +66,6 @@ class Nelm {
 
         fullValues.microservices.add(utils.merge(valuesOverrides, valuesOverridesSecret))
         script.writeYaml file: deployConfig.microServiceValuesFilePath, overwrite: true, data: fullValues
-        stash name: 'valuesFile', includes: includePattern "${deployConfig.defaultValuesFilePath},${deployConfig.microServiceValuesFilePath}"
+        stash name: 'valuesFile', includes: "${deployConfig.defaultValuesFilePath},${deployConfig.microServiceValuesFilePath}"
     }
 }
