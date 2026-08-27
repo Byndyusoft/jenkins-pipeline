@@ -15,6 +15,8 @@ class Nelm {
             try {
                 script.unstash 'valuesFile'
 
+                script.sh("ls -l ./.nelm/secret_values.yaml")
+
                 script.sh("""nelm release install --auto-rollback \
                             ${(environmentVariables.DEBUG ? '--log-level="debug"' : '')} \
                             --timeout=${deployTimeoutSeconds}s \
@@ -78,6 +80,9 @@ class Nelm {
                 logger.logInfo("Nelm's encrypt ended with an error ${e}")
             }
         }
+
+        script.sh("ls -l ${deployConfig.defaultValuesFilePath}")
+        script.sh("ls -l ./.nelm/secret_values.yaml")
 
         script.stash name: 'valuesFile', includes: "${deployConfig.defaultValuesFilePath.toString().replaceFirst(/^\.\//, "")},'.nelm/secret_values.yaml'"
     }
