@@ -275,16 +275,6 @@ def call() {
                     }
                 }
             }
-
-            if (pipelineParameters.stageAvailable(PipelineStage.DeployApplication)) {
-                runStage("Encrypt yaml configs", 'nelm') {
-                    artifactsVariables.each { artifactName, artifactVariables ->
-                        if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.Service])) {
-                            nelm.encryptYamlConfigs(deployConfig)
-                        }
-                    }
-                }
-            }
         }
     }
 
