@@ -76,6 +76,7 @@ class Nelm {
         script.withCredentials([script.string(credentialsId: deployConfig.nelmKeyCredentialsId, variable: 'NELM_SECRET_KEY')]) {
             try {
                 script.sh("""nelm chart secret values-file encrypt ${deployConfig.microServiceValuesFilePath} > ./.nelm/secret_values.yaml""")
+                script.sh("""rm -f ${deployConfig.microServiceValuesFilePath}""")
             } catch (e) {
                 logger.logInfo("Nelm's encrypt ended with an error ${e}")
             }
