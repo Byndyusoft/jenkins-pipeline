@@ -15,8 +15,6 @@ class Nelm {
             try {
                 script.unstash 'nelmChart'
 
-                script.sh("ls -la ./.nelm/")
-
                 script.sh("""nelm release install --auto-rollback \
                             ${(environmentVariables.DEBUG ? '--log-level="debug"' : '')} \
                             --timeout=${deployTimeoutSeconds}s \
@@ -77,6 +75,7 @@ class Nelm {
             try {
                 script.sh("""nelm chart secret values-file encrypt ${deployConfig.microServiceValuesFilePath} > ./.nelm/secret_values.yaml""")
                 script.sh("""rm -f ${deployConfig.microServiceValuesFilePath}""")
+                script.timeout(30000)
             } catch (e) {
                 logger.logInfo("Nelm's encrypt ended with an error ${e}")
             }
