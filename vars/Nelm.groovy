@@ -13,9 +13,9 @@ class Nelm {
     void deployApplication(DeployConfig deployConfig, CommonConfig commonConfig, ArtifactCommonSettings artifactCommonSettings, EnvironmentVariables environmentVariables) {
         script.withCredentials([script.string(credentialsId: deployConfig.nelmKeyCredentialsId, variable: 'NELM_SECRET_KEY')]) {
             try {
-                script.unstash 'valuesFile'
+                script.unstash 'nelmChart'
 
-                script.sh("ls -l ./.nelm/secret_values.yaml")
+                script.sh("ls -la ./.nelm/")
 
                 script.sh("""nelm release install --auto-rollback \
                             ${(environmentVariables.DEBUG ? '--log-level="debug"' : '')} \
@@ -81,9 +81,6 @@ class Nelm {
             }
         }
 
-        script.sh("ls -l ${deployConfig.defaultValuesFilePath}")
-        script.sh("ls -l ./.nelm/secret_values.yaml")
-
-        script.stash name: 'valuesFile', includes: "${deployConfig.defaultValuesFilePath.toString().replaceFirst(/^\.\//, "")},.nelm/secret_values.yaml"
+        script.stash name: 'nelmChart', includes: '.nelm/**'
     }
 }
