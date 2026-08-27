@@ -260,7 +260,7 @@ def call() {
 
             if (pipelineParameters.stageAvailable(PipelineStage.DeployApplication)) {
                 stage('Prepare yaml configs') {
-                    boolean yamlConfig false
+                    boolean yamlConfig = false
                     artifactsVariables.each { artifactName, artifactVariables ->
                         if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.Service])) {
                             nelm.prepareServiceYamlConfigs(deployConfig, commonConfig, artifactVariables, artifactCommonSettings)
