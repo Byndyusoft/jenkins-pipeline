@@ -12,6 +12,8 @@ class DeployConfig {
     List deployEnvironments = []
     List deployEnvironmentsImportant = []
     String cloudBuildName
+    /** Credentials from jenkins for nelm */
+    String nelmKeyCredentialsId
     /** path default values file */
     String defaultValuesFilePath
     /** path final values file for deploy service */
@@ -42,6 +44,7 @@ class DeployConfig {
 
         cloudBuildName = clouds.values().collectMany { it.cloudBuildNames ?: [] }.unique().first()
 
+        nelmKeyCredentialsId = deployYaml.get('nelmKeyCredentialsId')
         defaultValuesFilePath = deployYaml.get('defaultValues')
         microServiceValuesFilePath = deployYaml.get('serviceValues')
 

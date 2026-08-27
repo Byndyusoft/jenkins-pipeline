@@ -187,15 +187,15 @@ def call() {
                 }
             }
 
-            if (pipelineParameters.stageAvailable(PipelineStage.RunTests)) {
-                runStage('Unit test', 'docker') {
-                    make.runUnitTests()
-                }
-            }
-
             if (pipelineParameters.stageAvailable(PipelineStage.RunCodeStyleCheck)) {
                 runStage('Style checks', 'docker') {
                     make.runStyleChecks()
+                }
+            }
+
+            if (pipelineParameters.stageAvailable(PipelineStage.RunTests)) {
+                runStage('Unit test', 'docker') {
+                    make.runUnitTests()
                 }
             }
 
@@ -259,9 +259,9 @@ def call() {
             }
 
             if (pipelineParameters.stageAvailable(PipelineStage.DeployApplication)) {
-                stage('Prepare yaml configs') {
-                    artifactsVariables.each { artifactName, artifactVariables ->
-                        if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.Service])) {
+                artifactsVariables.each { artifactName, artifactVariables ->
+                    if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.Service])) {
+                        runStage("Prepare yaml configs", 'nelm') {
                             nelm.prepareServiceYamlConfigs(deployConfig, commonConfig, artifactVariables, artifactCommonSettings)
                         }
                     }

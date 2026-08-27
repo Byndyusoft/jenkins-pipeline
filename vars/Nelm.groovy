@@ -11,23 +11,25 @@ class Nelm {
     }
 
     void deployApplication(DeployConfig deployConfig, CommonConfig commonConfig, ArtifactCommonSettings artifactCommonSettings, EnvironmentVariables environmentVariables) {
-        try {
-            script.unstash 'valuesFile'
+        script.withCredentials([script.string(credentialsId: deployConfig.nelmKeyCredentialsId, variable: 'NELM_SECRET_KEY')]) {
+            try {
+                script.unstash 'valuesFile'
 
-            script.sh("""nelm release install --auto-rollback \
-                        ${(environmentVariables.DEBUG ? '--log-level="debug"' : '')} \
-                        --timeout=${deployTimeoutSeconds}s \
-                        -n ${artifactCommonSettings.namespace} \
-                        --values=${deployConfig.defaultValuesFilePath} \
-                        --values=${deployConfig.microServiceValuesFilePath} ${commonConfig.nelmOption} \
-                        -r ${artifactCommonSettings.releaseName} .nelm/""")
-        } catch (e) {
-            logger.logInfo("Nelm's work ended with an error ${e}")
-            script.timeout(time: 300, unit: "SECONDS") {
-                script.input 'Stop this?'
-            }
-            catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                script.sh("exit 1")
+                script.sh("""nelm release install --auto-rollback \
+                            ${(environmentVariables.DEBUG ? '--log-level="debug"' : '')} \
+                            --timeout=${deployTimeoutSeconds}s \
+                            -n ${artifactCommonSettings.namespace} \
+                            --values=${deployConfig.defaultValuesFilePath} \
+                            --values=./.nelm/secret_values.yaml ${commonConfig.nelmOption} \
+                            -r ${artifactCommonSettings.releaseName} .nelm/""")
+            } catch (e) {
+                logger.logInfo("Nelm's work ended with an error ${e}")
+                script.timeout(time: 300, unit: "SECONDS") {
+                    script.input 'Stop this?'
+                }
+                catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                    script.sh("exit 1")
+                }
             }
         }
     }
@@ -66,8 +68,15 @@ class Nelm {
 
         fullValues.microservices.add(utils.merge(valuesOverrides, valuesOverridesSecret))
         script.writeYaml file: deployConfig.microServiceValuesFilePath, overwrite: true, data: fullValues
-        script.sh("ls -l ${deployConfig.defaultValuesFilePath}")
-        script.sh("ls -l ${deployConfig.microServiceValuesFilePath}")
-        script.stash name: 'valuesFile', includes: "${deployConfig.defaultValuesFilePath.toString().replaceFirst(/^\.\//, "")},${deployConfig.microServiceValuesFilePath.toString().replaceFirst(/^\.\//, "")}"
+
+        script.withCredentials([script.string(credentialsId: deployConfig.nelmKeyCredentialsId, variable: 'NELM_SECRET_KEY')]) {
+            try {
+                script.sh("""nelm chart secret values-file encrypt ${deployConfig.microServiceValuesFilePath} > ./.nelm/secret_values.yaml""")
+            } catch (e) {
+                logger.logInfo("Nelm's encrypt ended with an error ${e}")
+            }
+        }
+
+        script.stash name: 'valuesFile', includes: "${deployConfig.defaultValuesFilePath.toString().replaceFirst(/^\.\//, "")}, .nelm/secret_values.yaml}"
     }
 }
