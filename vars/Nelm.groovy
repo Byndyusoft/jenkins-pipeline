@@ -84,6 +84,6 @@ class Nelm {
         script.sh("ls -l ${deployConfig.defaultValuesFilePath}")
         script.sh("ls -l ./.nelm/secret_values.yaml")
 
-        script.stash name: 'valuesFile', includes: "${deployConfig.defaultValuesFilePath.toString().replaceFirst(/^\.\//, "")},'.nelm/secret_values.yaml'"
+        script.stash name: 'valuesFile', includes: "${deployConfig.defaultValuesFilePath.toString().replaceFirst(/^\.\//, "")},.nelm/secret_values.yaml"
     }
 }
