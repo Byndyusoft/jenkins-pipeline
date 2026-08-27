@@ -68,7 +68,9 @@ class Nelm {
 
         fullValues.microservices.add(utils.merge(valuesOverrides, valuesOverridesSecret))
         script.writeYaml file: deployConfig.microServiceValuesFilePath, overwrite: true, data: fullValues
+    }
 
+    void encryptYamlConfigs(DeployConfig deployConfig) {
         script.withCredentials([script.string(credentialsId: deployConfig.nelmKeyCredentialsId, variable: 'NELM_SECRET_KEY')]) {
             try {
                 script.sh("""nelm chart secret values-file encrypt ${deployConfig.microServiceValuesFilePath} > ./.nelm/secret_values.yaml""")

@@ -259,10 +259,14 @@ def call() {
             }
 
             if (pipelineParameters.stageAvailable(PipelineStage.DeployApplication)) {
-                artifactsVariables.each { artifactName, artifactVariables ->
-                    if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.Service])) {
-                        runStage("Prepare yaml configs", 'nelm') {
+                stage('Prepare yaml configs') {
+                    artifactsVariables.each { artifactName, artifactVariables ->
+                        if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.Service])) {
                             nelm.prepareServiceYamlConfigs(deployConfig, commonConfig, artifactVariables, artifactCommonSettings)
+
+                            runStage("Encrypt yaml configs", 'nelm') {
+                                 nelm.encryptYamlConfigs(deployConfig)
+                            }
                         }
                     }
                 }
