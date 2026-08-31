@@ -62,7 +62,7 @@ class PipelineParameters {
         for (deployCluster in deployConfig.clusters.keySet()) {
             logger.logDebug("PipelineParameters:initialize deployCluster = ${deployCluster}")
             logger.logDebug("PipelineParameters:initialize deployEnvironment = ${deployEnvironment}")
-            if (deployConfig.clusters?.get(deployCluster)?.environment?.contains(deployEnvironment)) {
+            if (deployConfig.clusters?.get(deployCluster)?.environments?.containsKey(deployEnvironment)) {
                 cluster = deployCluster
                 logger.logDebug("PipelineParameters:initialize cluster = ${cluster}")
                 break
