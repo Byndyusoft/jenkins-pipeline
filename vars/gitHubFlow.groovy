@@ -107,7 +107,7 @@ def call() {
     Nelm nelm = new Nelm(this, logger)
 
     KubernetesConfig kubernetesConfigBuild = new KubernetesConfig(logger)
-    kubernetesConfigBuild.initialize([cloudName: deployConfig.cloudBuildName, yaml: deployConfig.yaml, volumes: deployConfig.volumes])
+    kubernetesConfigBuild.initialize([cloudName: deployConfig.buildCloudName, yaml: deployConfig.yaml, volumes: deployConfig.volumes])
 
     kubernetes.customPodTemplate(kubernetesConfigBuild) {
         node(POD_LABEL) {
@@ -279,8 +279,10 @@ def call() {
     }
 
     KubernetesConfig kubernetesConfigDeploy = new KubernetesConfig(logger)
-    String cloudName = deployConfig.clouds?.get(pipelineParameters.cluster)?.cloudDeployNames?.first()
+    // Get a random agent for deployment.
+    String cloudName = deployConfig.clusters?.get(pipelineParameters.cluster)?.deployCloudNames?.shuffled().first()
     kubernetesConfigDeploy.initialize([cloudName: cloudName, yaml: deployConfig.yaml, volumes: deployConfig.volumes])
+    logger.logDebug("Selected agent for deployment ${cloudName}")
 
     kubernetes.customPodTemplate(kubernetesConfigDeploy) {
         node(POD_LABEL) {

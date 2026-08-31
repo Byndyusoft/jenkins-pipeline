@@ -7,11 +7,11 @@ class DeployConfig {
     String projectName
     /** service name */
     String serviceName
-    Map clouds
+    Map clusters
     /** list of available environments */
     List deployEnvironments = []
     List deployEnvironmentsImportant = []
-    String cloudBuildName
+    String buildCloudName
     /** Credentials from jenkins for nelm */
     String nelmKeyCredentialsId
     /** path default values file */
@@ -38,11 +38,11 @@ class DeployConfig {
         projectName = deployYaml.get('project')
         serviceName = deployYaml.get('serviceName') ?: ''
 
-        clouds = deployYaml.get('clouds') as Map
-        deployEnvironments = clouds.values().findAll { it.important != true && it.environment }.collect { it.environment }.flatten().unique()
-        deployEnvironmentsImportant = clouds.values().findAll { it.important == true && it.environment }.collect { it.environment }.flatten().unique()
+        clusters = deployYaml.get('clusters') as Map
+        deployEnvironments = clusters.collectMany { k, v -> v.environments?.findAll { ek, ev -> !ev?.important }?.keySet() ?: [] }
+        deployEnvironmentsImportant = clusters.collectMany { k, v -> v.environments?.findAll { ek, ev -> ev?.important }?.keySet() ?: [] }
 
-        cloudBuildName = clouds.values().collectMany { it.cloudBuildNames ?: [] }.unique().first()
+        buildCloudName = clusters.values().collectMany { it.buildCloudNames ?: [] }.unique().shuffled().first()
 
         nelmKeyCredentialsId = deployYaml.get('nelmKeyCredentialsId')
         defaultValuesFilePath = deployYaml.get('defaultValues')

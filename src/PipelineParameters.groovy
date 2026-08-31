@@ -59,10 +59,10 @@ class PipelineParameters {
 
         patchLevel = script.params.version_type ?: PatchLevel.PATCH
 
-        for (deployCluster in deployConfig.clouds.keySet()) {
+        for (deployCluster in deployConfig.clusters.keySet()) {
             logger.logDebug("PipelineParameters:initialize deployCluster = ${deployCluster}")
             logger.logDebug("PipelineParameters:initialize deployEnvironment = ${deployEnvironment}")
-            if (deployConfig.clouds?.get(deployCluster)?.environment?.contains(deployEnvironment)) {
+            if (deployConfig.clusters?.get(deployCluster)?.environment?.contains(deployEnvironment)) {
                 cluster = deployCluster
                 logger.logDebug("PipelineParameters:initialize cluster = ${cluster}")
                 break
