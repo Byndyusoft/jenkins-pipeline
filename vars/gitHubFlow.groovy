@@ -280,7 +280,7 @@ def call() {
 
     KubernetesConfig kubernetesConfigDeploy = new KubernetesConfig(logger)
     // Get a random agent for deployment.
-    String cloudName = deployConfig.clusters?.get(pipelineParameters.cluster)?.deployCloudNames?.shuffle().first()
+    String cloudName = deployConfig.clusters?.get(pipelineParameters.cluster)?.deployCloudNames?.first()
     kubernetesConfigDeploy.initialize([cloudName: cloudName, yaml: deployConfig.yaml, volumes: deployConfig.volumes])
     logger.logDebug("Selected agent for deployment ${cloudName}")
 

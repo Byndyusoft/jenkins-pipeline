@@ -42,7 +42,7 @@ class DeployConfig {
         deployEnvironments = clusters.collectMany { k, v -> v.environments?.findAll { ek, ev -> !ev?.important }?.keySet() ?: [] }
         deployEnvironmentsImportant = clusters.collectMany { k, v -> v.environments?.findAll { ek, ev -> ev?.important }?.keySet() ?: [] }
 
-        buildCloudName = clusters.values().collectMany { it.buildCloudNames ?: [] }.unique().shuffle().first()
+        buildCloudName = clusters.values().collectMany { it.buildCloudNames ?: [] }.unique().first()
 
         nelmKeyCredentialsId = deployYaml.get('nelmKeyCredentialsId')
         defaultValuesFilePath = deployYaml.get('defaultValues')
