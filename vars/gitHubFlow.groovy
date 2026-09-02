@@ -57,9 +57,9 @@ def call(List<String> listServiceFileNames = []) {
                     if (!excludedFileName.contains(fileName)) {
                         logger.logDebug("fileName=${fileName}")
 
-                        ServiceConfig serviceConfig = new ServiceConfig()
-                        Yaml serviceYaml = new Yaml(readYaml(file: "${configDir}/${fileName}"))
-                        if (fileExists(serviceYaml)) {
+                        if (fileExists("${configDir}/${fileName}")) {
+                            ServiceConfig serviceConfig = new ServiceConfig()
+                            Yaml serviceYaml = new Yaml(readYaml(file: "${configDir}/${fileName}"))
                             serviceConfig.initialize(serviceYaml)
 
                             if (!serviceConfig.artifactSetting.get('enabled')) {
