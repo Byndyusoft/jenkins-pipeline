@@ -1,6 +1,6 @@
 import jenkins.model.Jenkins
 
-def call() {
+def call(List<String> listServiceFileNames = []) {
     Logger logger = new Logger()
 
     EnvironmentVariables environmentVariables = new EnvironmentVariables(env)
@@ -10,7 +10,7 @@ def call() {
         tracing.initialize(logger)
     }
 
-    final String pipelineVersion = '2.0.1'
+    final String pipelineVersion = '2.0.2'
     final String configDir = './deploy'
 
     logger.logInfo('###################################################################')
@@ -45,7 +45,12 @@ def call() {
                 Yaml deployYaml = new Yaml(readYaml(file: "${configDir}/deploy.yaml"))
                 deployConfig.initialize(deployYaml)
 
-                def fileIndir = findFiles(glob: "deploy/*").collect { file -> file.name }
+                def fileIndir = []
+                if (listServiceFileNames) {
+                    fileIndir = listServiceFileNames
+                } else {
+                    fileIndir = findFiles(glob: "deploy/*").collect { file -> file.name }
+                }
                 def excludedFileName = ["common.yaml", "deploy.yaml"]
 
                 for (fileName in fileIndir) {
@@ -54,24 +59,28 @@ def call() {
 
                         ServiceConfig serviceConfig = new ServiceConfig()
                         Yaml serviceYaml = new Yaml(readYaml(file: "${configDir}/${fileName}"))
-                        serviceConfig.initialize(serviceYaml)
+                        if (fileExists(serviceYaml)) {
+                            serviceConfig.initialize(serviceYaml)
 
-                        if (!serviceConfig.artifactSetting.get('enabled')) {
-                            continue
+                            if (!serviceConfig.artifactSetting.get('enabled')) {
+                                continue
+                            }
+
+                            String microserviceName = fileName.split("\\.")[0]
+
+                            List<ArtifactType> artifactTypes = utils.mapArtifactType(serviceConfig.artifactSetting.get('type') as List<String> ?: [])
+
+                            artifactsTypes.addAll(artifactTypes.flatten())
+
+                            artifactsVariables.put("${microserviceName}", [
+                                "artifactTypes": artifactTypes,
+                                "artifactName": microserviceName,
+                                "serviceConfig": serviceConfig,
+                                "outputDir": "./out/${microserviceName}"
+                            ])
+                        } else {
+                            logger.logInfo("File does not exist ${fileName}")
                         }
-
-                        String microserviceName = fileName.split("\\.")[0]
-
-                        List<ArtifactType> artifactTypes = utils.mapArtifactType(serviceConfig.artifactSetting.get('type') as List<String> ?: [])
-
-                        artifactsTypes.addAll(artifactTypes.flatten())
-
-                        artifactsVariables.put("${microserviceName}", [
-                            "artifactTypes": artifactTypes,
-                            "artifactName": microserviceName,
-                            "serviceConfig": serviceConfig,
-                            "outputDir": "./out/${microserviceName}"
-                        ])
                     }
                 }
 
