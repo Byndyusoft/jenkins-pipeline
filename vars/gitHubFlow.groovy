@@ -1,6 +1,6 @@
 import jenkins.model.Jenkins
 
-def call(List<String> listServiceFileNames = []) {
+def call(String jenkinsFileServiceName = "", List<String> jenkinsFilelistMicroServiceFileNames = []) {
     Logger logger = new Logger()
 
     EnvironmentVariables environmentVariables = new EnvironmentVariables(env)
@@ -43,11 +43,11 @@ def call(List<String> listServiceFileNames = []) {
                 }
 
                 Yaml deployYaml = new Yaml(readYaml(file: "${configDir}/deploy.yaml"))
-                deployConfig.initialize(deployYaml)
+                deployConfig.initialize(deployYaml, jenkinsFileServiceName)
 
                 def fileIndir = []
-                if (listServiceFileNames) {
-                    fileIndir = listServiceFileNames
+                if (jenkinsFilelistMicroServiceFileNames) {
+                    fileIndir = jenkinsFilelistMicroServiceFileNames
                 } else {
                     fileIndir = findFiles(glob: "deploy/*").collect { file -> file.name }
                 }

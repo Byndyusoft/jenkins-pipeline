@@ -32,11 +32,11 @@ class DeployConfig {
         this.logger = logger
     }
 
-    void initialize(Yaml deployYaml) {
+    void initialize(Yaml deployYaml, String jenkinsFileServiceName) {
         gitCredentialsId = deployYaml.get('gitCredentialsId')
 
         projectName = deployYaml.get('project')
-        serviceName = deployYaml.get('serviceName') ?: ''
+        serviceName = deployYaml.get('serviceName') ?: jenkinsFileServiceName ?: ''
 
         clusters = deployYaml.get('clusters') as Map
         deployEnvironments = clusters.collectMany { k, v -> v.environments?.findAll { ek, ev -> !ev?.important }?.keySet() ?: [] }
