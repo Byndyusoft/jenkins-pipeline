@@ -23,7 +23,6 @@ common:
 
   replicas:
     default: 1
-    preprod: 1
     prod: 1
 
   resourcesLimitsMemory:

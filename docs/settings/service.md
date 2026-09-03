@@ -2,6 +2,12 @@
 
 ## Example `<name>.yaml` file
 ```
+artifactSetting:
+  enabled: true
+  type: 
+    - service
+  weight: 20
+
 microservice:
   kind: "Deployment"
 
@@ -11,7 +17,6 @@ microservice:
 
   replicas:
     default: 1
-    preprod: 2
     prod: 6
 
   resourcesLimitsMemory:
@@ -49,12 +54,6 @@ microservice:
         haproxy-ingress.github.io/maxqueue-server: '4096'
         haproxy-ingress.github.io/ssl-redirect: 'false'
         cert-manager.io/cluster-issuer: letsencrypt-staging-haproxy
-      prod:
-        haproxy-ingress.github.io/backend-server-naming: pod
-        haproxy-ingress.github.io/maxconn-server: '50'
-        haproxy-ingress.github.io/maxqueue-server: '4096'
-        haproxy-ingress.github.io/ssl-redirect: 'false'
-        cert-manager.io/cluster-issuer: letsencrypt-haproxy
     hosts:
       - host:
           default: api.stage.example.com
@@ -67,15 +66,6 @@ microservice:
         hosts:
           default: api.stage.example.com
           prod: api.example.com
-
-  volumes:
-    share-mediastorage:
-      mountPath: "/data"
-      config:
-        nfs:
-          server: "10.0.11.40"
-          path: "/shares/share"
-          readOnly: false
 
   nodeSelector:
     node-role.kubernetes.io/worker: ""

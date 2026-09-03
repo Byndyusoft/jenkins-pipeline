@@ -58,24 +58,24 @@ def call(String jenkinsFileServiceName = "", List<String> jenkinsFilelistMicroSe
                         logger.logDebug("fileName=${fileName}")
 
                         if (fileExists("${configDir}/${fileName}")) {
-                            ServiceConfig serviceConfig = new ServiceConfig()
-                            Yaml serviceYaml = new Yaml(readYaml(file: "${configDir}/${fileName}"))
-                            serviceConfig.initialize(serviceYaml)
+                            MicroServiceConfig microServiceConfig = new MicroServiceConfig()
+                            Yaml microServiceYaml = new Yaml(readYaml(file: "${configDir}/${fileName}"))
+                            microServiceConfig.initialize(microServiceYaml)
 
-                            if (!serviceConfig.artifactSetting.get('enabled')) {
+                            if (!microServiceConfig.artifactSetting.get('enabled')) {
                                 continue
                             }
 
                             String microserviceName = fileName.split("\\.")[0]
 
-                            List<ArtifactType> artifactTypes = utils.mapArtifactType(serviceConfig.artifactSetting.get('type') as List<String> ?: [])
+                            List<ArtifactType> artifactTypes = utils.mapArtifactType(microServiceConfig.artifactSetting.get('type') as List<String> ?: [])
 
                             artifactsTypes.addAll(artifactTypes.flatten())
 
                             artifactsVariables.put("${microserviceName}", [
                                 "artifactTypes": artifactTypes,
                                 "artifactName": microserviceName,
-                                "serviceConfig": serviceConfig,
+                                "microServiceConfig": microServiceConfig,
                                 "outputDir": "./out/${microserviceName}"
                             ])
                         } else {

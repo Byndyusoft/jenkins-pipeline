@@ -42,7 +42,7 @@ class Nelm {
             fullValues = new Yaml(script.readYaml(file: deployConfig.microServiceValuesFilePath)).get('/')
         }
 
-        Map valuesOverrides = utils.merge(commonConfig.common, artifactVariables.get('serviceConfig').microservice)
+        Map valuesOverrides = utils.merge(commonConfig.common, artifactVariables.get('microServiceConfig').microservice)
 
         valuesOverrides['name'] = artifactVariables.get('artifactName')
         valuesOverrides['microservice'] = [registryUrl: deployConfig.registryProvider.registryImagePushUrl, imageFolder: artifactCommonSettings.imageFolder, image: artifactVariables.get('artifactName'), tag: artifactCommonSettings.imageTag]
@@ -51,7 +51,7 @@ class Nelm {
         valuesOverrides['environment'] = artifactCommonSettings.deployEnvironment
         valuesOverrides['gitCommitShort'] = artifactCommonSettings.gitCommitShort
         valuesOverrides['namespace'] = artifactCommonSettings.namespace
-        valuesOverrides['weight'] = artifactVariables.get('serviceConfig')artifactSetting.get('weight')
+        valuesOverrides['weight'] = artifactVariables.get('microServiceConfig')artifactSetting.get('weight')
 
         // Secrets
         Map valuesOverridesSecret  = [:]
