@@ -157,7 +157,8 @@ def call(List<String> jenkinsFilelistMicroServiceFileNames = [], String jenkinsF
             if (fileExists("${configDir}/common.yaml")) {
                 commonYaml = new Yaml(readYaml(file: "${configDir}/common.yaml"))
             }
-            commonConfig.initialize(commonYaml)
+
+            commonConfig.initialize(commonYaml ?: [:])
 
             Make make = new Make(this, commonConfig, logger)
 
