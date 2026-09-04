@@ -7,6 +7,8 @@ class DeployConfig {
     String projectName
     /** service name */
     String serviceName
+    /** prefix namespace */
+    String customPrefixNamespace
     Map clusters
     /** list of available environments */
     List deployEnvironments = []
