@@ -1,6 +1,6 @@
 import jenkins.model.Jenkins
 
-def call(String jenkinsFileServiceName = "", List<String> jenkinsFilelistMicroServiceFileNames = []) {
+def call(List<String> jenkinsFilelistMicroServiceFileNames = [], String jenkinsFileServiceName = "", String jenkinsFileCustomPrefixNamespace = "") {
     Logger logger = new Logger()
 
     EnvironmentVariables environmentVariables = new EnvironmentVariables(env)
@@ -10,7 +10,7 @@ def call(String jenkinsFileServiceName = "", List<String> jenkinsFilelistMicroSe
         tracing.initialize(logger)
     }
 
-    final String pipelineVersion = '2.0.2'
+    final String pipelineVersion = '2.0.3'
     final String configDir = './deploy'
 
     logger.logInfo('###################################################################')
@@ -43,7 +43,7 @@ def call(String jenkinsFileServiceName = "", List<String> jenkinsFilelistMicroSe
                 }
 
                 Yaml deployYaml = new Yaml(readYaml(file: "${configDir}/deploy.yaml"))
-                deployConfig.initialize(deployYaml, jenkinsFileServiceName)
+                deployConfig.initialize(deployYaml, jenkinsFileServiceName, jenkinsFileCustomPrefixNamespace)
 
                 def fileIndir = []
                 if (jenkinsFilelistMicroServiceFileNames) {
@@ -147,7 +147,7 @@ def call(String jenkinsFileServiceName = "", List<String> jenkinsFilelistMicroSe
 
             artifactCommonSettings.initialize(deployConfig, environmentVariables, pipelineParameters, git, releaseVersion, artifactVersion)
 
-            Nexus nexus = new Nexus(this, deployConfig, environmentVariables, logger)
+            Nexus nexus = new Nexus(this, deployConfig, artifactCommonSettings, environmentVariables, logger)
 
             runStage('Nexus initialize', 'docker') {
                 nexus.initialize()

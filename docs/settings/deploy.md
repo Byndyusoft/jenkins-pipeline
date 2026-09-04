@@ -5,6 +5,7 @@
 - `clusters` - jenkins agent name `Dashboard > Manage Jenkins > Clouds`
 - `project` - project name
 - `serviceName` - service name
+- `customPrefixNamespace` - Custom prefix for namespace. Replace `project` and `serviceName` only in namespace
 - `registryCredentialsId` - credentials from jenkins for deploy images
 - `registryImageUrl` - url registry for pull/push images(**overrides** `registryImagePullUrl` and `registryImagePushUrl`)
 - `registryImagePullUrl` - url registry for pull images

@@ -2,12 +2,14 @@
 class Nexus {
     private def script
     private final DeployConfig deployConfig
+    private final ArtifactCommonSettings artifactCommonSettings
     private final EnvironmentVariables environmentVariables
     private final Logger logger
 
-    Nexus(script, DeployConfig deployConfig, EnvironmentVariables environmentVariables, Logger logger) {
+    Nexus(script, DeployConfig deployConfig, ArtifactCommonSettings artifactCommonSettings, EnvironmentVariables environmentVariables, Logger logger) {
         this.script = script
         this.deployConfig = deployConfig
+        this.artifactCommonSettings = artifactCommonSettings
         this.environmentVariables = environmentVariables
         this.logger = logger
     }
@@ -71,7 +73,7 @@ class Nexus {
                     pushPythonPackage()
                     break
                 case ArtifactType.RawPackage:
-                    pushRawPackage(deployConfig.serviceName)
+                    pushRawPackage(artifactCommonSettings.serviceIdentifier)
                     break
                 case ArtifactType.NugetPackage:
                     pushNugetPackage(artifactVariables)
