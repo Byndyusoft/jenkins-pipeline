@@ -169,7 +169,7 @@ def call(List<String> jenkinsFilelistMicroServiceFileNames = [], String jenkinsF
                     boolean artifactExist = true
                     artifactsVariables.each { artifactName, artifactVariables ->
                         if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.Service])) {
-                            if (!nexus.checkImage(artifactCommonSettings, artifactName)) {
+                            if (!nexus.checkImage(artifactName)) {
                                 artifactExist = false
                                 logger.logInfo("Microservice ${artifactName} image does not exist")
                                 return true // each break
@@ -233,7 +233,7 @@ def call(List<String> jenkinsFilelistMicroServiceFileNames = [], String jenkinsF
                 runStage('Push image', 'docker') {
                     artifactsVariables.each { artifactName, artifactVariables ->
                         if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.Service])) {
-                            nexus.pushImage(artifactCommonSettings, artifactName)
+                            nexus.pushImage(artifactName)
                         }
                     }
                 }
@@ -243,7 +243,7 @@ def call(List<String> jenkinsFilelistMicroServiceFileNames = [], String jenkinsF
                 runStage('Push release image', 'docker') {
                     artifactsVariables.each { artifactName, artifactVariables ->
                         if (!artifactVariables.get('artifactTypes').disjoint([ArtifactType.Service])) {
-                            nexus.createReleaseImage(artifactCommonSettings, artifactName)
+                            nexus.createReleaseImage(artifactName)
                         }
                     }
 
@@ -292,7 +292,7 @@ def call(List<String> jenkinsFilelistMicroServiceFileNames = [], String jenkinsF
 
     KubernetesConfig kubernetesConfigDeploy = new KubernetesConfig(logger)
     String cloudName = deployConfig.clusters?.get(pipelineParameters.cluster)?.deployCloudNames?.first()
-    kubernetesConfigDeploy.initialize([cloudName: cloudName, yaml: deployConfig.yaml, volumes: deployConfig.volumes])
+    kubernetesConfigDeploy.initialize([cloudName: cloudName, yaml: deployConfig.yaml])
     logger.logDebug("Selected agent for deployment ${cloudName}")
 
     kubernetes.customPodTemplate(kubernetesConfigDeploy) {

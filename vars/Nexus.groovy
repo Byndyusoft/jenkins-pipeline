@@ -40,7 +40,7 @@ class Nexus {
         }
     }
 
-    boolean checkImage(ArtifactCommonSettings artifactCommonSettings, String artifactName) {
+    boolean checkImage(String artifactName) {
         boolean imageExist = false
 
         runWithCredentials {
@@ -55,11 +55,11 @@ class Nexus {
         return imageExist
     }
 
-    void pushImage(ArtifactCommonSettings artifactCommonSettings, String artifactName) {
+    void pushImage(String artifactName) {
         script.sh("docker push ${deployConfig.registryProvider.registryImagePushUrl}/${artifactCommonSettings.imageFolder}/${artifactName}:${artifactCommonSettings.imageTag}")
     }
 
-    void createReleaseImage(ArtifactCommonSettings artifactCommonSettings, String artifactName) {
+    void createReleaseImage(String artifactName) {
         script.sh("docker pull ${deployConfig.registryProvider.registryImagePushUrl}/${artifactCommonSettings.imageFolder}/${artifactName}:${artifactCommonSettings.imageTag}")
         script.sh("""docker tag ${deployConfig.registryProvider.registryImagePushUrl}/${artifactCommonSettings.imageFolder}/${artifactName}:${artifactCommonSettings.imageTag} \
             ${deployConfig.registryProvider.registryImagePushUrl}/${artifactCommonSettings.releaseImageFolder}/${artifactName}:${artifactCommonSettings.releaseTag}""")
