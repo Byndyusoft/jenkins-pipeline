@@ -210,7 +210,6 @@ class PipelineParameters {
                         mandatoryStages.addAll([PipelineStage.PackApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication])
                         environments.addAll(deployConfig.deployEnvironments)
                         environments.addAll(deployConfig.deployEnvironmentsImportant)
-                        // environments.addAll([DeployEnvironment.preprod.name(), DeployEnvironment.prod.name()])
                         break
                     }
 
@@ -221,7 +220,6 @@ class PipelineParameters {
 
                     optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.PackApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication])
                     environments.addAll(deployConfig.deployEnvironments)
-                    // environments.add(DeployEnvironment.preprod.name())
                     break
 
                 case ArtifactType.None:

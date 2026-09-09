@@ -10,7 +10,7 @@ def call(List<String> jenkinsFilelistMicroServiceFileNames = [], String jenkinsF
         tracing.initialize(logger)
     }
 
-    final String pipelineVersion = '2.0.3'
+    final String pipelineVersion = '2.0.4'
     final String configDir = './deploy'
 
     logger.logInfo('###################################################################')
