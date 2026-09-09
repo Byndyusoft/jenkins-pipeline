@@ -8,7 +8,7 @@ class DeployConfig {
     /** service name */
     String serviceName
     /** prefix namespace */
-    String customPrefixNamespace
+    String customNamespacePrefix
     Map clusters
     /** list of available environments */
     List deployEnvironments = []
@@ -34,12 +34,12 @@ class DeployConfig {
         this.logger = logger
     }
 
-    void initialize(Yaml deployYaml, String jenkinsFileServiceName, jenkinsFileCustomPrefixNamespace) {
+    void initialize(Yaml deployYaml, String jenkinsFileServiceName, jenkinsFilecustomNamespacePrefix) {
         gitCredentialsId = deployYaml.get('gitCredentialsId')
 
         projectName = deployYaml.get('project')
         serviceName = deployYaml.get('serviceName') ?: jenkinsFileServiceName ?: ''
-        customPrefixNamespace = deployYaml.get('customPrefixNamespace') ?: jenkinsFileCustomPrefixNamespace ?: ''
+        customNamespacePrefix = deployYaml.get('customNamespacePrefix') ?: jenkinsFilecustomNamespacePrefix ?: ''
 
         clusters = deployYaml.get('clusters') as Map
         deployEnvironments = clusters.collectMany { k, v -> v.environments?.findAll { ek, ev -> !ev?.important }?.keySet() ?: [] }

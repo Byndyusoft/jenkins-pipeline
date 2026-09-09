@@ -1,6 +1,6 @@
 import jenkins.model.Jenkins
 
-def call(List<String> jenkinsFilelistMicroServiceFileNames = [], String jenkinsFileServiceName = "", String jenkinsFileCustomPrefixNamespace = "") {
+def call(List<String> jenkinsFilelistMicroServiceFileNames = [], String jenkinsFileServiceName = "", String jenkinsFilecustomNamespacePrefix = "") {
     Logger logger = new Logger()
 
     EnvironmentVariables environmentVariables = new EnvironmentVariables(env)
@@ -43,7 +43,7 @@ def call(List<String> jenkinsFilelistMicroServiceFileNames = [], String jenkinsF
                 }
 
                 Yaml deployYaml = new Yaml(readYaml(file: "${configDir}/deploy.yaml"))
-                deployConfig.initialize(deployYaml, jenkinsFileServiceName, jenkinsFileCustomPrefixNamespace)
+                deployConfig.initialize(deployYaml, jenkinsFileServiceName, jenkinsFilecustomNamespacePrefix)
 
                 def fileIndir = []
                 if (jenkinsFilelistMicroServiceFileNames) {
