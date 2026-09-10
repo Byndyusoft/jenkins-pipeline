@@ -169,10 +169,10 @@ class PipelineParameters {
         }
 
         parameters.add(script.reactiveChoice(
-            choiceType: 'PT_CHECKBOX', 
-            filterLength: 1, 
-            filterable: false, 
-            name: titleBuildParameters, 
+            choiceType: 'PT_CHECKBOX',
+            filterLength: 1,
+            filterable: false,
+            name: titleBuildParameters,
             referencedParameters: 'reload,make_release',
             script: script.groovyScript(
                 fallbackScript: [classpath: [], oldScript: '', sandbox: true, script: 'return ["<p>ERROR</p>"]'],
@@ -198,30 +198,32 @@ class PipelineParameters {
             )
         ))
 
-        if (environments) {            
-            parameters.add(script.reactiveChoice(
-                choiceType: 'PT_RADIO', 
-                filterLength: 1, 
-                filterable: false, 
-                name: titleDeploymentEnvironment, 
-                referencedParameters: 'reload,make_release',
-                script: script.groovyScript(
-                    fallbackScript: [classpath: [], oldScript: '', sandbox: true, script: 'return ["<p>ERROR</p>"]'],
-                    script: [classpath: [], oldScript: '', sandbox: true, script: """
-                        def isReload = (reload?.toString() == 'true')
-                        def isRelease = make_release?.toString()?.contains('Make Release')
+        if (environments) { 
+            if (stageAvailable(PipelineStage.DeployApplication)) {
+                parameters.add(script.reactiveChoice(
+                    choiceType: 'PT_RADIO',
+                    filterLength: 1,
+                    filterable: false,
+                    name: titleDeploymentEnvironment,
+                    referencedParameters: 'reload,make_release',
+                    script: script.groovyScript(
+                        fallbackScript: [classpath: [], oldScript: '', sandbox: true, script: 'return ["<p>ERROR</p>"]'],
+                        script: [classpath: [], oldScript: '', sandbox: true, script: """
+                            def isReload = (reload?.toString() == 'true')
+                            def isRelease = make_release?.toString()?.contains('Make Release')
 
-                        if (isReload) {
-                            return []
-                        }
-                        if (isRelease) {
-                            return []
-                        }
+                            if (isReload) {
+                                return []
+                            }
+                            if (isRelease) {
+                                return []
+                            }
 
-                        return [${Utils.toJenkinsChoiceFormat(environments)}]
-                    """]
-                )
-            ))
+                            return [${Utils.toJenkinsChoiceFormat(environments)}]
+                        """]
+                    )
+                ))
+            }
         }
 
         if (stageAvailable(PipelineStage.CreateTag)) {
