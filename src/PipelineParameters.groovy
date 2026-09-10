@@ -82,7 +82,15 @@ class PipelineParameters {
             deleteStage([PipelineStage.CreateTag, PipelineStage.CreateReleaseImage])
 
             if (script.params[titleBuildParameters].contains(buildApplication) == false) {
-                deleteStage([PipelineStage.InstallDependencies, PipelineStage.RunTests, PipelineStage.BuildApplication, PipelineStage.PackApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication, PipelineStage.PackAndPushPackage])
+                deleteStage([
+                    PipelineStage.InstallDependencies,
+                    PipelineStage.RunTests,
+                    PipelineStage.BuildApplication,
+                    PipelineStage.PackApplication,
+                    PipelineStage.BuildDockerImage,
+                    PipelineStage.DeployApplication,
+                    PipelineStage.PackAndPushPackage
+                ])
             }
             if (script.params[titleBuildParameters].contains(deployApplication) == false) {
                 deleteStage([PipelineStage.DeployApplication])
@@ -93,11 +101,8 @@ class PipelineParameters {
             if (script.params[titleBuildParameters].contains(runCodeStyleCheck) == false) {
                 deleteStage([PipelineStage.RunCodeStyleCheck])
             }
-            if (script.params[titleBuildParameters].contains(buildPackage) == false) {
-                deleteStage([PipelineStage.BuildPackage, PipelineStage.PushPackage])
-            }
-            if (script.params[titleBuildParameters].contains(publishPackage) == false) {
-                deleteStage([PipelineStage.PushPackage])
+            if (script.params[titleBuildParameters].contains(packAndPushPackage) == false) {
+                deleteStage([PipelineStage.PackAndPushPackage])
             }
         }
     }
