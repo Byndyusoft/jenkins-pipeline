@@ -14,6 +14,10 @@ class Make {
         script.sh("make ${commonConfig.makeOption} install-dependencies ${commonConfig.makeFileEnvString}")
     }
 
+    void runStyleChecks() {
+        script.sh("make ${commonConfig.makeOption} lint ${commonConfig.makeFileEnvString}")
+    }
+
     void runUnitTests() {
         script.sh("make ${commonConfig.makeOption} test ${commonConfig.makeFileEnvString}")
         if (script.fileExists('test/results.xml')) {
@@ -23,24 +27,20 @@ class Make {
         }
     }
 
-    void runStyleChecks() {
-        script.sh("make ${commonConfig.makeOption} lint ${commonConfig.makeFileEnvString}")
-    }
-
     void buildApplication(String version) {
         script.sh("make ${commonConfig.makeOption} build-app version=${version} ${commonConfig.makeFileEnvString}")
     }
 
     void packApplication(Map artifactVariables) {
-        script.sh("make ${commonConfig.makeOption} pack-application outputDir=${artifactVariables.get('outputDir')} ${commonConfig.makeFileEnvString} ${artifactVariables.get('serviceConfig').makeFileEnvString}")
+        script.sh("make ${commonConfig.makeOption} pack-application outputDir=${artifactVariables.get('outputDir')} ${commonConfig.makeFileEnvString} ${artifactVariables.get('microServiceConfig').makeFileEnvString}")
     }
 
     void buildImage(DeployConfig deployConfig, def artifactCommonSettings, Map artifactVariables) {
         String fullImagePath = "${deployConfig.registryProvider.registryImagePushUrl}/${artifactCommonSettings.imageFolder}/${artifactVariables.get('artifactName')}:${artifactCommonSettings.imageTag}"
-        script.sh("make ${commonConfig.makeOption} build-image appImage=${fullImagePath} outputDir=${artifactVariables.get('outputDir')} ${commonConfig.makeFileEnvString} ${artifactVariables.get('serviceConfig').makeFileEnvString}")
+        script.sh("make ${commonConfig.makeOption} build-image appImage=${fullImagePath} outputDir=${artifactVariables.get('outputDir')} ${commonConfig.makeFileEnvString} ${artifactVariables.get('microServiceConfig').makeFileEnvString}")
     }
 
     void packPackage(String packageVersion, Map artifactVariables) {
-        script.sh("make ${commonConfig.makeOption} pack-package packageVersion=${packageVersion} outputDir=${artifactVariables.get('outputDir')} ${commonConfig.makeFileEnvString} ${artifactVariables.get('serviceConfig').makeFileEnvString}")
+        script.sh("make ${commonConfig.makeOption} pack-package packageVersion=${packageVersion} outputDir=${artifactVariables.get('outputDir')} ${commonConfig.makeFileEnvString} ${artifactVariables.get('microServiceConfig').makeFileEnvString}")
     }
 }

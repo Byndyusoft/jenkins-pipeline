@@ -7,10 +7,15 @@ class DeployConfig {
     String projectName
     /** service name */
     String serviceName
-    /** list of available agents */
-    List clusterNames = []
+    /** prefix namespace */
+    String customNamespacePrefix
+    Map clusters
     /** list of available environments */
-    List additionalDeployEnvironments = []
+    List deployEnvironments = []
+    List deployEnvironmentsImportant = []
+    String buildCloudName
+    /** Credentials from jenkins for nelm */
+    String nelmKeyCredentialsId
     /** path default values file */
     String defaultValuesFilePath
     /** path final values file for deploy service */
@@ -20,8 +25,6 @@ class DeployConfig {
     String yaml
     /** volumes for "Pod Templates jenkins agent(k8s)" */
     Map volumes
-    /** for deploy jenkins agent */
-    String serviceAccount
     /** setting secrets provider */
     SecretProvider secretProvider
     /** setting registry provider */
@@ -31,21 +34,25 @@ class DeployConfig {
         this.logger = logger
     }
 
-    void initialize(Yaml deployYaml) {
+    void initialize(Yaml deployYaml, String jenkinsFileServiceName, jenkinsFilecustomNamespacePrefix) {
         gitCredentialsId = deployYaml.get('gitCredentialsId')
 
         projectName = deployYaml.get('project')
-        serviceName = deployYaml.get('serviceName') ?: ''
+        serviceName = deployYaml.get('serviceName') ?: jenkinsFileServiceName ?: ''
+        customNamespacePrefix = deployYaml.get('customNamespacePrefix') ?: jenkinsFilecustomNamespacePrefix ?: ''
 
-        clusterNames = deployYaml.get('clusterName') as List
-        additionalDeployEnvironments = Utils.listToString(deployYaml.get('additionalDeployEnvironments'))
+        clusters = deployYaml.get('clusters') as Map
+        deployEnvironments = clusters.collectMany { k, v -> v.environments?.findAll { ek, ev -> !ev?.important }?.keySet() ?: [] }
+        deployEnvironmentsImportant = clusters.collectMany { k, v -> v.environments?.findAll { ek, ev -> ev?.important }?.keySet() ?: [] }
 
+        buildCloudName = clusters.values().collectMany { it.buildCloudNames ?: [] }.unique().first()
+
+        nelmKeyCredentialsId = deployYaml.get('nelmKeyCredentialsId')
         defaultValuesFilePath = deployYaml.get('defaultValues')
         microServiceValuesFilePath = deployYaml.get('serviceValues')
 
         yaml = deployYaml.get('yaml')
         volumes = deployYaml.get('volumes') as Map
-        serviceAccount = deployYaml.get('serviceAccount')
 
         secretProvider = new SecretProvider(deployYaml.get('secret') as Map ?: [:])
         registryProvider = new RegistryProvider(logger)

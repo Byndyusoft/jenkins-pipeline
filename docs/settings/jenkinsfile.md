@@ -4,27 +4,21 @@
 - `env.DEBUG` - set debug mode. `true\false`. *Default: false*
 - `gitHubFlow()` - main function to calling pipeline
 
+
 ## Example `Jenkinsfile` file
 ```
 @Library(['bs-shared-library']) _
 
-env.DEBUG=false
+env.debug=false
 
-gitHubFlow([artifact_name: "checkerworker"])
+gitHubFlow()
 ```
 
+## Example `Jenkinsfile` file
 ```
 @Library(['bs-shared-library']) _
 
 env.debug=false
 
-gitHubFlow([artifact_name: "test-updaterworker", type: ["service", "nuget-package"]], ["unittest"])
-```
-
-```
-@Library(['bs-shared-library']) _
-
-env.debug=false
-
-gitHubFlow([artifact_name: "test-client", type: ["nuget-package"]], ["unittest"])
+gitHubFlow("service1", ["microservice1.yaml", "microservice2.yaml"])
 ```

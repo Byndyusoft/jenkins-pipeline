@@ -7,7 +7,7 @@ class Tracing {
         decorateWithTracing(KubernetesConfig, logger)
         decorateWithTracing(PipelineParameters, logger)
         // decorateWithTracing(SemanticVersion, logger)
-        decorateWithTracing(ServiceConfig, logger)
+        decorateWithTracing(MicroServiceConfig, logger)
         decorateWithTracing(Git, logger)
         decorateWithTracing(Nelm, logger)
         decorateWithTracing(Kubernetes, logger)

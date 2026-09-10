@@ -59,7 +59,15 @@ class PipelineParameters {
 
         patchLevel = script.params.version_type ?: PatchLevel.PATCH
 
-        cluster = deployEnvironment == DeployEnvironment.prod.name() ? 'prod' : 'stage'
+        for (deployCluster in deployConfig.clusters.keySet()) {
+            logger.logDebug("PipelineParameters:initialize deployCluster = ${deployCluster}")
+            logger.logDebug("PipelineParameters:initialize deployEnvironment = ${deployEnvironment}")
+            if (deployConfig.clusters?.get(deployCluster)?.environments?.containsKey(deployEnvironment)) {
+                cluster = deployCluster
+                logger.logDebug("PipelineParameters:initialize cluster = ${cluster}")
+                break
+            }
+        }
 
         if (script.params[titleBuildParameters].contains(buildApplication) == false) {
             deleteStage([PipelineStage.InstallDependencies, PipelineStage.RunTests, PipelineStage.BuildApplication, PipelineStage.PackApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication, PipelineStage.PackAndPushPackage])
@@ -200,8 +208,8 @@ class PipelineParameters {
 
                     if (environmentVariables.TAG_NAME) {
                         mandatoryStages.addAll([PipelineStage.PackApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication])
-                        environments.addAll(deployConfig.additionalDeployEnvironments)
-                        environments.addAll([DeployEnvironment.preprod.name(), DeployEnvironment.prod.name()])
+                        environments.addAll(deployConfig.deployEnvironments)
+                        environments.addAll(deployConfig.deployEnvironmentsImportant)
                         break
                     }
 
@@ -211,8 +219,7 @@ class PipelineParameters {
                     }
 
                     optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.PackApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication])
-                    environments.addAll(deployConfig.additionalDeployEnvironments)
-                    environments.add(DeployEnvironment.preprod.name())
+                    environments.addAll(deployConfig.deployEnvironments)
                     break
 
                 case ArtifactType.None:

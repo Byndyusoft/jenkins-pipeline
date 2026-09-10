@@ -2,12 +2,14 @@
 class Nexus {
     private def script
     private final DeployConfig deployConfig
+    private final ArtifactCommonSettings artifactCommonSettings
     private final EnvironmentVariables environmentVariables
     private final Logger logger
 
-    Nexus(script, DeployConfig deployConfig, EnvironmentVariables environmentVariables, Logger logger) {
+    Nexus(script, DeployConfig deployConfig, ArtifactCommonSettings artifactCommonSettings, EnvironmentVariables environmentVariables, Logger logger) {
         this.script = script
         this.deployConfig = deployConfig
+        this.artifactCommonSettings = artifactCommonSettings
         this.environmentVariables = environmentVariables
         this.logger = logger
     }
@@ -38,7 +40,7 @@ class Nexus {
         }
     }
 
-    boolean checkImage(ArtifactCommonSettings artifactCommonSettings, String artifactName) {
+    boolean checkImage(String artifactName) {
         boolean imageExist = false
 
         runWithCredentials {
@@ -53,11 +55,11 @@ class Nexus {
         return imageExist
     }
 
-    void pushImage(ArtifactCommonSettings artifactCommonSettings, String artifactName) {
+    void pushImage(String artifactName) {
         script.sh("docker push ${deployConfig.registryProvider.registryImagePushUrl}/${artifactCommonSettings.imageFolder}/${artifactName}:${artifactCommonSettings.imageTag}")
     }
 
-    void createReleaseImage(ArtifactCommonSettings artifactCommonSettings, String artifactName) {
+    void createReleaseImage(String artifactName) {
         script.sh("docker pull ${deployConfig.registryProvider.registryImagePushUrl}/${artifactCommonSettings.imageFolder}/${artifactName}:${artifactCommonSettings.imageTag}")
         script.sh("""docker tag ${deployConfig.registryProvider.registryImagePushUrl}/${artifactCommonSettings.imageFolder}/${artifactName}:${artifactCommonSettings.imageTag} \
             ${deployConfig.registryProvider.registryImagePushUrl}/${artifactCommonSettings.releaseImageFolder}/${artifactName}:${artifactCommonSettings.releaseTag}""")
@@ -71,7 +73,7 @@ class Nexus {
                     pushPythonPackage()
                     break
                 case ArtifactType.RawPackage:
-                    pushRawPackage(deployConfig.serviceName)
+                    pushRawPackage(artifactCommonSettings.serviceIdentifier)
                     break
                 case ArtifactType.NugetPackage:
                     pushNugetPackage(artifactVariables)
