@@ -38,7 +38,7 @@ class PipelineParameters {
             makeRelease = makeReleaseParam.toString().contains('Make Release')
         }
 
-        initializeDefaultStages(jenkinsFileSettings, environmentVariables, deployConfig)
+        initializeDefaultStages(deployConfig, environmentVariables, artifactsTypes)
 
         List params = buildParameters()
 
