@@ -208,8 +208,10 @@ private DeployConfig getDeployConfig(Kubernetes kubernetes, String configDir, Lo
 
 private def runStage(String stageName, String containerName, Closure code) {
     return stage(stageName) {
-        return container(containerName) {
-            return code()
+        return ansiColor('xterm') {
+            return container(containerName) {
+                return code()
+            }
         }
     }
 }
