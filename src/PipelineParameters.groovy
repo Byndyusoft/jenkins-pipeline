@@ -14,8 +14,7 @@ class PipelineParameters {
     private final String releaseVersionTypeDescription = 'Release version increment (only for Make Release)'
     private final String runTests = 'Run tests'
     private final String runCodeStyleCheck = 'Run code style check'
-    private final String buildPackage = 'Build package'
-    private final String publishPackage = 'Publish package'
+    private final String packAndPushPackage = 'Pack and push package'
     private final String masterBranchName = 'master'
 
     boolean onlyPipelineUpdate = false
@@ -29,7 +28,7 @@ class PipelineParameters {
         this.logger = logger
     }
 
-    void initialize(JenkinsFileSettings jenkinsFileSettings, EnvironmentVariables environmentVariables, DeployConfig deployConfig) {
+    void initialize(DeployConfig deployConfig, EnvironmentVariables environmentVariables, List<ArtifactType> artifactsTypes) {
         mandatoryStages = []
         optionalStages = []
         environments = []
@@ -39,15 +38,26 @@ class PipelineParameters {
             makeRelease = makeReleaseParam.toString().contains('Make Release')
         }
 
-        initializeDefaultStages(jenkinsFileSettings, environmentVariables, deployConfig)
+        initializeDefaultStages(deployConfig, environmentVariables, artifactsTypes)
 
         List params = buildParameters()
 
         script.properties([this.script.parameters(params)])
 
+        def isGitIndexed = false
+        script.script {
+            def causes = script.currentBuild.rawBuild.getCauses()
+
+            isGitIndexed = causes.any { cause ->
+                cause instanceof hudson.triggers.SCMTrigger.SCMTriggerCause
+            }
+        }
+
         if (environmentVariables.BUILD_NUMBER == '1') {
             onlyPipelineUpdate = true
         } else if (script.params.reload == true) {
+            onlyPipelineUpdate = true
+        } else if (isGitIndexed) {
             onlyPipelineUpdate = true
         }
 
@@ -56,7 +66,15 @@ class PipelineParameters {
         def versionTypeParam = script.params.version_type
         patchLevel = versionTypeParam ? PatchLevel.valueOf(versionTypeParam.toString()) : PatchLevel.PATCH
 
-        cluster = deployEnvironment == DeployEnvironment.prod.name() ? 'prod' : 'stage'
+        for (deployCluster in deployConfig.clusters.keySet()) {
+            logger.logDebug("PipelineParameters:initialize deployCluster = ${deployCluster}")
+            logger.logDebug("PipelineParameters:initialize deployEnvironment = ${deployEnvironment}")
+            if (deployConfig.clusters?.get(deployCluster)?.environments?.containsKey(deployEnvironment)) {
+                cluster = deployCluster
+                logger.logDebug("PipelineParameters:initialize cluster = ${cluster}")
+                break
+            }
+        }
 
         if (makeRelease) {
             deleteStage([PipelineStage.DeployApplication])
@@ -64,7 +82,15 @@ class PipelineParameters {
             deleteStage([PipelineStage.CreateTag, PipelineStage.CreateReleaseImage])
 
             if (script.params[titleBuildParameters].contains(buildApplication) == false) {
-                deleteStage([PipelineStage.BuildApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication])
+                deleteStage([
+                    PipelineStage.InstallDependencies,
+                    PipelineStage.RunTests,
+                    PipelineStage.BuildApplication,
+                    PipelineStage.PackApplication,
+                    PipelineStage.BuildDockerImage,
+                    PipelineStage.DeployApplication,
+                    PipelineStage.PackAndPushPackage
+                ])
             }
             if (script.params[titleBuildParameters].contains(deployApplication) == false) {
                 deleteStage([PipelineStage.DeployApplication])
@@ -75,11 +101,8 @@ class PipelineParameters {
             if (script.params[titleBuildParameters].contains(runCodeStyleCheck) == false) {
                 deleteStage([PipelineStage.RunCodeStyleCheck])
             }
-            if (script.params[titleBuildParameters].contains(buildPackage) == false) {
-                deleteStage([PipelineStage.BuildPackage, PipelineStage.PushPackage])
-            }
-            if (script.params[titleBuildParameters].contains(publishPackage) == false) {
-                deleteStage([PipelineStage.PushPackage])
+            if (script.params[titleBuildParameters].contains(packAndPushPackage) == false) {
+                deleteStage([PipelineStage.PackAndPushPackage])
             }
         }
     }
@@ -116,12 +139,8 @@ class PipelineParameters {
             buildVariants.add("\'${runCodeStyleCheck}${(makeRelease && mandatoryStages.contains(PipelineStage.RunCodeStyleCheck)) ? ':selected:disabled' : ''}\'")
         }
 
-        if (stageAvailable(PipelineStage.BuildPackage)) {
-            buildVariants.add("\'${buildPackage}:selected${mandatoryStages.contains(PipelineStage.RunCodeStyleCheck) ? ':disabled' : ''}\'")
-        }
-
-        if (stageAvailable(PipelineStage.PushPackage)) {
-            buildVariants.add("\'${publishPackage}:selected${mandatoryStages.contains(PipelineStage.RunCodeStyleCheck) ? ':disabled' : ''}\'")
+        if (stageAvailable(PipelineStage.PackAndPushPackage)) {
+            buildVariants.add("\'${packAndPushPackage}:selected${mandatoryStages.contains(PipelineStage.PackAndPushPackage) ? ':disabled' : ''}\'")
         }
 
         // the order of parameters is important, so the dry run flag should be on top.
@@ -150,10 +169,10 @@ class PipelineParameters {
         }
 
         parameters.add(script.reactiveChoice(
-            choiceType: 'PT_CHECKBOX', 
-            filterLength: 1, 
-            filterable: false, 
-            name: titleBuildParameters, 
+            choiceType: 'PT_CHECKBOX',
+            filterLength: 1,
+            filterable: false,
+            name: titleBuildParameters,
             referencedParameters: 'reload,make_release',
             script: script.groovyScript(
                 fallbackScript: [classpath: [], oldScript: '', sandbox: true, script: 'return ["<p>ERROR</p>"]'],
@@ -179,30 +198,32 @@ class PipelineParameters {
             )
         ))
 
-        if (environments) {            
-            parameters.add(script.reactiveChoice(
-                choiceType: 'PT_RADIO', 
-                filterLength: 1, 
-                filterable: false, 
-                name: titleDeploymentEnvironment, 
-                referencedParameters: 'reload,make_release',
-                script: script.groovyScript(
-                    fallbackScript: [classpath: [], oldScript: '', sandbox: true, script: 'return ["<p>ERROR</p>"]'],
-                    script: [classpath: [], oldScript: '', sandbox: true, script: """
-                        def isReload = (reload?.toString() == 'true')
-                        def isRelease = make_release?.toString()?.contains('Make Release')
+        if (environments) { 
+            if (stageAvailable(PipelineStage.DeployApplication)) {
+                parameters.add(script.reactiveChoice(
+                    choiceType: 'PT_RADIO',
+                    filterLength: 1,
+                    filterable: false,
+                    name: titleDeploymentEnvironment,
+                    referencedParameters: 'reload,make_release',
+                    script: script.groovyScript(
+                        fallbackScript: [classpath: [], oldScript: '', sandbox: true, script: 'return ["<p>ERROR</p>"]'],
+                        script: [classpath: [], oldScript: '', sandbox: true, script: """
+                            def isReload = (reload?.toString() == 'true')
+                            def isRelease = make_release?.toString()?.contains('Make Release')
 
-                        if (isReload) {
-                            return []
-                        }
-                        if (isRelease) {
-                            return []
-                        }
+                            if (isReload) {
+                                return []
+                            }
+                            if (isRelease) {
+                                return []
+                            }
 
-                        return [${Utils.toJenkinsChoiceFormat(environments)}]
-                    """]
-                )
-            ))
+                            return [${Utils.toJenkinsChoiceFormat(environments)}]
+                        """]
+                    )
+                ))
+            }
         }
 
         if (stageAvailable(PipelineStage.CreateTag)) {
@@ -216,72 +237,113 @@ class PipelineParameters {
         return parameters
     }
 
-    private initializeDefaultStages(JenkinsFileSettings jenkinsFileSettings, EnvironmentVariables environmentVariables, DeployConfig deployConfig) {
-        logger.logDebug("PipelineParameters:initializeDefaultStages jenkinsFileSettings.repositoryTypes = ${jenkinsFileSettings.repositoryTypes}")
+    private initializeDefaultStages(DeployConfig deployConfig, EnvironmentVariables environmentVariables, List<ArtifactType> artifactsTypes) {
+        logger.logDebug("PipelineParameters:initializeDefaultStages artifactsTypes = ${artifactsTypes}")
 
-        for (repositoryType in jenkinsFileSettings.repositoryTypes) {
-            switch (repositoryType) {
-                case RepositoryType.NugetPackage:
+        for (artifactType in artifactsTypes) {
+            mandatoryStages.addAll([
+              PipelineStage.InstallDependencies, 
+              PipelineStage.BuildApplication
+            ])
+            switch (artifactType) {
+                case ArtifactType.NugetPackage:
                     if (environmentVariables.BRANCH_NAME == masterBranchName) {
-                        mandatoryStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.CreateTag,
-                                PipelineStage.BuildPackage, PipelineStage.PushPackage])
+                        mandatoryStages.addAll([
+                          PipelineStage.RunTests, 
+                          PipelineStage.RunCodeStyleCheck, 
+                          PipelineStage.CreateTag, 
+                          PipelineStage.PackAndPushPackage
+                        ])
                         break
                     }
 
-                    optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildPackage, PipelineStage.PushPackage])
+                    if (environmentVariables.TAG_NAME) {
+                        break
+                    }
+
+                    optionalStages.addAll([
+                      PipelineStage.RunTests, 
+                      PipelineStage.RunCodeStyleCheck, 
+                      PipelineStage.PackAndPushPackage
+                    ])
                     break
 
-                case RepositoryType.RawPackage:
+                case ArtifactType.RawPackage:
                     if (environmentVariables.BRANCH_NAME == masterBranchName) {
-                        mandatoryStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.CreateTag,
-                                PipelineStage.BuildPackage, PipelineStage.PushPackage])
+                        mandatoryStages.addAll([
+                          PipelineStage.RunTests, 
+                          PipelineStage.RunCodeStyleCheck, 
+                          PipelineStage.CreateTag, 
+                          PipelineStage.PackAndPushPackage
+                        ])
                         break
                     }
 
-                    optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildPackage, PipelineStage.PushPackage])
+                    if (environmentVariables.TAG_NAME) {
+                        break
+                    }
+
+                    optionalStages.addAll([
+                      PipelineStage.RunTests, 
+                      PipelineStage.RunCodeStyleCheck, 
+                      PipelineStage.PackAndPushPackage
+                    ])
                     break
 
-                case RepositoryType.PythonPackage:
+                case ArtifactType.PythonPackage:
                     if (environmentVariables.BRANCH_NAME == masterBranchName) {
-                        mandatoryStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.CreateTag,
-                                PipelineStage.BuildPackage, PipelineStage.PushPackage])
+                        mandatoryStages.addAll([
+                          PipelineStage.RunTests, 
+                          PipelineStage.RunCodeStyleCheck, 
+                          PipelineStage.CreateTag, 
+                          PipelineStage.PackAndPushPackage
+                        ])
                         break
                     }
 
-                    optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildPackage, PipelineStage.PushPackage])
+                    if (environmentVariables.TAG_NAME) {
+                        break
+                    }
+
+                    optionalStages.addAll([
+                      PipelineStage.RunTests, 
+                      PipelineStage.RunCodeStyleCheck, 
+                      PipelineStage.PackAndPushPackage
+                    ])
                     break
 
                 // By default
-                case RepositoryType.Service:
+                case ArtifactType.Service:
                     mandatoryStages.addAll([PipelineStage.CheckImage])
 
                     if (environmentVariables.TAG_NAME) {
-                        mandatoryStages.addAll([PipelineStage.BuildApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication])
-                        environments.addAll(deployConfig.additionalDeployEnvironments)
-                        environments.addAll([DeployEnvironment.preprod.name(), DeployEnvironment.prod.name()])
+                        mandatoryStages.addAll([
+                          PipelineStage.PackApplication, 
+                          PipelineStage.BuildDockerImage, 
+                          PipelineStage.DeployApplication
+                        ])
+                        environments.addAll(deployConfig.deployEnvironments)
+                        environments.addAll(deployConfig.deployEnvironmentsImportant)
                         break
                     }
+          
+                    optionalStages.addAll([
+                      PipelineStage.RunTests, 
+                      PipelineStage.RunCodeStyleCheck, 
+                      PipelineStage.PackApplication, 
+                      PipelineStage.BuildDockerImage, 
+                      PipelineStage.DeployApplication
+                    ])
 
-                    if (environmentVariables.BRANCH_NAME == masterBranchName) {
-                        environments.addAll(deployConfig.additionalDeployEnvironments)
-                        environments.add(DeployEnvironment.preprod.name())
-
-                        optionalStages.addAll([
-                            PipelineStage.RunTests, 
-                            PipelineStage.RunCodeStyleCheck,
-                            PipelineStage.BuildApplication, 
-                            PipelineStage.BuildDockerImage,
-                            PipelineStage.DeployApplication
-                        ])
-
+                    if (environmentVariables.BRANCH_NAME == masterBranchName) {                      
                         if (makeRelease) {
                             mandatoryStages.addAll([
-                                PipelineStage.RunTests, 
-                                PipelineStage.RunCodeStyleCheck,
-                                PipelineStage.CreateReleaseImage, 
-                                PipelineStage.BuildApplication,
-                                PipelineStage.BuildDockerImage, 
-                                PipelineStage.CreateTag
+                              PipelineStage.RunTests, 
+                              PipelineStage.RunCodeStyleCheck, 
+                              PipelineStage.CreateReleaseImage, 
+                              PipelineStage.PackApplication, 
+                              PipelineStage.BuildDockerImage, 
+                              PipelineStage.CreateTag
                             ])
                         } else {
                             optionalStages.add(PipelineStage.CreateTag)
@@ -289,16 +351,15 @@ class PipelineParameters {
                         break
                     }
 
-                    optionalStages.addAll([PipelineStage.RunTests, PipelineStage.RunCodeStyleCheck, PipelineStage.BuildApplication, PipelineStage.BuildDockerImage, PipelineStage.DeployApplication])
-                    environments.addAll(deployConfig.additionalDeployEnvironments)
-                    environments.add(DeployEnvironment.preprod.name())
+                    environments.addAll(deployConfig.deployEnvironments)
                     break
 
-                case RepositoryType.None:
-                    logger.logDebug("PipelineParameters:initializeDefaultStages RepositoryType is None")
+                case ArtifactType.None:
+                    logger.logDebug("PipelineParameters:initializeDefaultStages ArtifactType is None")
                     return []
             }
         }
+
         logger.logDebug("PipelineParameters:initializeDefaultStages mandatoryStages = ${mandatoryStages}")
         logger.logDebug("PipelineParameters:initializeDefaultStages optionalStages = ${optionalStages}")
         logger.logDebug("PipelineParameters:initializeDefaultStages environments = ${environments}")

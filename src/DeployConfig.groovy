@@ -3,47 +3,56 @@ class DeployConfig {
     private final Logger logger
     /** Credentials from jenkins for git repositories */
     String gitCredentialsId
-    /**project name*/
+    /** project name */
     String projectName
-    /**list of available agents*/
-    List clusterNames = []
+    /** service name */
+    String serviceName
+    /** prefix namespace */
+    String customNamespacePrefix
+    Map clusters
     /** list of available environments */
-    List additionalDeployEnvironments = []
-    /**path default values file*/
+    List deployEnvironments = []
+    List deployEnvironmentsImportant = []
+    String buildCloudName
+    /** Credentials from jenkins for nelm */
+    String nelmKeyCredentialsId
+    /** path default values file */
     String defaultValuesFilePath
-    /**path final values file for deploy service*/
+    /** path final values file for deploy service */
     String microServiceValuesFilePath
-    /**path final values-secret file for deploy service*/
-    String secretValuesFilePath
-    /**custom yaml for "Pod Templates jenkins agent(k8s)"*/
+
+    /** custom yaml for "Pod Templates jenkins agent(k8s)" */
     String yaml
-    /**volumes for "Pod Templates jenkins agent(k8s)"*/
+    /** volumes for "Pod Templates jenkins agent(k8s)" */
     Map volumes
-    /**for deploy jenkins agent*/
-    String serviceAccount
-    /**setting secrets provider*/
+    /** setting secrets provider */
     SecretProvider secretProvider
-    /**setting registry provider*/
+    /** setting registry provider */
     RegistryProvider registryProvider
 
     DeployConfig(Logger logger) {
         this.logger = logger
     }
 
-    void initialize(Yaml deployYaml) {
+    void initialize(Yaml deployYaml, String jenkinsFileServiceName, jenkinsFilecustomNamespacePrefix) {
         gitCredentialsId = deployYaml.get('gitCredentialsId')
 
         projectName = deployYaml.get('project')
-        clusterNames = deployYaml.get('clusterName') as List
-        additionalDeployEnvironments = Utils.listToString(deployYaml.get('additionalDeployEnvironments'))
+        serviceName = deployYaml.get('serviceName') ?: jenkinsFileServiceName ?: ''
+        customNamespacePrefix = deployYaml.get('customNamespacePrefix') ?: jenkinsFilecustomNamespacePrefix ?: ''
 
+        clusters = deployYaml.get('clusters') as Map
+        deployEnvironments = clusters.collectMany { k, v -> v.environments?.findAll { ek, ev -> !ev?.important }?.keySet() ?: [] }
+        deployEnvironmentsImportant = clusters.collectMany { k, v -> v.environments?.findAll { ek, ev -> ev?.important }?.keySet() ?: [] }
+
+        buildCloudName = clusters.values().collectMany { it.buildCloudNames ?: [] }.unique().first()
+
+        nelmKeyCredentialsId = deployYaml.get('nelmKeyCredentialsId')
         defaultValuesFilePath = deployYaml.get('defaultValues')
-        microServiceValuesFilePath = deployYaml.get('microserviceValues')
-        secretValuesFilePath = deployYaml.get('secretValues')
+        microServiceValuesFilePath = deployYaml.get('serviceValues')
 
         yaml = deployYaml.get('yaml')
         volumes = deployYaml.get('volumes') as Map
-        serviceAccount = deployYaml.get('serviceAccount')
 
         secretProvider = new SecretProvider(deployYaml.get('secret') as Map ?: [:])
         registryProvider = new RegistryProvider(logger)

@@ -3,7 +3,7 @@ class Yaml {
     private def parsedYaml
 
     Yaml(yaml) {
-        parsedYaml = yaml
+        this.parsedYaml = yaml
     }
 
     def get(String path) {
