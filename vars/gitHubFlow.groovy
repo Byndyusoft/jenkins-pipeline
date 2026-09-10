@@ -137,7 +137,8 @@ def call(List<String> jenkinsFilelistMicroServiceFileNames = [], String jenkinsF
             SemanticVersion releaseVersion = new SemanticVersion(latestTag.toString())
 
             String artifactVersion
-            if (pipelineParameters.stageAvailable(PipelineStage.CreateTag)) {
+            def useReleaseVersion = params.use_release_version?.toString()?.toBoolean() ?: false
+            if (pipelineParameters.stageAvailable(PipelineStage.CreateTag) || useReleaseVersion) {
                 releaseVersion.increaseVersion(pipelineParameters.patchLevel)
                 artifactVersion = releaseVersion.toString()
             } else {
@@ -218,6 +219,12 @@ def call(List<String> jenkinsFilelistMicroServiceFileNames = [], String jenkinsF
                             make.packApplication(artifactVariables)
                         }
                     }
+                }
+            }
+
+            if (pipelineParameters.stageAvailable(PipelineStage.RunTests)) {
+                runStage('Unit test', 'docker') {
+                    make.runUnitTests()
                 }
             }
 
