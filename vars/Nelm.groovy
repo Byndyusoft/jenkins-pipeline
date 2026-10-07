@@ -54,13 +54,15 @@ class Nelm {
         valuesOverrides['weight'] = artifactVariables.get('microServiceConfig')artifactSetting.get('weight')
 
         // Secrets
-        Map valuesOverridesSecret  = [:]
+        Map valuesOverridesSecret = [:]
 
         switch (deployConfig.secretProvider.providerName) {
             case 'vault':
                 Vault vault = new Vault(script, deployConfig)
-                String vaultPathSecret = "${artifactCommonSettings.cluster}/${artifactVariables.get('microServiceConfig')artifactSetting.get('customVaultPath')} ?: ${artifactCommonSettings.serviceIdentifier}/${artifactVariables.get('artifactName')}/${artifactCommonSettings.deployEnvironment}"
-                valuesOverridesSecret = [envSecret: vault.getVaultSecret(vaultPathSecret)]
+                String customVaultPath = artifactVariables.get('microServiceConfig')artifactSetting.get('customVaultPath')
+                String vaultSecretPath = "${artifactCommonSettings.cluster}/${customVaultPath ?: artifactCommonSettings.serviceIdentifier}/${artifactVariables.get('artifactName')}/${artifactCommonSettings.deployEnvironment}"
+
+                valuesOverridesSecret = [envSecret: vault.getVaultSecret(vaultSecretPath)]
                 break
             default:
                 break
