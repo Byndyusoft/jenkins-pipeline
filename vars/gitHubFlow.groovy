@@ -14,7 +14,7 @@ def call(Map serviceSetting = [:], List<String> checks = [], Map k8sCloud = [:],
 
     jenkinsFileSettings.initialize(serviceSetting)
 
-    final String pipelineVersion = '1.0.8'
+    final String pipelineVersion = '1.0.9'
     final String configDir = './deploy'
 
     logger.logInfo('###################################################################')
