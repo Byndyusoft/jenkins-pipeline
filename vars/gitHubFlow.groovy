@@ -77,7 +77,7 @@ def call(List<String> jenkinsFilelistMicroServiceFileNames = [], String jenkinsF
                                 "artifactName": microserviceName,
                                 "microServiceConfig": microServiceConfig,
                                 "outputDir": "./out/${microserviceName}",
-                                "customVaultPath": microServiceConfig.artifactSetting.get('customVaultPath') :? ""
+                                "customVaultPath": microServiceConfig.artifactSetting.get('customVaultPath') ?: ""
                             ])
                         } else {
                             logger.logInfo("File does not exist ${fileName}")
