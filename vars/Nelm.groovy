@@ -59,7 +59,7 @@ class Nelm {
         switch (deployConfig.secretProvider.providerName) {
             case 'vault':
                 Vault vault = new Vault(script, deployConfig)
-                String vaultPathSecret = "${artifactCommonSettings.cluster}/${artifactCommonSettings.serviceIdentifier}/${artifactVariables.get('artifactName')}/${artifactCommonSettings.deployEnvironment}"
+                String vaultPathSecret = "${artifactCommonSettings.cluster}/${artifactVariables.get('microServiceConfig')artifactSetting.get('customVaultPath')} :? ${artifactCommonSettings.serviceIdentifier}/${artifactVariables.get('artifactName')}/${artifactCommonSettings.deployEnvironment}"
                 valuesOverridesSecret = [envSecret: vault.getVaultSecret(vaultPathSecret)]
                 break
             default:

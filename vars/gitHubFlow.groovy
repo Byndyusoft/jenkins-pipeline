@@ -10,7 +10,7 @@ def call(List<String> jenkinsFilelistMicroServiceFileNames = [], String jenkinsF
         tracing.initialize(logger)
     }
 
-    final String pipelineVersion = '2.0.4'
+    final String pipelineVersion = '2.0.5'
     final String configDir = './deploy'
 
     logger.logInfo('###################################################################')
@@ -76,7 +76,8 @@ def call(List<String> jenkinsFilelistMicroServiceFileNames = [], String jenkinsF
                                 "artifactTypes": artifactTypes,
                                 "artifactName": microserviceName,
                                 "microServiceConfig": microServiceConfig,
-                                "outputDir": "./out/${microserviceName}"
+                                "outputDir": "./out/${microserviceName}",
+                                "customVaultPath": microServiceConfig.artifactSetting.get('customVaultPath') :? ""
                             ])
                         } else {
                             logger.logInfo("File does not exist ${fileName}")
