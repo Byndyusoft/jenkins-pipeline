@@ -101,27 +101,27 @@ class PipelineParameters {
         List<String> buildVariants = []
 
         if (stageAvailable(PipelineStage.BuildApplication)) {
-            buildVariants.add("\'${buildApplication}:selected${(makeRelease && mandatoryStages.contains(PipelineStage.BuildApplication)) ? ':disabled' : ''}\'")
+            buildVariants.add(buildApplication)
         }
 
         if (stageAvailable(PipelineStage.DeployApplication)) {
-            buildVariants.add("\'${deployApplication}:selected${(makeRelease && mandatoryStages.contains(PipelineStage.DeployApplication)) ? ':disabled' : ''}\'")
+            buildVariants.add(deployApplication)
         }
 
         if (stageAvailable(PipelineStage.RunTests)) {
-            buildVariants.add("\'${runTests}:selected${(makeRelease && mandatoryStages.contains(PipelineStage.RunTests)) ? ':disabled' : ''}\'")
+            buildVariants.add(runTests)
         }
 
         if (stageAvailable(PipelineStage.RunCodeStyleCheck)) {
-            buildVariants.add("\'${runCodeStyleCheck}${(makeRelease && mandatoryStages.contains(PipelineStage.RunCodeStyleCheck)) ? ':selected:disabled' : ''}\'")
+            buildVariants.add(runCodeStyleCheck)
         }
 
         if (stageAvailable(PipelineStage.BuildPackage)) {
-            buildVariants.add("\'${buildPackage}:selected${mandatoryStages.contains(PipelineStage.RunCodeStyleCheck) ? ':disabled' : ''}\'")
+            buildVariants.add(buildPackage)
         }
 
         if (stageAvailable(PipelineStage.PushPackage)) {
-            buildVariants.add("\'${publishPackage}:selected${mandatoryStages.contains(PipelineStage.RunCodeStyleCheck) ? ':disabled' : ''}\'")
+            buildVariants.add(publishPackage)
         }
 
         // the order of parameters is important, so the dry run flag should be on top.
@@ -165,16 +165,13 @@ class PipelineParameters {
                         return []
                     }
 
-                    def variants = []
-                    variants << '${buildApplication}:selected' + (isRelease ? ':disabled' : '')
-                    variants << '${runTests}:selected' + (isRelease ? ':disabled' : '')
-                    variants << '${runCodeStyleCheck}:selected' + (isRelease ? ':disabled' : '')
+                    def availableVariants = [${Utils.toJenkinsChoiceFormat(buildVariants)}]
 
-                    if (!isRelease) {
-                        variants << '${deployApplication}:selected'
+                    return availableVariants.findAll { variant ->
+                        !isRelease || variant != '${deployApplication}'
+                    }.collect { variant ->
+                        variant + ':selected' + (isRelease ? ':disabled' : '')
                     }
-
-                    return variants
                 """]
             )
         ))

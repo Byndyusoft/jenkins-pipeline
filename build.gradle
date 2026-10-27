@@ -37,3 +37,22 @@ test {
         events "passed", "skipped", "failed"
     }
 }
+
+tasks.register(
+    'testPipelineParameters',
+    JavaExec
+) {
+    group = 'verification'
+    description = 'Checks pipeline parameter forms and stage selection without Jenkins.'
+    classpath = configurations.runtimeClasspath
+    mainClass = 'groovy.ui.GroovyMain'
+    args 'test/PipelineParametersTest.groovy'
+
+    if (project.hasProperty('verboseTests')) {
+        args '--verbose'
+    }
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('testPipelineParameters')
+}
